@@ -11,5 +11,5 @@ package diarsid.sceptre;
  */
 public interface WeightConsumer {
     
-    void accept(int index, double weight, WeightElement weightElement);
+    void accept(int index, float weight, WeightElement weightElement);
 }

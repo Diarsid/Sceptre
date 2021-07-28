@@ -10,7 +10,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-import static java.lang.Double.MIN_VALUE;
+import static java.lang.Float.MIN_VALUE;
 import static java.util.Arrays.fill;
 
 import static diarsid.sceptre.AnalyzeLogType.POSITIONS_CLUSTERS;
@@ -23,16 +23,16 @@ import static diarsid.sceptre.WeightElement.WeightType.PREDEFINED;
 class Weight {
     
     private final static int SIZE = 128;
-    final static double WEIGHT_UNINITIALIZED = MIN_VALUE;
+    final static float WEIGHT_UNINITIALIZED = MIN_VALUE;
     
     private final List<WeightElement> elements;
-    private final double[] weights;
-    private double weightSum;
+    private final float[] weights;
+    private float weightSum;
     private int nextFreeWeightIndex;
 
     public Weight() {
         this.elements = new ArrayList<>();
-        this.weights = new double[SIZE];
+        this.weights = new float[SIZE];
         this.nextFreeWeightIndex = 0;
     }
     
@@ -46,7 +46,7 @@ class Weight {
                 weightElement.predefinedWeight(), weightElement.description());
     }
     
-    void add(double calculatedWeight, WeightElement element) {
+    void add(float calculatedWeight, WeightElement element) {
         if ( calculatedWeight == 0.0 ) {
             return;
         }
@@ -67,7 +67,7 @@ class Weight {
         this.nextFreeWeightIndex++;
     }
 
-    private void addWeightAndElement(double calculatedWeight, WeightElement element) {
+    private void addWeightAndElement(float calculatedWeight, WeightElement element) {
         this.elements.add(element);
         this.weights[this.nextFreeWeightIndex] = calculatedWeight;
         this.weightSum = this.weightSum + calculatedWeight;
@@ -91,7 +91,7 @@ class Weight {
         this.nextFreeWeightIndex = 0;
     }
     
-    double sum() {
+    float sum() {
         return this.weightSum;
     }
     
@@ -113,7 +113,7 @@ class Weight {
     }
 
     private void excludeByIndex(int i) {
-        double excludedWeight = this.weights[i];
+        float excludedWeight = this.weights[i];
         this.weights[i] = WEIGHT_UNINITIALIZED;
         this.weightSum = this.weightSum - excludedWeight;
     }
@@ -144,7 +144,7 @@ class Weight {
         hash = 71 * hash + Objects.hashCode(this.elements);
         hash = 71 * hash + Arrays.hashCode(this.weights);
         hash =
-                71 * hash + ( int ) (Double.doubleToLongBits(this.weightSum) ^ (Double.doubleToLongBits(this.weightSum) >>> 32));
+                71 * hash + ( int ) (Float.floatToIntBits(this.weightSum) ^ (Float.floatToIntBits(this.weightSum) >>> 32));
         hash = 71 * hash + this.nextFreeWeightIndex;
         return hash;
     }
@@ -161,7 +161,7 @@ class Weight {
             return false;
         }
         final Weight other = ( Weight ) obj;
-        if ( Double.doubleToLongBits(this.weightSum) != Double.doubleToLongBits(other.weightSum) ) {
+        if ( Float.floatToIntBits(this.weightSum) != Float.floatToIntBits(other.weightSum) ) {
             return false;
         }
         if ( this.nextFreeWeightIndex != other.nextFreeWeightIndex ) {

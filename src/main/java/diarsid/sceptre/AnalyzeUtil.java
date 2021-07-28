@@ -16,7 +16,7 @@ import static diarsid.support.misc.MathFunctions.ratio;
 
 class AnalyzeUtil {     
     
-    private static final double ADJUSTED_WEIGHT_TRESHOLD = 30;
+    private static final float ADJUSTED_WEIGHT_TRESHOLD = 30;
     private static final int UNINITIALIZED = MIN_VALUE;
     
     static int inconsistencyOf(Cluster orderDiff, int clusterLength) {
@@ -214,83 +214,83 @@ class AnalyzeUtil {
         }
     }
     
-    static double missedRatio(double clustersImportance) {
+    static float missedRatio(float clustersImportance) {
         if ( clustersImportance < 0 ) {
-            return 19.0;
+            return 19.0f;
         } else if ( clustersImportance >= 0.0 && clustersImportance < 10.0 ) {
-            return 14.0;
+            return 14.0f;
         } else if ( clustersImportance >= 10.0 && clustersImportance < 20.0 ) {
-            return 12.0;
+            return 12.0f;
         } else if ( clustersImportance >= 20.0 && clustersImportance < 30.0 ) {
-            return 10.0;
+            return 10.0f;
         } else if ( clustersImportance >= 30.0 && clustersImportance < 40.0 ) {
-            return 8.0;
+            return 8.0f;
         } else if ( clustersImportance >= 40.0 && clustersImportance < 60.0 ) {
-            return 6.0;
+            return 6.0f;
         } else if ( clustersImportance >= 60.0 && clustersImportance < 80.0 ) {
-            return 4.0;
+            return 4.0f;
         } else if ( clustersImportance >= 80.0 && clustersImportance < 100.0 ) {
-            return 2.0;
+            return 2.0f;
         } else if ( clustersImportance >= 100.0 && clustersImportance < 130.0 ) {
-            return 1.0;
+            return 1.0f;
         } else {
-            return 0.5;
+            return 0.5f;
         }
     }
     
-    static double unsortedRatioDependingOn(double clustersImportance) {
+    static float unsortedRatioDependingOn(float clustersImportance) {
         if ( clustersImportance < 0 ) {
-            return 26.8;
+            return 26.8f;
         } else if ( clustersImportance >= 0.0 && clustersImportance < 10.0 ) {
-            return 14.3;
+            return 14.3f;
         } else if ( clustersImportance >= 10.0 && clustersImportance < 20.0 ) {
-            return 8.9;
+            return 8.9f;
         } else if ( clustersImportance >= 20.0 && clustersImportance < 30.0 ) {
-            return 5.1;
+            return 5.1f;
         } else if ( clustersImportance >= 30.0 && clustersImportance < 40.0 ) {
-            return 3.7;
+            return 3.7f;
         } else if ( clustersImportance >= 40.0 && clustersImportance < 60.0 ) {
-            return 2.3;
+            return 2.3f;
         } else if ( clustersImportance >= 60.0 && clustersImportance < 80.0 ) {
-            return 1.8;
+            return 1.8f;
         } else if ( clustersImportance >= 80.0 && clustersImportance < 100.0 ) {
-            return 1.1;
+            return 1.1f;
         } else if ( clustersImportance >= 100.0 && clustersImportance < 130.0 ) {
-            return 0.8;
+            return 0.8f;
         } else {
-            return 0.2;
+            return 0.2f;
         }
     }
 
-    static boolean isDiversitySufficient(double minWeight, double maxWeight) {
+    static boolean isDiversitySufficient(float minWeight, float maxWeight) {
         return ((maxWeight - minWeight) > (minWeight * 0.25));
     }
     
     static final int CLUSTER_QTY_TRESHOLD = 4;
-    static double clustersImportanceDependingOn(int clustersQty, int clustered, int nonClustered) {
+    static float clustersImportanceDependingOn(int clustersQty, int clustered, int nonClustered) {
         return clustersImportance_v2(clustersQty, nonClustered, clustered);
     }
     
-    private static double clustersImportance_v2(int clustersQty, int nonClustered, int clustered) {
+    private static float clustersImportance_v2(int clustersQty, int nonClustered, int clustered) {
         if ( clustersQty == 0 ) {
-            return CLUSTER_QTY_TRESHOLD * nonClustered * -1.0 ;
+            return CLUSTER_QTY_TRESHOLD * nonClustered * -1.0f ;
         }
         if ( clustered < clustersQty * 2 ) {
             return 0;
         }
         
-        double ci;
+        float ci;
         int clusteredPercent = percentAsInt(clustered, clustered + nonClustered);
         if ( clustersQty < CLUSTER_QTY_TRESHOLD ) {
-            ci = clusteredPercent * clustered * (CLUSTER_QTY_TRESHOLD - clustersQty) / 10;
+            ci = clusteredPercent * clustered * (CLUSTER_QTY_TRESHOLD - clustersQty) / 10f;
         } else {
-            ci = clusteredPercent * clustered * 0.8 / 10;
+            ci = clusteredPercent * clustered * 0.8f / 10f;
         } 
         
         if ( nonClustered > 1 ) {      
-            double ratio = 1.0 - (nonClustered * 0.15);
+            float ratio = 1.0f - (nonClustered * 0.15f);
             if ( ratio < 0.2 ) {
-                ratio = 0.2;
+                ratio = 0.2f;
             }
             ci = ci * ratio;
         }
@@ -298,34 +298,34 @@ class AnalyzeUtil {
         return ci;
     }
 
-    private static double clustersImportance_v1(int clustersQty, int nonClustered, int clustered) {
+    private static float clustersImportance_v1(int clustersQty, int nonClustered, int clustered) {
         if ( clustersQty == 0 ) {
-            return CLUSTER_QTY_TRESHOLD * nonClustered * -1.0 ;
+            return CLUSTER_QTY_TRESHOLD * nonClustered * -1.0f;
         }
         
         if ( nonClustered == 0 ) {
             if ( clustersQty < CLUSTER_QTY_TRESHOLD ) {
                 return clustered * clustered * (CLUSTER_QTY_TRESHOLD - clustersQty);
             } else {
-                return clustered * clustered * 0.8;
+                return clustered * clustered * 0.8f;
             }            
         }
         
         if ( clustersQty > CLUSTER_QTY_TRESHOLD ) {
-            return ( clustersQty - CLUSTER_QTY_TRESHOLD ) * -8.34;
+            return ( clustersQty - CLUSTER_QTY_TRESHOLD ) * -8.34f;
         }
         
-        double result = 1.32 * ( ( CLUSTER_QTY_TRESHOLD - clustersQty ) * 1.0 ) *
-                ( 1.0 + ( ( clustered * 1.0 ) / ( nonClustered * 1.0 ) ) ) * 
-                ( ( ( clustered * 1.0 ) / ( clustersQty * 1.0 ) ) * 0.8 - 0.79 ) + ( ( clustered - 2 ) * 1.0 ) ;
+        float result = 1.32f * ( ( CLUSTER_QTY_TRESHOLD - clustersQty ) * 1.0f ) *
+                ( 1.0f + ( ( clustered * 1.0f ) / ( nonClustered * 1.0f ) ) ) *
+                ( ( ( clustered * 1.0f ) / ( clustersQty * 1.0f ) ) * 0.8f - 0.79f ) + ( ( clustered - 2 ) * 1.0f ) ;
         return result;
     }
     
-    static double lengthImportanceRatio(int length) {
+    static float lengthImportanceRatio(int length) {
         int lengthSteps = length / 5;
-        double ratio = 0.5 + (lengthSteps * 0.07);
-        if ( ratio > 1.0 ) {
-            ratio = ratio + lengthSteps * 0.05;
+        float ratio = 0.5f + (lengthSteps * 0.07f);
+        if ( ratio > 1.0f ) {
+            ratio = ratio + lengthSteps * 0.05f;
         }
         return ratio;
     }
@@ -344,13 +344,13 @@ class AnalyzeUtil {
         return ( ratio(missed, patterLength) >= 0.32 );
     }
 
-    static double missedImportanceDependingOn(
-            int missed, double clustersImportance, int patternLength, int variantLength) {
+    static float missedImportanceDependingOn(
+            int missed, float clustersImportance, int patternLength, int variantLength) {
         if ( missed == 0 ) {
             return 0;
         }
         
-        double baseMissedImportance = ( missed - 0.25 ) * missedRatio(clustersImportance);
+        float baseMissedImportance = ( missed - 0.25f ) * missedRatio(clustersImportance);
         return baseMissedImportance;
 //        if ( patternLength > variantLength ) {
 //            return baseMissedImportance * ( absDiff(patternLength, variantLength) + 1.5 );

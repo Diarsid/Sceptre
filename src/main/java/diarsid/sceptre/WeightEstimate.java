@@ -24,19 +24,19 @@ public enum WeightEstimate {
         this.level = level;
     }
     
-    private static final double BAD_BOUND = -10;
-    private static final double MODERATE_BOUND = -36;
-    private static final double GOOD_BOUND = -75;
+    private static final float BAD_BOUND = -10;
+    private static final float MODERATE_BOUND = -36;
+    private static final float GOOD_BOUND = -75;
     
     public static WeightEstimate estimateWeightOf(Variant variant) {
         return estimate(variant.weight());
     }
     
-    static WeightEstimate estimatePreliminarily(double weight) { 
-        return estimate(weight - 5.0);
+    static WeightEstimate estimatePreliminarily(float weight) {
+        return estimate(weight - 5.0f);
     }
     
-    public static WeightEstimate estimate(double weight) {        
+    public static WeightEstimate estimate(float weight) {
         if ( weight > BAD_BOUND ) {
             return BAD;
         } else if ( BAD_BOUND >= weight && weight > MODERATE_BOUND ) {

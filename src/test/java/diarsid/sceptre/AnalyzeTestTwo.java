@@ -24,11 +24,23 @@ import static java.util.stream.Collectors.joining;
 
 import static diarsid.sceptre.WeightAnalyzeReal.stringsToVariants;
 import static diarsid.support.configuration.Configuration.actualConfiguration;
+import static diarsid.support.configuration.Configuration.configure;
 import static diarsid.support.objects.Pools.pools;
 import static diarsid.support.objects.collections.CollectionUtils.nonEmpty;
 import static org.junit.jupiter.api.Assertions.fail;
 
 public class AnalyzeTestTwo {
+
+    static {
+        configure().withDefault(
+                "log = true",
+                "analyze.weight.base.log = true",
+                "analyze.weight.positions.search.log = true",
+                "analyze.weight.positions.clusters.log = true",
+                "analyze.result.variants.limit = 11",
+                "analyze.similarity.log.base = true",
+                "analyze.similarity.log.advanced = true");
+    }
     
     private static WeightAnalyzeReal analyzeInstance;
     private static int totalVariantsQuantity;

@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package diarsid.sceptre;
 
 import static java.lang.String.format;
@@ -12,30 +7,26 @@ import static diarsid.sceptre.WeightElement.WeightCalculationType.DEFAULT_CALCUL
 import static diarsid.sceptre.WeightElement.WeightType.CALCULATED;
 import static diarsid.sceptre.WeightElement.WeightType.PREDEFINED;
 
-/**
- *
- * @author Diarsid
- */
 public enum WeightElement {
     
     CHAR_IS_ONE_CHAR_WORD(
-            -19.2, "char is one-char-word"),
+            -19.2f, "char is one-char-word"),
     PREVIOUS_CHAR_IS_SEPARATOR_CURRENT_CHAR_AT_PATTERN_START(
-            -7.71, "previous char is word separator, current char is at pattern start!"),
+            -7.71f, "previous char is word separator, current char is at pattern start!"),
     PREVIOUS_CHAR_IS_SEPARATOR(
-            -3.1, "previous char is word separator"),
+            -3.1f, "previous char is word separator"),
     CLUSTER_BEFORE_SEPARATOR(
-            -10.5, "there is cluster before separator!"),
+            -10.5f, "there is cluster before separator!"),
     CLUSTER_STARTS_WITH_VARIANT(
-            -6.6, "cluster starts with variant"),
+            -6.6f, "cluster starts with variant"),
     CLUSTER_STARTS_PREVIOUS_CHAR_IS_WORD_SEPARATOR(
-            -6.6, "cluster start, previous char is word separator"),
+            -6.6f, "cluster start, previous char is word separator"),
     CLUSTER_STARTS_CURRENT_CHAR_IS_WORD_SEPARATOR(
-            -6.6, "cluster start, current char is word separator"),
+            -6.6f, "cluster start, current char is word separator"),
     NEXT_CHAR_IS_SEPARATOR(
-            -3.1, "next char is word separator"),
+            -3.1f, "next char is word separator"),
     CLUSTER_ENDS_CURRENT_CHAR_IS_WORD_SEPARATOR(
-            -6.6, "cluster ends, current char is word separator"),
+            -6.6f, "cluster ends, current char is word separator"),
     
     VARIANT_EQUAL_PATTERN(
             "variant is equal to pattern"),
@@ -121,7 +112,7 @@ public enum WeightElement {
 
 
 
-    private final double predefinedWeight;
+    private final float predefinedWeight;
     private final String description;
     private final WeightType type;
     private final WeightCalculationType calculationType;
@@ -133,7 +124,7 @@ public enum WeightElement {
         this.calculationType = DEFAULT_CALCULATION_TYPE;
     }
 
-    WeightElement(double predefinedWeight, String description) {
+    WeightElement(float predefinedWeight, String description) {
         this.predefinedWeight = predefinedWeight;
         this.description = description;
         this.type = PREDEFINED;
@@ -148,14 +139,14 @@ public enum WeightElement {
     }
 
     WeightElement(
-            double predefinedWeight, String description, WeightCalculationType calculationType) {
+            float predefinedWeight, String description, WeightCalculationType calculationType) {
         this.predefinedWeight = predefinedWeight;
         this.description = description;
         this.type = PREDEFINED;
         this.calculationType = calculationType;
     }
     
-    double predefinedWeight() {
+    float predefinedWeight() {
         return this.predefinedWeight;
     }
     

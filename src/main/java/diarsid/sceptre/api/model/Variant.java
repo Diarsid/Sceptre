@@ -18,7 +18,7 @@ public final class Variant implements Serializable, Comparable<Variant>, Reindex
     private int index;
     
     private Boolean equalsToPattern;
-    private double weight;
+    private float weight;
     
     public Variant(String value, int variantIndex) {
         this.value = value;
@@ -54,7 +54,7 @@ public final class Variant implements Serializable, Comparable<Variant>, Reindex
         return this.name;
     }
     
-    public Variant set(double weight, boolean equalsToPattern) {
+    public Variant set(float weight, boolean equalsToPattern) {
         if ( nonNull(this.equalsToPattern) ) {
             throw new IllegalStateException();
         }
@@ -97,7 +97,7 @@ public final class Variant implements Serializable, Comparable<Variant>, Reindex
         return this.equalsToPattern;
     }
 
-    public double weight() {
+    public float weight() {
         return this.weight;
     }
     

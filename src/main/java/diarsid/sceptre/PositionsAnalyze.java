@@ -229,7 +229,7 @@ class PositionsAnalyze {
     int separatorsBetweenClusters;
     int allClustersInconsistency;
     
-    double clustersImportance; 
+    float clustersImportance;
     int nonClusteredImportance;
     
     Weight weight;
@@ -577,7 +577,7 @@ class PositionsAnalyze {
         }
         
         if ( estimate(this.weight.sum() + this.data.weight.sum()).equals(BAD) ) {
-            double placingPenalty = square( ( 10.0 - this.clustersQty ) / this.clustered );
+            float placingPenalty = (float) square( ( 10.0 - this.clustersQty ) / this.clustered );
             logAnalyze(POSITIONS_CLUSTERS, "    [cluster placing] positions weight is too bad for placing assessment");
             this.weight.add(placingPenalty, PLACING_PENALTY);
         } else {
@@ -1241,7 +1241,7 @@ class PositionsAnalyze {
     private void improveWeightOnFoundDuplicateClusters(
             PositionsSearchStepOneCluster one, 
             PositionsSearchStepOneCluster two) {
-        double bonus = calculateSimilarity(one, two);
+        float bonus = calculateSimilarity(one, two);
         logAnalyze(POSITIONS_SEARCH, "        [clusters are similar] -%s", bonus);
         weight.add(-bonus, CLUSTER_CANDIDATES_SIMILARITY);
     }
@@ -1758,11 +1758,11 @@ class PositionsAnalyze {
             }                       
         } else {
             if ( cluster.hasOrdersDiffShifts() ) {
-                double shiftDeviation;
+                float shiftDeviation;
                 if ( cluster.ordersDiffShifts() == this.currentClusterLength ) {
                     shiftDeviation = square(cluster.ordersDiffShifts());
                 } else {
-                    shiftDeviation = cluster.ordersDiffShifts() * onePointRatio(cluster.ordersDiffShifts(), this.currentClusterLength);
+                    shiftDeviation = cluster.ordersDiffShifts() * (float) onePointRatio(cluster.ordersDiffShifts(), this.currentClusterLength);
                 }
                 logAnalyze(POSITIONS_CLUSTERS, "            [cluster stats] cluster has %s shifts", cluster.ordersDiffShifts());
                 this.weight.add(shiftDeviation, CLUSTER_HAS_SHIFTS);

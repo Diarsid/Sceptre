@@ -25,10 +25,10 @@ public class VariantsImpl implements Variants {
     private static final int FEED_ALGORITHM_VERSION = 2;
     
     private final List<Variant> variants;
-    private final double bestWeight;
-    private final double worstWeight;
-    private final double weightDifference;
-    private final double weightStep;
+    private final float bestWeight;
+    private final float worstWeight;
+    private final float weightDifference;
+    private final float weightStep;
     private List<Variant> currentSimilarVariants;
     private int currentVariantIndex;
 
@@ -38,7 +38,7 @@ public class VariantsImpl implements Variants {
         if ( nonEmpty(this.variants) ) {
             this.bestWeight = variants.get(0).weight();
             this.worstWeight = lastFrom(variants).weight();
-            this.weightDifference = absDiff(this.bestWeight, this.worstWeight);
+            this.weightDifference = (float) absDiff(this.bestWeight, this.worstWeight);
             this.weightStep = this.weightDifference / this.variants.size();
         } else {
             this.bestWeight = 0;
@@ -235,8 +235,8 @@ public class VariantsImpl implements Variants {
                         "Unexpected behavior: call .next() before accessing variants!");
             }
             
-            double currentWeight = this.current().weight();
-            double nextWeight = this.variants.get(this.currentVariantIndex + 1).weight();
+            float currentWeight = this.current().weight();
+            float nextWeight = this.variants.get(this.currentVariantIndex + 1).weight();
             
             switch ( FEED_ALGORITHM_VERSION ) {
                 case 1 : {

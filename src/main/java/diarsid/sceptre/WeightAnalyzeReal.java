@@ -16,8 +16,8 @@ import diarsid.support.configuration.Configuration;
 import diarsid.support.objects.GuardedPool;
 import diarsid.support.objects.Pools;
 
-import static java.lang.Double.MAX_VALUE;
-import static java.lang.Double.MIN_VALUE;
+import static java.lang.Float.MAX_VALUE;
+import static java.lang.Float.MIN_VALUE;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 import static java.util.Collections.sort;
@@ -341,8 +341,8 @@ public class WeightAnalyzeReal implements LimitedWeightAnalyze {
         List<Variant> weightedVariants = new ArrayList<>();        
         AnalyzeUnit analyzeUnit = this.analyzeUnitsPool.give();
         
-        double minWeight = MAX_VALUE;
-        double maxWeight = MIN_VALUE;
+        float minWeight = MAX_VALUE;
+        float maxWeight = MIN_VALUE;
         
         try {
             variantsWeighting: for (Variant variant : rawVariants) {

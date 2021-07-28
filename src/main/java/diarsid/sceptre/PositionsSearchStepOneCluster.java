@@ -370,10 +370,10 @@ class PositionsSearchStepOneCluster {
         }
     }
     
-    static double calculateSimilarity(
+    static float calculateSimilarity(
             PositionsSearchStepOneCluster one, PositionsSearchStepOneCluster two) {
         int coincide = min(one.coreLength(), two.coreLength());
-        double bonus;
+        float bonus;
                 
         switch (coincide) {
             case 0:
@@ -382,19 +382,19 @@ class PositionsSearchStepOneCluster {
                 throw new IllegalStateException("Step one clusters length must not be less than 3!");
             }
             case 3: {
-                bonus = 2.5;
+                bonus = 2.5f;
                 break;
             }
             case 4: {
-                bonus = 3.2;
+                bonus = 3.2f;
                 break;
             }
             case 5: {
-                bonus = 3.8;
+                bonus = 3.8f;
                 break;
             }
             default: {
-                bonus = coincide * 0.7;
+                bonus = coincide * 0.7f;
             }
         }
         

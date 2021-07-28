@@ -70,7 +70,7 @@ class AnalyzeUnit extends PooledReusable {
     int patternInVariantIndex;
     
     Weight weight;
-    double lengthDelta;
+    float lengthDelta;
     boolean allPositionsPresentSortedAndNotPathSeparatorsBetween;
     boolean calculatedAsUsualClusters;
     boolean canClustersBeBad = true;
@@ -243,8 +243,8 @@ class AnalyzeUnit extends PooledReusable {
             this.weight.add(-this.positionsAnalyze.clustersImportance, CLUSTERS_IMPORTANCE);
             this.weight.add(-this.positionsAnalyze.clustered, TOTAL_CLUSTERED_CHARS);
         } else {
-            double lengthImportance = lengthImportanceRatio(this.variant.length());
-            this.lengthDelta = ( this.variant.length() - this.positionsAnalyze.clustered - this.positionsAnalyze.meaningful ) * 0.3 * lengthImportance;
+            float lengthImportance = lengthImportanceRatio(this.variant.length());
+            this.lengthDelta = ( this.variant.length() - this.positionsAnalyze.clustered - this.positionsAnalyze.meaningful ) * 0.3f * lengthImportance;
             
             this.weight.add(this.positionsAnalyze.nonClusteredImportance, TOTAL_UNCLUSTERED_CHARS_IMPORTANCE);
             this.weight.add(-this.positionsAnalyze.clustersImportance, CLUSTERS_IMPORTANCE);
@@ -260,19 +260,19 @@ class AnalyzeUnit extends PooledReusable {
     }
     
     private void calculateAsSeparatedCharsWithoutClusters() {        
-        double lengthImportance = lengthImportanceRatio(this.variant.length());
-        this.lengthDelta = ( this.variant.length() - this.positionsAnalyze.meaningful ) * 0.1 * lengthImportance;
+        float lengthImportance = lengthImportanceRatio(this.variant.length());
+        this.lengthDelta = ( this.variant.length() - this.positionsAnalyze.meaningful ) * 0.1f * lengthImportance;
         this.weight.add(this.lengthDelta, LENGTH_DELTA);
             
-        double bonus = this.positionsAnalyze.positions.length * 5.1;
+        float bonus = this.positionsAnalyze.positions.length * 5.1f;
         this.weight.add(-bonus, NO_CLUSTERS_SEPARATED_POSITIONS_SORTED);
         
         int meanigfulPositions = this.positionsAnalyze.meaningful;
         if ( meanigfulPositions > 0 ) {
-            bonus = bonus * ( meanigfulPositions + 1 ) * 0.8;
+            bonus = bonus * ( meanigfulPositions + 1 ) * 0.8f;
             this.weight.add(-bonus, NO_CLUSTERS_SEPARATED_POSITIONS_MEANINGFUL);
             if ( meanigfulPositions == this.pattern.length() ) {
-                bonus = meanigfulPositions * 2.8;
+                bonus = meanigfulPositions * 2.8f;
                 this.weight.add(-bonus, NO_CLUSTERS_ALL_SEPARATED_POSITIONS_MEANINGFUL);
             }
         }
@@ -399,7 +399,7 @@ class AnalyzeUnit extends PooledReusable {
         if ( this.positionsAnalyze.clusters.firstCluster().length() < 4 ) {
             logAnalyze(BASE, "    [mark sequence] ");
             if ( this.weight.contains(VARIANT_CONTAINS_PATTERN) ) {
-                double bonus = percentAsFloat(pattern.length(), variant.length()) / 10;
+                float bonus = percentAsFloat(pattern.length(), variant.length()) / 10;
                 this.weight.add(-bonus, SINGLE_WORD_VARIANT_CONTAINS_PATTERN);
             }
             this.positionsAnalyze.lookForDuplicatedCharsOfSingleCluster();
@@ -423,7 +423,7 @@ class AnalyzeUnit extends PooledReusable {
     void checkIfVariantTextContainsPatternDirectly() {
         this.patternInVariantIndex = indexOfIgnoreCase(this.variant, this.pattern);
         if ( this.patternInVariantIndex >= 0 ) {
-            double lengthRatio = patternLengthRatio(this.pattern);
+            float lengthRatio = patternLengthRatio(this.pattern);
             logAnalyze(BASE, "  variant contains pattern: weight -%s", lengthRatio);
             this.weight.add(-lengthRatio, VARIANT_CONTAINS_PATTERN);
             this.variantContainsPattern = true;
@@ -453,8 +453,8 @@ class AnalyzeUnit extends PooledReusable {
         fill(this.positionsAnalyze.positions, POS_UNINITIALIZED);
     }
     
-    private static double patternLengthRatio(String pattern) {
-        return pattern.length() * 5.5;
+    private static float patternLengthRatio(String pattern) {
+        return pattern.length() * 5.5f;
     }
 
     void findPatternCharsPositions() {
