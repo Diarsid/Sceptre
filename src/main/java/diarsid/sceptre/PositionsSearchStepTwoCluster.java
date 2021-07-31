@@ -13,7 +13,7 @@ class PositionsSearchStepTwoCluster {
     private static final int UNINITIALIZED = -9;
     private static final int BEFORE_START = -1;
     
-    private static class StepTwoClusterPositionView implements PositionIterableView {
+    static class StepTwoClusterPositionView implements PositionIterableView {
 
         public StepTwoClusterPositionView(PositionsSearchStepTwoCluster cluster) {
             this.cluster = cluster;
@@ -25,6 +25,7 @@ class PositionsSearchStepTwoCluster {
         private int patternPosition;
         private int variantPosition;
         private boolean filled;
+        private boolean filledInPattern;
         private MatchType matchType;
         private boolean filledFromSubcluster;
         
@@ -32,10 +33,12 @@ class PositionsSearchStepTwoCluster {
                 char c, 
                 int patternPosition, 
                 int variantPosition, 
-                boolean included, 
+                boolean included,
+                boolean includedInPattern,
                 MatchType matchType) {
             this.character = c;
             this.filled = included;
+            this.filledInPattern = includedInPattern;
             this.patternPosition = patternPosition;
             this.variantPosition = variantPosition;
             this.matchType = matchType;
@@ -47,6 +50,7 @@ class PositionsSearchStepTwoCluster {
         }
         
         private boolean isBetterThan(StepTwoClusterPositionView other) {
+            // TODO possible loss here - does not consider filledInPattern
             if ( this.filled && (! other.filled) ) {
                 return true;
             } else if ( (! this.filled) && other.filled ) {
@@ -72,6 +76,9 @@ class PositionsSearchStepTwoCluster {
                     .fillings
                     .set(this.i, this.filled);
             this.cluster
+                    .fillingsInPattern
+                    .set(this.i, this.filledInPattern);
+            this.cluster
                     .patternPositions
                     .set(this.i, this.patternPosition);
             this.cluster
@@ -87,6 +94,7 @@ class PositionsSearchStepTwoCluster {
         private StepTwoClusterPositionView fillFromSubcluster(int i) {
             this.character = this.cluster.chars.get(i);
             this.filled = this.cluster.fillings.get(i);
+            this.filledInPattern = this.cluster.fillingsInPattern.get(i);
             this.patternPosition = this.cluster.patternPositions.get(i);
             this.variantPosition = this.cluster.variantPositions.get(i);
             this.matchType = this.cluster.matches.get(i);
@@ -129,6 +137,22 @@ class PositionsSearchStepTwoCluster {
         public boolean isNotFilled() {
             return ! this.filled;
         }
+
+        public boolean isFilledInPattern() {
+            return this.filledInPattern;
+        }
+
+        public boolean isNotFilledInPattern() {
+            return ! this.filledInPattern;
+        }
+
+        public boolean canBeWritten() {
+            return ! this.filled && ! this.filledInPattern;
+        }
+
+        public boolean canNotBeWritten() {
+            return this.filled || this.filledInPattern;
+        }
     }
     
     private final List<Character> chars;
@@ -136,6 +160,7 @@ class PositionsSearchStepTwoCluster {
     private final List<Integer> variantPositions;
     private final List<MatchType> matches;
     private final List<Boolean> fillings;
+    private final List<Boolean> fillingsInPattern;
     
     private final StepTwoClusterPositionView existingPositionView;
     private final StepTwoClusterPositionView possiblePositionView;
@@ -153,6 +178,7 @@ class PositionsSearchStepTwoCluster {
         this.variantPositions = new ArrayList<>();
         this.matches = new ArrayList<>();
         this.fillings = new ArrayList<>();
+        this.fillingsInPattern = new ArrayList<>();
         this.filledQty = 0;
         this.matchStrength = 0;
         this.mergedDuplicates = 0;
@@ -195,12 +221,13 @@ class PositionsSearchStepTwoCluster {
             char c, 
             int patternPosition, 
             int variantPosition, 
-            boolean isFilled, 
+            boolean isFilled,
+            boolean isFilledInPattern,
             MatchType matchType) {
         int alreadyExisted = this.patternPositions.indexOf(patternPosition);
         if ( alreadyExisted > -1 ) {
             StepTwoClusterPositionView existingPosition = this.positionViewAt(alreadyExisted);
-            StepTwoClusterPositionView possiblePosition = this.possiblePositionView.fill(c, patternPosition, variantPosition, isFilled, matchType);
+            StepTwoClusterPositionView possiblePosition = this.possiblePositionView.fill(c, patternPosition, variantPosition, isFilled, isFilledInPattern, matchType);
             logAnalyze(
                     POSITIONS_SEARCH, 
                     "          [info] positions-in-cluster duplicate: new '%s' pattern:%s, variant:%s -vs- existed '%s' pattern:%s, variant:%s",
@@ -225,6 +252,7 @@ class PositionsSearchStepTwoCluster {
             this.variantPositions.add(variantPosition);
             this.matches.add(matchType);
             this.fillings.add(isFilled);
+            this.fillingsInPattern.add(isFilledInPattern);
             if ( isFilled ) {
                 this.filledQty++;
             } 
@@ -276,6 +304,7 @@ class PositionsSearchStepTwoCluster {
         this.variantPositions.clear();
         this.matches.clear();
         this.fillings.clear();
+        this.fillingsInPattern.clear();
         this.filledQty = 0;
         this.matchStrength = 0;
         this.mergedDuplicates = 0;
@@ -289,7 +318,7 @@ class PositionsSearchStepTwoCluster {
     @Override
     public String toString() {
         return format(
-                "['%s' variant:%s, clustered:['%s', pattern:%s, variant:%s, included:%s, matches:%s]]", 
-                this.assessedChar, this.assessedCharVariantPosition, this.chars, this.patternPositions, this.variantPositions, this.fillings, this.matches);
+                "['%s' variant:%s, clustered:['%s', pattern:%s, variant:%s, variant-included:%s, pattern-included:%s, matches:%s]]",
+                this.assessedChar, this.assessedCharVariantPosition, this.chars, this.patternPositions, this.variantPositions, this.fillings, this.fillingsInPattern, this.matches);
     }
 }

@@ -1249,8 +1249,8 @@ public class AnalyzeTest {
                 "D:/DEV/1__Projects/Diarsid/NetBeans",
                 "D:/DEV/1__Projects/Diarsid/X__Reserve",
                 "D:/DEV/1__Projects/Diarsid/X__Distrib",
-                "D:/DEV/1__Projects/Diarsid/X__GitHub_Pages",
-                "D:/DEV/1__Projects/X__Archive/Diarsid"
+                "D:/DEV/1__Projects/X__Archive/Diarsid",
+                "D:/DEV/1__Projects/Diarsid/X__GitHub_Pages"
         );
 
         expectedSameOrderAsVariants();
@@ -1541,6 +1541,20 @@ public class AnalyzeTest {
                 "Projects/UkrPoshta"
         );
         
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_projectsUkrPoshtaCainiao_ukropsapi() {
+        pattern = "ukropsapi";
+
+        variants = asList(
+                "Projects/UkrPoshta/CainiaoAPI");
+
+        expected = asList(
+                "Projects/UkrPoshta/CainiaoAPI"
+        );
+
         weightVariantsAndCheckMatching();
     }
     
