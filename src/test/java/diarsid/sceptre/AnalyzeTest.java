@@ -1234,6 +1234,42 @@ public class AnalyzeTest {
         
         weightVariantsAndCheckMatching();
     }
+
+    @Test
+    public void test_projsdrs_full() {
+        pattern = "projsdrs";
+
+        variants = asList(
+                "D:/DEV/1__Projects/Diarsid/RStudio",
+                "D:/DEV/1__Projects/Diarsid",
+                "D:/DEV/1__Projects/Diarsid/src",
+                "D:/DEV/1__Projects/Diarsid/Other",
+                "D:/DEV/1__Projects/Diarsid/IntelliJ",
+                "D:/DEV/1__Projects/Diarsid/WebStorm",
+                "D:/DEV/1__Projects/Diarsid/NetBeans",
+                "D:/DEV/1__Projects/Diarsid/X__Reserve",
+                "D:/DEV/1__Projects/Diarsid/X__Distrib",
+                "D:/DEV/1__Projects/Diarsid/X__GitHub_Pages",
+                "D:/DEV/1__Projects/X__Archive/Diarsid"
+        );
+
+        expectedSameOrderAsVariants();
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_projsdrs() {
+        pattern = "projsdrs";
+
+        variants = asList(
+                "D:/DEV/1__Projects/Diarsid"
+        );
+
+        expectedSameOrderAsVariants();
+
+        weightVariantsAndCheckMatching();
+    }
     
     @Test
     public void test_JavaSE8Case_jse8() {

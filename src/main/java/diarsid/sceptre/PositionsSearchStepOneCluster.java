@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package diarsid.sceptre;
 
 import java.util.ArrayList;
@@ -23,10 +18,6 @@ import static diarsid.support.objects.references.References.simplePossibleButEmp
 import static diarsid.support.strings.StringUtils.isWordsSeparator;
 import static diarsid.support.strings.StringUtils.joinAll;
 
-/**
- *
- * @author Diarsid
- */
 class PositionsSearchStepOneCluster {
     
     private static final int UNINITIALIZED = -5;
@@ -369,6 +360,47 @@ class PositionsSearchStepOneCluster {
             this.endsBeforeSeparator = isWordsSeparator(variant.charAt(this.lastVariantPosition() + 1));
         }
     }
+
+    void copyFrom(PositionsSearchStepOneCluster other) {
+        this.variant.resetTo(other.variant);
+        this.pattern.resetTo(other.pattern);
+        this.positionIterableView.i = other.positionIterableView.i;
+
+        this.allVariantPositions.clear();
+        this.prevsVariantPositions.clear();
+        this.nextsVariantPositions.clear();
+        this.allPatternPositions.clear();
+        this.prevsPatternPositions.clear();
+        this.nextsPatternPositions.clear();
+
+        this.allVariantPositions.addAll(other.allVariantPositions);
+        this.prevsVariantPositions.addAll(other.prevsVariantPositions);
+        this.nextsVariantPositions.addAll(other.nextsVariantPositions);
+        this.allPatternPositions.addAll(other.allPatternPositions);
+        this.prevsPatternPositions.addAll(other.prevsPatternPositions);
+        this.nextsPatternPositions.addAll(other.nextsPatternPositions);
+
+        this.prevVariantPosition = other.prevVariantPosition;
+        this.mainVariantPosition = other.mainVariantPosition;
+        this.nextVariantPosition = other.nextVariantPosition;
+        this.prevPatternPosition = other.prevPatternPosition;
+        this.mainPatternPosition = other.mainPatternPosition;
+        this.nextPatternPosition = other.nextPatternPosition;
+
+        this.hasPrevs = other.hasPrevs;
+        this.hasNexts = other.hasNexts;
+        this.lastAddedVariantPosition = other.lastAddedVariantPosition;
+        this.lastAddedPatternPosition = other.lastAddedPatternPosition;
+        this.finished = other.finished;
+        this.skip = other.skip;
+        this.variantPositionsAtStart = other.variantPositionsAtStart;
+        this.startsAfterSeparator = other.startsAfterSeparator;
+        this.variantPositionsAtEnd = other.variantPositionsAtEnd;
+        this.endsBeforeSeparator = other.endsBeforeSeparator;
+
+        this.typos.clear();
+        this.typos.copyFrom(other.typos);
+    }
     
     static float calculateSimilarity(
             PositionsSearchStepOneCluster one, PositionsSearchStepOneCluster two) {
@@ -654,12 +686,12 @@ class PositionsSearchStepOneCluster {
         
         return length;
     }
-    
-    private int firstVariantPosition() {
+
+    public int firstVariantPosition() {
         return this.allVariantPositions.get(0);        
     }
     
-    private int lastVariantPosition() {
+    public int lastVariantPosition() {
         return lastFrom(this.allVariantPositions);
     }
     

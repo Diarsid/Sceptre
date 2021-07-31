@@ -149,6 +149,25 @@ class Typos implements StatefulClearable, AutoCloseable {
         this.typosPool.takeBackAll(this.typosAfter);
     }
 
+    public void copyFrom(Typos other) {
+        this.pattern.resetTo(other.pattern);
+        this.variant.resetTo(other.variant);
+
+        this.typosPool.takeBackAll(this.typosBefore);
+        this.typosPool.takeBackAll(this.typosAfter);
+
+        copyTyposLists(this.typosBefore, other.typosBefore);
+        copyTyposLists(this.typosAfter, other.typosAfter);
+    }
+
+    private void copyTyposLists(List<Typo> target, List<Typo> src) {
+        for ( Typo typoSrc : src ) {
+            Typo typo = this.typosPool.give();
+            typo.copyFrom(typoSrc);
+            target.add(typo);
+        }
+    }
+
     @Override
     public void close() {
         this.clear();

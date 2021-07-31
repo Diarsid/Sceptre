@@ -37,6 +37,12 @@ public class Typo extends PooledReusable {
         return this.character.orThrow();
     }
 
+    public void copyFrom(Typo other) {
+        this.variantIndex.resetTo(other.variantIndex);
+        this.patternIndex.resetTo(other.patternIndex);
+        this.character.resetTo(other.character);
+    }
+
     @Override
     protected void clearForReuse() {
         this.variantIndex.nullify();
