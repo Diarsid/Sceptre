@@ -1786,6 +1786,21 @@ public class AnalyzeTest {
         
         weightVariantsAndCheckMatching();
     }
+
+    @Test
+    public void test_kwizachoderah() {
+        pattern = "kwizachoderah";
+
+        variants = asList(
+                "young adulthood kwisatz haderach he reached century ce modern taraza odrade scholars duncan idaho which"
+        );
+
+        expected = asList(
+                "young adulthood kwisatz haderach he reached century ce modern taraza odrade scholars duncan idaho which"
+        );
+
+        weightVariantsAndCheckMatching();
+    }
     
     @Test
     public void test_mathCase_math() {

@@ -46,8 +46,8 @@ public enum WeightElement {
             "pattern DOES NOT contain cluster"),
     CLUSTERS_NEAR_ARE_IN_ONE_PART(
             "clusters near, are in one part"),
-    CHAR_BEFORE_PREVIOUS_SEPARATOR_AND_CLUSTER_ENCLOSING_WORD(
-            "char before previous separator and cluster enclosing single word"),
+    CHAR_AFTER_PREVIOUS_SEPARATOR_AND_CLUSTER_ENCLOSING_WORD(
+            "char after previous separator and cluster enclosing single word"),
     CLUSTER_IS_WORD(
             "cluster is a word"),
     UNNATURAL_POSITIONING_CLUSTER_AT_END_PATTERN_AT_START(

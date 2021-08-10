@@ -3,6 +3,7 @@ package diarsid.sceptre;
 import java.util.ArrayList;
 import java.util.List;
 
+import static java.lang.Math.abs;
 import static java.lang.String.format;
 
 import static diarsid.sceptre.AnalyzeLogType.POSITIONS_SEARCH;
@@ -224,9 +225,9 @@ class PositionsSearchStepTwoCluster {
             boolean isFilled,
             boolean isFilledInPattern,
             MatchType matchType) {
-        int alreadyExisted = this.patternPositions.indexOf(patternPosition);
-        if ( alreadyExisted > -1 ) {
-            StepTwoClusterPositionView existingPosition = this.positionViewAt(alreadyExisted);
+        int alreadyExistedInPattern = this.patternPositions.indexOf(patternPosition);
+        if ( alreadyExistedInPattern > -1 ) {
+            StepTwoClusterPositionView existingPosition = this.positionViewAt(alreadyExistedInPattern);
             StepTwoClusterPositionView possiblePosition = this.possiblePositionView.fill(c, patternPosition, variantPosition, isFilled, isFilledInPattern, matchType);
             logAnalyze(
                     POSITIONS_SEARCH, 
@@ -247,20 +248,36 @@ class PositionsSearchStepTwoCluster {
             
             this.mergedDuplicates++;
         } else {
-            this.chars.add(c);
-            this.patternPositions.add(patternPosition);
-            this.variantPositions.add(variantPosition);
-            this.matches.add(matchType);
-            this.fillings.add(isFilled);
-            this.fillingsInPattern.add(isFilledInPattern);
-            if ( isFilled ) {
-                this.filledQty++;
-            } 
-            this.matchStrength = this.matchStrength + matchType.strength();
-            logAnalyze(
-                    POSITIONS_SEARCH, 
-                    "          [info] positions-in-cluster '%s' pattern:%s, variant:%s, included: %s, %s", 
-                    c, patternPosition, variantPosition, isFilled, matchType.name());
+            int alreadyExistedInVariant = this.variantPositions.indexOf(variantPosition);
+            boolean writeGivenAsNew;
+
+            if ( alreadyExistedInVariant > -1 ) {
+                int patternPositionOfExistedInVariant = this.patternPositions.get(alreadyExistedInVariant);
+                int diffExisting = abs(assessedCharPatternPosition - patternPositionOfExistedInVariant);
+                int diffNew = abs(assessedCharPatternPosition - patternPosition);
+                writeGivenAsNew = diffExisting >= diffNew;
+            }
+            else {
+                writeGivenAsNew = true;
+            }
+
+            if ( writeGivenAsNew ) {
+                this.chars.add(c);
+                this.patternPositions.add(patternPosition);
+                this.variantPositions.add(variantPosition);
+                this.matches.add(matchType);
+                this.fillings.add(isFilled);
+                this.fillingsInPattern.add(isFilledInPattern);
+                if ( isFilled ) {
+                    this.filledQty++;
+                }
+                this.matchStrength = this.matchStrength + matchType.strength();
+                logAnalyze(
+                        POSITIONS_SEARCH,
+                        "          [info] positions-in-cluster '%s' pattern:%s, variant:%s, included: %s, %s",
+                        c, patternPosition, variantPosition, isFilled, matchType.name());
+            }
+
         }        
     }
     
