@@ -1,7 +1,5 @@
 package diarsid.sceptre.api;
 
-import diarsid.sceptre.api.WeightAnalyze;
-
 public interface LimitedWeightAnalyze extends WeightAnalyze {
 
     boolean isResultsLimitPresent();
