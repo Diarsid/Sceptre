@@ -10,7 +10,7 @@ import static diarsid.sceptre.impl.weight.WeightElement.WeightType.PREDEFINED;
 public enum WeightElement {
     
     CHAR_IS_ONE_CHAR_WORD(
-            -19.2f, "char is one-char-word"),
+            -8.2f, "char is one-char-word"),
     PREVIOUS_CHAR_IS_SEPARATOR_CURRENT_CHAR_AT_PATTERN_START(
             -7.71f, "previous char is word separator, current char is at pattern start!"),
     PREVIOUS_CHAR_IS_SEPARATOR(
@@ -48,6 +48,10 @@ public enum WeightElement {
             "clusters near, are in one part"),
     CHAR_AFTER_PREVIOUS_SEPARATOR_AND_CLUSTER_ENCLOSING_WORD(
             "char after previous separator and cluster enclosing single word"),
+    CHAR_AFTER_PREVIOUS_SEPARATOR_AND_CLUSTER_LOOKS_LIKE_WORD(
+            "char after previous separator and cluster looks like single word"),
+    CHAR_AFTER_PREVIOUS_SEPARATOR_AND_CLUSTER_LOOKS_LIKE_WORD_AT_PATTERN_START(
+            "char after previous separator and cluster looks like single word at pattern start"),
     CLUSTER_IS_WORD(
             "cluster is a word"),
     UNNATURAL_POSITIONING_CLUSTER_AT_END_PATTERN_AT_START(

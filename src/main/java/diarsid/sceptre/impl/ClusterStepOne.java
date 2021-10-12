@@ -144,7 +144,7 @@ class ClusterStepOne {
         }
         
     }
-    
+
     private final Possible<String> variant;
     private final Possible<String> pattern;
     
@@ -158,6 +158,8 @@ class ClusterStepOne {
     private final List<Integer> prevsPatternPositions;
     private final List<Integer> nextsVariantPositions;
     private final List<Integer> nextsPatternPositions;
+
+    private int size;
     
     private Boolean startsAfterSeparator;
     private Boolean endsBeforeSeparator;
@@ -169,9 +171,13 @@ class ClusterStepOne {
     private int prevVariantPosition;
     private int mainVariantPosition;
     private int nextVariantPosition;
+
     private int prevPatternPosition;
     private int mainPatternPosition;
     private int nextPatternPosition;
+
+    private boolean mainCharIsWordEnd;
+
     private boolean hasPrevs;
     private boolean hasNexts;
     
@@ -183,6 +189,7 @@ class ClusterStepOne {
     private int skip;
 
     public ClusterStepOne() {
+        this.size = 0;
         this.variant = simplePossibleButEmpty();
         this.pattern = simplePossibleButEmpty();
         this.positionIterableView = new StepOneClusterPositionIterableView(this);
@@ -211,6 +218,7 @@ class ClusterStepOne {
         this.variantPositionsAtEnd = null;
         this.endsBeforeSeparator = null;
         this.typos = new Typos();
+        this.mainCharIsWordEnd = false;
     }
     
     void incrementSkip() {
@@ -249,6 +257,14 @@ class ClusterStepOne {
     
     boolean isAtEnd() {
         return this.variantPositionsAtEnd;
+    }
+
+    boolean isMainCharWordEnd() {
+        return this.mainCharIsWordEnd;
+    }
+
+    int size() {
+        return this.size;
     }
     
     boolean doesStartAfterSeparator() {
@@ -362,6 +378,8 @@ class ClusterStepOne {
     }
 
     void copyFrom(ClusterStepOne other) {
+        this.size = other.size;
+
         this.variant.resetTo(other.variant);
         this.pattern.resetTo(other.pattern);
         this.positionIterableView.i = other.positionIterableView.i;
@@ -400,6 +418,8 @@ class ClusterStepOne {
 
         this.typos.clear();
         this.typos.copyFrom(other.typos);
+
+        this.mainCharIsWordEnd = other.mainCharIsWordEnd;;
     }
     
     static float calculateSimilarity(
@@ -588,6 +608,8 @@ class ClusterStepOne {
     }
     
     void setMain(int patternP, int variantP) {
+        this.size++;
+
         this.lastAddedVariantPosition = variantP;
         this.lastAddedPatternPosition = patternP;
         
@@ -595,7 +617,13 @@ class ClusterStepOne {
         this.mainPatternPosition = patternP;
     }
 
+    void markCharAsWordEnd() {
+        this.mainCharIsWordEnd = true;
+    }
+
     void setPrev(int prev) {
+        this.size++;
+
         this.lastAddedVariantPosition = prev;
         this.lastAddedPatternPosition = this.mainPatternPosition - 1;
         
@@ -604,6 +632,8 @@ class ClusterStepOne {
     }
 
     void setNext(int next) {
+        this.size++;
+
         this.lastAddedVariantPosition = next;
         this.lastAddedPatternPosition = this.mainPatternPosition + 1;
         
@@ -612,6 +642,8 @@ class ClusterStepOne {
     }
     
     void addNext(int nextOne) {
+        this.size++;
+
         if ( this.nextVariantPosition < 0 ) {
             throw new IllegalStateException();
         }
@@ -625,6 +657,8 @@ class ClusterStepOne {
     }
     
     void addPrev(int prevOne) {
+        this.size++;
+
         if ( this.prevVariantPosition < 0 ) {
             throw new IllegalStateException();
         }
@@ -700,6 +734,7 @@ class ClusterStepOne {
     }
     
     void clear() {
+        this.size = 0;
         this.variant.nullify();
         this.pattern.nullify();
         this.positionIterableView.i = BEFORE_START;
@@ -726,6 +761,7 @@ class ClusterStepOne {
         this.variantPositionsAtEnd = null;
         this.endsBeforeSeparator = null;
         this.typos.clear();
+        this.mainCharIsWordEnd = false;
     }
     
     @Override

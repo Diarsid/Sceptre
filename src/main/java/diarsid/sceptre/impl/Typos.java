@@ -23,15 +23,15 @@ class Typos implements StatefulClearable, AutoCloseable {
     private final GuardedPool<Typo> typosPool;
     private final Possible<String> pattern;
     private final Possible<String> variant;
-    private final List<Typo> typosBefore;
-    private final List<Typo> typosAfter;
+    private final List<Typo> before;
+    private final List<Typo> after;
 
     Typos() {
         this.typosPool = pools().createPool(Typo.class, () -> new Typo());
         this.pattern = simplePossibleButEmpty();
         this.variant = simplePossibleButEmpty();
-        this.typosBefore = new ArrayList<>();
-        this.typosAfter = new ArrayList<>();
+        this.before = new ArrayList<>();
+        this.after = new ArrayList<>();
     }
     
     void set(String variant, String pattern) {
@@ -88,9 +88,9 @@ class Typos implements StatefulClearable, AutoCloseable {
                     Typo typo = this.typosPool.give();
                     typo.set(vi, pi, charInVariant);
                     if (placing == BEFORE) {
-                        this.typosBefore.add(typo);
+                        this.before.add(typo);
                     } else {
-                        this.typosAfter.add(typo);
+                        this.after.add(typo);
                     }
                 }
             }
@@ -98,11 +98,11 @@ class Typos implements StatefulClearable, AutoCloseable {
     }
     
     int qtyBefore() {
-        return this.typosBefore.size();
+        return this.before.size();
     }
     
     int qtyAfter() {
-        return this.typosAfter.size();
+        return this.after.size();
     }
     
     int qtyTotal() {
@@ -110,19 +110,19 @@ class Typos implements StatefulClearable, AutoCloseable {
     }
     
     boolean hasBefore() {
-        return this.typosBefore.size() > 0;
+        return this.before.size() > 0;
     }
     
     boolean hasAfter() {
-        return this.typosAfter.size() > 0;
+        return this.after.size() > 0;
     }
     
     boolean hasInBefore(int variantIndex) {
-        return hasIndexInTypos(variantIndex, this.typosBefore);
+        return hasIndexInTypos(variantIndex, this.before);
     }
     
     boolean hasInAfter(int variantIndex) {
-        return hasIndexInTypos(variantIndex, this.typosAfter);
+        return hasIndexInTypos(variantIndex, this.after);
     }
     
     private static boolean hasIndexInTypos(int variantIndex, List<Typo> typos) {
@@ -138,26 +138,26 @@ class Typos implements StatefulClearable, AutoCloseable {
 
     @Override
     public String toString() {
-        return "Typos{" + "typosBefore=" + typosBefore + ", typosAfter=" + typosAfter + '}';
+        return "Typos{" + "before=" + before + ", after=" + after + '}';
     }
 
     @Override
     public void clear() {
         this.pattern.nullify();
         this.variant.nullify();
-        this.typosPool.takeBackAll(this.typosBefore);
-        this.typosPool.takeBackAll(this.typosAfter);
+        this.typosPool.takeBackAll(this.before);
+        this.typosPool.takeBackAll(this.after);
     }
 
     public void copyFrom(Typos other) {
         this.pattern.resetTo(other.pattern);
         this.variant.resetTo(other.variant);
 
-        this.typosPool.takeBackAll(this.typosBefore);
-        this.typosPool.takeBackAll(this.typosAfter);
+        this.typosPool.takeBackAll(this.before);
+        this.typosPool.takeBackAll(this.after);
 
-        copyTyposLists(this.typosBefore, other.typosBefore);
-        copyTyposLists(this.typosAfter, other.typosAfter);
+        copyTyposLists(this.before, other.before);
+        copyTyposLists(this.after, other.after);
     }
 
     private void copyTyposLists(List<Typo> target, List<Typo> src) {

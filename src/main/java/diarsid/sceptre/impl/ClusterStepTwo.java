@@ -9,6 +9,7 @@ import static java.lang.Math.abs;
 import static java.lang.String.format;
 
 import static diarsid.sceptre.impl.WeightAnalyzeReal.logAnalyze;
+import static diarsid.sceptre.impl.logs.AnalyzeLogType.POSITIONS_SEARCH;
 
 class ClusterStepTwo {
     
@@ -173,26 +174,37 @@ class ClusterStepTwo {
     private int filledQty;
     private int matchStrength;
     private int mergedDuplicates;
+    private int meaningfulChars;
 
-    public ClusterStepTwo() {
+    private boolean hasWordStart;
+    private boolean hasWordEnd;
+
+    ClusterStepTwo() {
         this.chars = new ArrayList<>();
         this.patternPositions = new ArrayList<>();
         this.variantPositions = new ArrayList<>();
         this.matches = new ArrayList<>();
         this.fillings = new ArrayList<>();
         this.fillingsInPattern = new ArrayList<>();
+
         this.filledQty = 0;
         this.matchStrength = 0;
         this.mergedDuplicates = 0;
         this.assessedChar = ' ';
         this.assessedCharPatternPosition = UNINITIALIZED;
         this.assessedCharVariantPosition = UNINITIALIZED;
+
+        this.hasWordStart = false;
+        this.hasWordEnd = false;
+
+        this.meaningfulChars = 0;
         
         this.existingPositionView = new StepTwoClusterPositionView(this);
         this.possiblePositionView = new StepTwoClusterPositionView(this);
     }
     
     void setAssessed(char c, int patternPosition, int variantPosition) {
+        this.clear();
         this.assessedChar = c;
         this.assessedCharPatternPosition = patternPosition;
         this.assessedCharVariantPosition = variantPosition;
@@ -207,6 +219,8 @@ class ClusterStepTwo {
     }
     
     StepTwoClusterPositionView positionView() {
+        this.existingPositionView.i = BEFORE_START;
+        this.existingPositionView.filledFromSubcluster = false;
         return this.existingPositionView;
     }
     
@@ -216,7 +230,11 @@ class ClusterStepTwo {
     }
     
     boolean isSet() {
-        return this.chars.size() > 0;
+        return this.chars.size() > 0 || this.hasWordEnd || this.hasWordStart;
+    }
+
+    boolean isNotSet() {
+        return ! this.isSet() ;
     }
     
     void add(
@@ -231,7 +249,7 @@ class ClusterStepTwo {
             StepTwoClusterPositionView existingPosition = this.positionViewAt(alreadyExistedInPattern);
             StepTwoClusterPositionView possiblePosition = this.possiblePositionView.fill(c, patternPosition, variantPosition, isFilled, isFilledInPattern, matchType);
             logAnalyze(
-                    AnalyzeLogType.POSITIONS_SEARCH,
+                    POSITIONS_SEARCH,
                     "          [info] positions-in-cluster duplicate: new '%s' pattern:%s, variant:%s -vs- existed '%s' pattern:%s, variant:%s",
                     possiblePosition.character, possiblePosition.patternPosition, possiblePosition.variantPosition,
                     existingPosition.character, existingPosition.patternPosition, existingPosition.variantPosition);
@@ -239,14 +257,15 @@ class ClusterStepTwo {
             if ( possiblePosition.isBetterThan(existingPosition) ) {
                 possiblePosition.mergeInSubclusterInsteadOf(existingPosition);
                 logAnalyze(
-                        AnalyzeLogType.POSITIONS_SEARCH,
+                        POSITIONS_SEARCH,
                         "          [info] positions-in-cluster duplicate: new position accepted");
             } else {
                 logAnalyze(
-                        AnalyzeLogType.POSITIONS_SEARCH,
+                        POSITIONS_SEARCH,
                         "          [info] positions-in-cluster duplicate: new position rejected");
             }
-            
+
+            this.matchStrength = this.matchStrength + matchType.strength();
             this.mergedDuplicates++;
         } else {
             int alreadyExistedInVariant = this.variantPositions.indexOf(variantPosition);
@@ -273,43 +292,56 @@ class ClusterStepTwo {
                     this.filledQty++;
                 }
                 this.matchStrength = this.matchStrength + matchType.strength();
-                logAnalyze(
-                        AnalyzeLogType.POSITIONS_SEARCH,
+                logAnalyze(POSITIONS_SEARCH,
                         "          [info] positions-in-cluster '%s' pattern:%s, variant:%s, included: %s, %s",
                         c, patternPosition, variantPosition, isFilled, matchType.name());
             }
 
         }        
     }
+
+    int size() {
+        return this.chars.size() + 1;
+    }
     
     boolean isBetterThan(ClusterStepTwo other) {
-        if ( this.filledQty == 0 && other.filledQty == 0 ) {
-            /* comparison of found subclusters, both are new */
-            /* prefer subcluster that have more matches to fill more chars */
-            if ( this.matched() > other.matched() ) {
-                return true;
-            } else if ( this.matched() < other.matched() ) {
-                return false;
-            } else {
-                return this.matchStrength >= other.matchStrength;
-            }
-        } else {
-            /* comparison of found subclusters, some subclusters have ties with already found chars */
-            /* prefer subcluster that have more ties with found chars to increase consistency */
-            if ( this.filledQty > other.filledQty ) {
-                return true;
-            } else if ( this.filledQty < other.filledQty ) {
-                return false;
-            } else {
+        if ( this.matchStrength > other.matchStrength ) {
+            return true;
+        }
+        else if ( this.matchStrength < other.matchStrength ) {
+            return false;
+        }
+        else {
+            if ( this.filledQty == 0 && other.filledQty == 0 ) {
+                /* comparison of found subclusters, both are new */
+                /* prefer subcluster that have more matches to fill more chars */
                 if ( this.matched() > other.matched() ) {
                     return true;
                 } else if ( this.matched() < other.matched() ) {
                     return false;
                 } else {
+//                    throw new UnsupportedLogicException(); // TODO
                     return this.matchStrength >= other.matchStrength;
                 }
+            } else {
+                /* comparison of found subclusters, some subclusters have ties with already found chars */
+                /* prefer subcluster that have more ties with found chars to increase consistency */
+                if ( this.filledQty > other.filledQty ) {
+                    return true;
+                } else if ( this.filledQty < other.filledQty ) {
+                    return false;
+                } else {
+                    if ( this.matched() > other.matched() ) {
+                        return true;
+                    } else if ( this.matched() < other.matched() ) {
+                        return false;
+                    } else {
+//                        throw new UnsupportedLogicException(); // TODO
+                        return this.matchStrength >= other.matchStrength;
+                    }
+                }
             }
-        }        
+        }
     }
     
     int matched() {
@@ -331,12 +363,76 @@ class ClusterStepTwo {
         this.assessedCharVariantPosition = UNINITIALIZED;
         this.existingPositionView.i = BEFORE_START;
         this.possiblePositionView.i = BEFORE_START;
+        this.hasWordStart = false;
+        this.hasWordEnd = false;
+        this.meaningfulChars = 0;
+    }
+
+    int meaningfulChars() {
+        return this.meaningfulChars;
+    }
+
+    void applyCurrentWordBounds(int start, int end, int foundInWord) {
+        this.matchStrength = this.matchStrength + foundInWord*2;
+        logAnalyze(POSITIONS_SEARCH,
+                "          [info] found-in-word: " + foundInWord);
+
+        if ( start == assessedCharVariantPosition ) {
+            this.hasWordStart = true;
+            this.matchStrength = this.matchStrength + 2;
+            if ( chars.isEmpty() ) {
+                this.meaningfulChars++;
+                logAnalyze(POSITIONS_SEARCH,
+                        "          [info] char is meaningful");
+            }
+//            this.meaningfulChars++;
+            logAnalyze(POSITIONS_SEARCH,
+                    "          [info] char is at word start !!!!");
+        }
+
+        if ( end == assessedCharVariantPosition ) {
+            this.hasWordEnd = true;
+            this.matchStrength = this.matchStrength + 1;
+            if ( chars.isEmpty() ) {
+                this.meaningfulChars++;
+                logAnalyze(POSITIONS_SEARCH,
+                        "          [info] char is meaningful");
+            }
+//            this.meaningfulChars++;
+            logAnalyze(POSITIONS_SEARCH,
+                    "          [info] char is at word end !!!!");
+        }
+
+        if ( this.hasWordEnd && this.hasWordStart ) {
+            return;
+        }
+
+        int position;
+        for (int i = 0; i < this.variantPositions.size(); i++) {
+            position = this.variantPositions.get(i);
+
+            if ( ! this.hasWordStart && position == start ) {
+                this.hasWordStart = true;
+                this.matchStrength = this.matchStrength + 1;
+                logAnalyze(POSITIONS_SEARCH,
+                        "          [info] char is at word start");
+            }
+
+            if ( ! this.hasWordEnd && position == end ) {
+                this.hasWordEnd = true;
+                this.matchStrength = this.matchStrength + 1;
+                logAnalyze(POSITIONS_SEARCH,
+                        "          [info] char is at word end");
+            }
+        }
     }
     
     @Override
     public String toString() {
         return format(
-                "['%s' variant:%s, clustered:['%s', pattern:%s, variant:%s, variant-included:%s, pattern-included:%s, matches:%s]]",
-                this.assessedChar, this.assessedCharVariantPosition, this.chars, this.patternPositions, this.variantPositions, this.fillings, this.fillingsInPattern, this.matches);
+                "['%s' variant:%s, %s clustered:['%s', pattern:%s, variant:%s, variant-included:%s, pattern-included:%s, matches:%s]]",
+                this.assessedChar, this.assessedCharVariantPosition,
+                (this.hasWordStart ? "word-start," : "") + (this.hasWordEnd ? "word-end" : ""),
+                this.chars, this.patternPositions, this.variantPositions, this.fillings, this.fillingsInPattern, this.matches);
     }
 }
