@@ -1259,6 +1259,102 @@ public class AnalyzeTest {
     }
 
     @Test
+    public void test_dsrsdprojs_full() {
+        pattern = "dsrsdprojs";
+
+        variants = asList(
+                "D:/DEV/1__Projects/Diarsid",
+                "D:/DEV/1__Projects/Diarsid/src",
+                "D:/DEV/1__Projects/Diarsid/Other",
+                "D:/DEV/1__Projects/Diarsid/RStudio",
+                "D:/DEV/1__Projects/Diarsid/IntelliJ",
+                "D:/DEV/1__Projects/Diarsid/WebStorm",
+                "D:/DEV/1__Projects/Diarsid/NetBeans",
+                "D:/DEV/1__Projects/Diarsid/X__Reserve",
+                "D:/DEV/1__Projects/X__Archive/Diarsid",
+                "D:/DEV/1__Projects/Diarsid/X__GitHub_Pages",
+                "D:/DEV/1__Projects/Diarsid/X__Distrib"
+        );
+
+        expectedSameOrderAsVariants();
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_dsrsdprojs() {
+        pattern = "dsrsdprojs";
+
+        variants = asList(
+                "D:/DEV/1__Projects/Diarsid",
+                "D:/DEV/1__Projects/Diarsid/NetBeans"
+        );
+
+        expectedSameOrderAsVariants();
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_drsdprojs_full() {
+        pattern = "drsdprojs";
+
+        variants = asList(
+                "D:/DEV/1__Projects/Diarsid",
+                "D:/DEV/1__Projects/Diarsid/src",
+                "D:/DEV/1__Projects/Diarsid/Other",
+                "D:/DEV/1__Projects/Diarsid/RStudio",
+                "D:/DEV/1__Projects/Diarsid/IntelliJ",
+                "D:/DEV/1__Projects/Diarsid/WebStorm",
+                "D:/DEV/1__Projects/Diarsid/NetBeans",
+                "D:/DEV/1__Projects/Diarsid/X__Reserve",
+                "D:/DEV/1__Projects/X__Archive/Diarsid",
+                "D:/DEV/1__Projects/Diarsid/X__GitHub_Pages",
+                "D:/DEV/1__Projects/Diarsid/X__Distrib"
+        );
+
+        expectedSameOrderAsVariants();
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_porjdrsd_full() {
+        pattern = "porjdrsd";
+
+        variants = asList(
+                "D:/DEV/1__Projects/Diarsid",
+                "D:/DEV/1__Projects/Diarsid/src",
+                "D:/DEV/1__Projects/Diarsid/Other",
+                "D:/DEV/1__Projects/Diarsid/RStudio",
+                "D:/DEV/1__Projects/Diarsid/IntelliJ",
+                "D:/DEV/1__Projects/Diarsid/WebStorm",
+                "D:/DEV/1__Projects/Diarsid/NetBeans",
+                "D:/DEV/1__Projects/Diarsid/X__Reserve",
+                "D:/DEV/1__Projects/X__Archive/Diarsid",
+                "D:/DEV/1__Projects/Diarsid/X__GitHub_Pages",
+                "D:/DEV/1__Projects/Diarsid/X__Distrib"
+        );
+
+        expectedSameOrderAsVariants();
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_porjsdrsd() {
+        pattern = "porjsdrsd";
+
+        variants = asList(
+                "D:/DEV/1__Projects/Diarsid"
+        );
+
+        expectedSameOrderAsVariants();
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
     public void test_drs_full() {
         pattern = "drs";
 
@@ -1366,6 +1462,65 @@ public class AnalyzeTest {
         
         weightVariantsAndCheckMatching();
     }
+
+    @Test
+    public void test_differens_tolos() {
+
+        pattern = "tolos";
+
+        variants = asList(
+                "Tools_aaaaa",
+                "Tools_to",
+                "Tools_aaaaa",
+                "Tools_looking",
+                "book_tolstoy",
+                "tolkien_lost",
+                "lost_old_to",
+                "to_low_losing",
+                "topolski"
+        );
+
+        expected = asList(
+                "Tools");
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_servs() {
+
+        pattern = "servs";
+
+        variants = asList(
+                "supervision",
+                "servers"
+        );
+
+        expected = asList(
+                "servers",
+                "supervision"
+                );
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_jeschrstpassn() {
+
+        pattern = "jeschrstpassn";
+
+        variants = asList(
+                "The Passion of Jesus Christ by John Piper",
+                "The Chronicles of Chrestomanci by Diana Wynne Jones"
+        );
+
+        expected = asList(
+                "The Passion of Jesus Christ by John Piper",
+                "The Chronicles of Chrestomanci by Diana Wynne Jones"
+        );
+
+        weightVariantsAndCheckMatching();
+    }
     
     @Test
     public void test_enginesJavaBinCase_engjbin() {
@@ -1380,6 +1535,21 @@ public class AnalyzeTest {
                 "Engines/Java/Path/JAVA_HOME/bin",
                 "Engines/Java/Path/JAVA_HOME/bin/java.exe");
         
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_matrix_philosophy_mtrxpholspy() {
+        pattern = "mtrxpholspy";
+
+        variants = asList(
+                "The Matrix and Philosophy: Welcome to the Desert of the Real"
+        );
+
+        expected = asList(
+                "The Matrix and Philosophy: Welcome to the Desert of the Real"
+        );
+
         weightVariantsAndCheckMatching();
     }
     
