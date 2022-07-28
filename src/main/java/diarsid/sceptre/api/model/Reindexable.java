@@ -3,8 +3,6 @@ package diarsid.sceptre.api.model;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import diarsid.sceptre.Indexable;
-
 public interface Reindexable extends Indexable {
     
     void setIndex(int index);

@@ -3,12 +3,9 @@ package diarsid.sceptre.api.model;
 import java.io.Serializable;
 import java.util.Objects;
 
-import diarsid.sceptre.WeightEstimate;
-
 import static java.lang.String.format;
 import static java.util.Objects.nonNull;
 
-import static diarsid.sceptre.WeightEstimate.estimateWeightOf;
 import static diarsid.support.strings.StringUtils.lower;
 
 public final class Variant implements Serializable, Comparable<Variant>, Reindexable {
@@ -86,7 +83,7 @@ public final class Variant implements Serializable, Comparable<Variant>, Reindex
     }
     
     public boolean hasEqualOrBetterWeightThan(WeightEstimate otherEstimate) {
-        return estimateWeightOf(this).isEqualOrBetterThan(otherEstimate);
+        return WeightEstimate.estimateWeightOf(this).isEqualOrBetterThan(otherEstimate);
     }
     
     public boolean isBetterThan(Variant other) {
