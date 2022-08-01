@@ -199,8 +199,9 @@ public class AnalyzeTest {
                 "Engines/Java/Path/available",
                 "Books/Tech/Java/JavaFX"
         );
-        
-        expectedSameOrderAsVariants();
+
+        expected = asList(
+                "Engines/Java/Path/available");
         
         weightVariantsAndCheckMatching();
     }
@@ -468,6 +469,52 @@ public class AnalyzeTest {
                 "Engines/Java/Path/JAVA_HOME/bin/jvisualvm.exe"
         );
         
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_javaEngines_enginsjva() {
+        pattern = "enginsjva";
+
+        variants = asList(
+                "Engines/Java/Path/JAVA_HOME/bin/jvisualvm.exe",
+                "Engines/Java");
+
+        expected = asList(
+                "Engines/Java",
+                "Engines/Java/Path/JAVA_HOME/bin/jvisualvm.exe"
+        );
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_javaEngines_eningsjva() {
+        pattern = "eningsjva";
+
+        variants = asList(
+                "Engines/Java/Path/JAVA_HOME/bin/jvisualvm.exe",
+                "Engines/Java");
+
+        expected = asList(
+                "Engines/Java",
+                "Engines/Java/Path/JAVA_HOME/bin/jvisualvm.exe"
+        );
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_javaEngines_eningsjva_to_remove() {
+        pattern = "eningsjva";
+
+        variants = asList(
+                "Engines/Java");
+
+        expected = asList(
+                "Engines/Java"
+        );
+
         weightVariantsAndCheckMatching();
     }
     
@@ -1226,12 +1273,21 @@ public class AnalyzeTest {
                 "beam_project",
                 "beam_project_home",
                 "beam_server_project",
-                "netbeans_projects",
-                "beam_project/src",
-                "beam netpro",
-                "babel_pro",
-                "abe_netpro");
+                "beam_project/src");
         
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_beamProjectCase_beaporj_toRemove() {
+        pattern = "beaporj";
+
+        variants = asList(
+                "beam netpro"
+        );
+
+        expected = asList();
+
         weightVariantsAndCheckMatching();
     }
 
@@ -1248,9 +1304,9 @@ public class AnalyzeTest {
                 "D:/DEV/1__Projects/Diarsid/WebStorm",
                 "D:/DEV/1__Projects/Diarsid/NetBeans",
                 "D:/DEV/1__Projects/Diarsid/X__Reserve",
+                "D:/DEV/1__Projects/Diarsid/X__Distrib",
                 "D:/DEV/1__Projects/X__Archive/Diarsid",
-                "D:/DEV/1__Projects/Diarsid/X__GitHub_Pages",
-                "D:/DEV/1__Projects/Diarsid/X__Distrib"
+                "D:/DEV/1__Projects/Diarsid/X__GitHub_Pages"
         );
 
         expectedSameOrderAsVariants();
@@ -1271,9 +1327,9 @@ public class AnalyzeTest {
                 "D:/DEV/1__Projects/Diarsid/WebStorm",
                 "D:/DEV/1__Projects/Diarsid/NetBeans",
                 "D:/DEV/1__Projects/Diarsid/X__Reserve",
+                "D:/DEV/1__Projects/Diarsid/X__Distrib",
                 "D:/DEV/1__Projects/X__Archive/Diarsid",
-                "D:/DEV/1__Projects/Diarsid/X__GitHub_Pages",
-                "D:/DEV/1__Projects/Diarsid/X__Distrib"
+                "D:/DEV/1__Projects/Diarsid/X__GitHub_Pages"
         );
 
         expectedSameOrderAsVariants();
@@ -1294,6 +1350,18 @@ public class AnalyzeTest {
 
         weightVariantsAndCheckMatching();
     }
+    @Test
+    public void test_dsrsdprojs_to_remove() {
+        pattern = "dsrsdprojs";
+
+        variants = asList(
+                "D:/DEV/1__Projects/Diarsid"
+        );
+
+        expectedSameOrderAsVariants();
+
+        weightVariantsAndCheckMatching();
+    }
 
     @Test
     public void test_drsdprojs_full() {
@@ -1308,8 +1376,21 @@ public class AnalyzeTest {
                 "D:/DEV/1__Projects/Diarsid/WebStorm",
                 "D:/DEV/1__Projects/Diarsid/NetBeans",
                 "D:/DEV/1__Projects/Diarsid/X__Reserve",
+                "D:/DEV/1__Projects/Diarsid/X__Distrib",
                 "D:/DEV/1__Projects/X__Archive/Diarsid",
-                "D:/DEV/1__Projects/Diarsid/X__GitHub_Pages",
+                "D:/DEV/1__Projects/Diarsid/X__GitHub_Pages"
+        );
+
+        expectedSameOrderAsVariants();
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_drsdprojs_DiarsidDistrib() {
+        pattern = "drsdprojs";
+
+        variants = asList(
                 "D:/DEV/1__Projects/Diarsid/X__Distrib"
         );
 
@@ -1331,9 +1412,9 @@ public class AnalyzeTest {
                 "D:/DEV/1__Projects/Diarsid/WebStorm",
                 "D:/DEV/1__Projects/Diarsid/NetBeans",
                 "D:/DEV/1__Projects/Diarsid/X__Reserve",
+                "D:/DEV/1__Projects/Diarsid/X__Distrib",
                 "D:/DEV/1__Projects/X__Archive/Diarsid",
-                "D:/DEV/1__Projects/Diarsid/X__GitHub_Pages",
-                "D:/DEV/1__Projects/Diarsid/X__Distrib"
+                "D:/DEV/1__Projects/Diarsid/X__GitHub_Pages"
         );
 
         expectedSameOrderAsVariants();
@@ -1418,8 +1499,7 @@ public class AnalyzeTest {
         pattern = "beaporj";
         
         variants = asList( 
-                "beam_server_project",
-                "netbeans_projects"
+                "beam_server_project"
         );
         
         expectedSameOrderAsVariants();
@@ -1464,6 +1544,20 @@ public class AnalyzeTest {
     }
 
     @Test
+    public void test_differens_tols_to_remove() {
+
+        pattern = "tols";
+
+        variants = asList(
+                "Torrents"
+        );
+
+        expected = asList();
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
     public void test_differens_tolos() {
 
         pattern = "tolos";
@@ -1504,6 +1598,39 @@ public class AnalyzeTest {
                 "servers",
                 "supervision"
                 );
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_srv() {
+
+        pattern = "srv";
+
+        variants = asList(
+                "supervision",
+                "servers"
+        );
+
+        expected = asList(
+                "servers",
+                "supervision"
+        );
+
+        weightVariantsAndCheckMatching();
+    }
+    @Test
+    public void test_srv_to_remove() {
+
+        pattern = "srv";
+
+        variants = asList(
+                "servers"
+        );
+
+        expected = asList(
+                "servers"
+        );
 
         weightVariantsAndCheckMatching();
     }
@@ -1660,6 +1787,18 @@ public class AnalyzeTest {
         expected = asList( 
                 "Tech/langs/Java/Specifications");
         
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_javaSpecCase_jspec_to_remove() {
+        pattern = "jspec";
+
+        variants = asList(
+                "Projects/UkrPoshta/UkrPostAPI");
+
+        expected = asList();
+
         weightVariantsAndCheckMatching();
     }
     
@@ -1964,8 +2103,7 @@ public class AnalyzeTest {
         );
         
         expected = asList(            
-                "Projects/Diarsid/WebStorm/React.js",
-                "Java/Specifications/JPA_v.2.2_(JSR_318).pdf"
+                "Projects/Diarsid/WebStorm/React.js"
         );
         
         weightVariantsAndCheckMatching();
@@ -2101,6 +2239,18 @@ public class AnalyzeTest {
         
         weightVariantsAndCheckMatching();
     }
+
+    @Test
+    public void test_JavaPathBinCase_jbin_2() {
+        pattern = "jbin";
+
+        variants = asList(
+                "Current_Job/domain");
+
+        expected = asList();
+
+        weightVariantsAndCheckMatching();
+    }
     
     @Test
     public void test_synthetic_1() {
@@ -2144,7 +2294,7 @@ public class AnalyzeTest {
                 "ababbaccaABCabbac_xyyxzyyxzXYZzx",
                 "ababbaccaACBabbac_xyyxzyyxzXYZzx");
         
-        expected = asList(       
+        expected = asList(
                 "ababbaccaABCabbac_xyyxzyyxzXYZzx",
                 "ababbaccaACBabbac_xyyxzyyxzXYZzx");
         

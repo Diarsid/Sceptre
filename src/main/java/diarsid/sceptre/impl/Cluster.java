@@ -44,6 +44,7 @@ class Cluster
     private boolean hasOnlyOneExccessCharBetween;
     private int compensationSum;
     private int teardown;
+    private boolean rejected;
 
     Cluster() {
         super();
@@ -60,9 +61,10 @@ class Cluster
         this.hasOnlyOneExccessCharBetween = false;
         this.compensationSum = 0;
         this.teardown = 0;
+        this.rejected = false;
     }
     
-    Cluster set(
+    void set(
             int firstPosition,
             int patternLength,
             int length, 
@@ -72,7 +74,8 @@ class Cluster
             int diffCount, 
             int shifts, 
             boolean haveCompensation,
-            int compensationSum) {
+            int compensationSum,
+            boolean rejected) {
         this.firstPosition = firstPosition;
         this.patternLength = patternLength;
         this.length = length;
@@ -83,7 +86,7 @@ class Cluster
         this.ordersDiffShifts = shifts;
         this.ordersDiffHaveCompensation = haveCompensation;
         this.compensationSum = compensationSum;
-        return this;
+        this.rejected = rejected;
     }
     
     List<Integer> repeats() {
@@ -156,6 +159,10 @@ class Cluster
     
     boolean isMarkedForTeardown() {
         return this.teardown > 0;
+    }
+
+    boolean isRejected() {
+        return this.rejected;
     }
     
     void finish() {        
@@ -271,6 +278,7 @@ class Cluster
         this.hasOnlyOneExccessCharBetween = false;
         this.compensationSum = 0;
         this.teardown = 0;
+        this.rejected = false;
     }
 
     @Override

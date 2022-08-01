@@ -48,12 +48,18 @@ public class WeightAnalyzeReal implements LimitedWeightAnalyze {
         this.similarity = similarity;
         this.defaultWeightResultLimit = configuration.asInt("analyze.result.variants.limit");        
         this.tooBadWeight = 9000.0f;
+
         GuardedPool<Cluster> clusterPool = pools.createPool(
                 Cluster.class, 
-                () -> new Cluster());        
+                () -> new Cluster());
+
+        GuardedPool<WordInVariant> wordPool = pools.createPool(
+                WordInVariant.class,
+                () -> new WordInVariant());
+
         this.analyzeUnitsPool = pools.createPool(
                 AnalyzeUnit.class, 
-                () -> new AnalyzeUnit(clusterPool));
+                () -> new AnalyzeUnit(clusterPool, wordPool));
         
 //        BiFunction<String, String, Float> weightFunction = (target, pattern) -> {
 //            return this.weightStringInternally(pattern, target, NOT_USE_CACHE);
@@ -231,7 +237,7 @@ public class WeightAnalyzeReal implements LimitedWeightAnalyze {
                 return (float) analyze.weight.sum();
             }
             analyze.checkIfVariantTextContainsPatternDirectly();
-            analyze.findPathAndTextSeparators();
+            analyze.findWordsAndPathAndTextSeparators();
             analyze.setPatternCharsAndPositions();
             analyze.findPatternCharsPositions();
 //            analyze.checkUnsortedPositionsNormality();
@@ -434,7 +440,7 @@ public class WeightAnalyzeReal implements LimitedWeightAnalyze {
                 analyzeUnit.set(pattern, variantText);
                 if ( analyzeUnit.isVariantNotEqualsPattern() ) {
                     analyzeUnit.checkIfVariantTextContainsPatternDirectly();
-                    analyzeUnit.findPathAndTextSeparators();
+                    analyzeUnit.findWordsAndPathAndTextSeparators();
                     analyzeUnit.setPatternCharsAndPositions();
                     analyzeUnit.findPatternCharsPositions();
                     analyzeUnit.logUnsortedPositions();

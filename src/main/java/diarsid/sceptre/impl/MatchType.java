@@ -3,6 +3,7 @@ package diarsid.sceptre.impl;
 public enum MatchType {
     
     MATCH_DIRECTLY(10),
+    MATCH_WORD_END(4),
     MATCH_TYPO_LOOP(2),
     MATCH_TYPO_1(3),
     MATCH_TYPO_2(2),

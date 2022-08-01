@@ -27,6 +27,12 @@ public enum WeightElement {
             -3.1f, "next char is word separator"),
     CLUSTER_ENDS_CURRENT_CHAR_IS_WORD_SEPARATOR(
             -6.6f, "cluster ends, current char is word separator"),
+    SINGLE_POSITION_AND_FULL_CLUSTER_DENOTE_WORD(
+            -8.17f, "single position and full cluster denote word"),
+    SINGLE_POSITION_AND_PART_OF_CLUSTER_DENOTE_WORD(
+            -3.27f, "single position and part of cluster denote word"),
+    CLUSTER_IS_REJECTED_BY_ORDER_DIFFS(
+            +24.73f, "cluster is rejected by order diffs"),
     
     VARIANT_EQUAL_PATTERN(
             "variant is equal to pattern"),
