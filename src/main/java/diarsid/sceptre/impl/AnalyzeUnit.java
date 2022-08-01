@@ -60,10 +60,11 @@ class AnalyzeUnit extends PooledReusable {
     }
     
     final PositionsAnalyze positionsAnalyze;
-    
-    TreeSet<Integer> variantSeparators;
-    TreeSet<Integer> variantPathSeparators;
-    TreeSet<Integer> variantTextSeparators;
+    final WordsInVariant wordsInVariant;
+
+    final TreeSet<Integer> variantSeparators;
+    final TreeSet<Integer> variantPathSeparators;
+    final TreeSet<Integer> variantTextSeparators;
     String variant;
     boolean variantEqualsToPattern;
     boolean variantContainsPattern;
@@ -80,7 +81,7 @@ class AnalyzeUnit extends PooledReusable {
     
     int missedPercent;
         
-    AnalyzeUnit(GuardedPool<Cluster> clusterPool) {
+    AnalyzeUnit(GuardedPool<Cluster> clusterPool, GuardedPool<WordInVariant> wordPool) {
         super();
         this.positionsAnalyze = new PositionsAnalyze(
                 this, 
@@ -89,6 +90,7 @@ class AnalyzeUnit extends PooledReusable {
         this.variantSeparators = new TreeSet<>();
         this.variantPathSeparators = new TreeSet<>();
         this.variantTextSeparators = new TreeSet<>();
+        this.wordsInVariant = new WordsInVariant(wordPool);
         this.weight = new Weight();
     }
     
@@ -122,6 +124,7 @@ class AnalyzeUnit extends PooledReusable {
         this.canClustersBeBad = true;
         this.allPositionsPresentSortedAndNotPathSeparatorsBetween = false;
         this.missedPercent = 0;
+        this.wordsInVariant.clear();
     }
 
     void calculateWeight() {        
@@ -430,18 +433,52 @@ class AnalyzeUnit extends PooledReusable {
         }
     }
     
-    void findPathAndTextSeparators() {
+    void findWordsAndPathAndTextSeparators() {
+        boolean separator = false;
+        WordInVariant wordInVariant = null;
+        char c;
+
         for (int i = 0; i < this.variant.length(); i++) {
-            if ( isPathSeparator(this.variant.charAt(i)) ) {
+            c = this.variant.charAt(i);
+            if ( isPathSeparator(c) ) {
                 this.variantPathSeparators.add(i);
+                separator = true;
             }
-            if ( isTextSeparator(this.variant.charAt(i)) ) {
+
+            if ( isTextSeparator(c) ) {
                 this.variantTextSeparators.add(i);
+                separator = true;
             }
+
+            if ( separator ) {
+                if ( nonNull(wordInVariant) ) {
+                    if ( wordInVariant.length > 0 ) {
+                        wordInVariant.complete();
+                        wordInVariant = wordsInVariant.next();
+                    }
+                }
+                else {
+                    wordInVariant = wordsInVariant.next();
+                }
+            }
+            else {
+                if ( i == 0 ) {
+                    wordInVariant = wordsInVariant.next();
+                }
+                wordInVariant.set(i, c);
+            }
+
+            separator = false;
         }
+
+        if ( nonNull(wordInVariant) && wordInVariant.length > 0 ) {
+            wordInVariant.complete();
+        }
+
         if ( isNotEmpty(this.variantPathSeparators) ) {
             this.variantSeparators.addAll(this.variantPathSeparators);
         }
+
         if ( isNotEmpty(this.variantTextSeparators) ) {
             this.variantSeparators.addAll(this.variantTextSeparators);
         }

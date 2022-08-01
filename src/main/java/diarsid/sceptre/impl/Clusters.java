@@ -111,10 +111,17 @@ class Clusters implements StatefulClearable {
     void acceptProcessed(Cluster cluster) {
         if ( this.arranged ) {
             throw new IllegalStateException(
-                    "It is forbidden to add next cluster after arrengment!");
+                    "It is forbidden to add next cluster after arrengement!");
         }
-        this.lastAdded.resetTo(cluster);
-        this.clusters.add(cluster);
+
+        if ( cluster.isRejected() ) {
+            this.clustersTakenFromPool.remove(cluster);
+            this.clusterPool.takeBack(cluster);
+        }
+        else {
+            this.lastAdded.resetTo(cluster);
+            this.clusters.add(cluster);
+        }
     }
     
     List<Cluster> all() {
