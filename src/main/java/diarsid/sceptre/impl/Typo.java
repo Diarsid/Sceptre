@@ -52,8 +52,10 @@ public class Typo extends PooledReusable {
 
     @Override
     public String toString() {
-        return "Typo{" + "variant=" + variantIndex + ", pattern=" + 
-               patternIndex + ", char=" + character + '}';
+        return "Typo{" +
+                "variant='" + variantIndex.mapValueOr(String::valueOf, "_") +
+                "', pattern='" + patternIndex.mapValueOr(String::valueOf, "_") +
+                "', char='" + character.mapValueOr(String::valueOf, "_") + "'}";
     }
 
     @Override

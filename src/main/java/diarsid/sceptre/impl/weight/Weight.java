@@ -34,11 +34,11 @@ public class Weight {
     public void add(WeightElement weightElement) {
         weightElement.weightTypeMustBe(PREDEFINED);
         weightElement.weightCalculationTypeMustBe(ADD_VALUE_TO_SUM);
-        this.addWeightAndElement(weightElement.predefinedWeight(), weightElement);
+        this.addWeightAndElement(weightElement.predefinedWeight, weightElement);
         logAnalyze(
                 POSITIONS_CLUSTERS, 
                 "               [weight] %1$+.2f : %2$s", 
-                weightElement.predefinedWeight(), weightElement.description());
+                weightElement.predefinedWeight, weightElement.description);
     }
     
     public void add(float calculatedWeight, WeightElement element) {
@@ -50,7 +50,7 @@ public class Weight {
         this.addWeightAndElement(calculatedWeight, element);
         logAnalyze(
                 POSITIONS_CLUSTERS, 
-                "               [weight] %1$+.2f : %2$s", calculatedWeight, element.description());
+                "               [weight] %1$+.2f : %2$s", calculatedWeight, element.description);
     }
     
     public void applyPercent(int percent, WeightElement element) {
@@ -63,10 +63,31 @@ public class Weight {
     }
 
     private void addWeightAndElement(float calculatedWeight, WeightElement element) {
+        if ( element.isFading ) {
+            int count = this.countAdded(element);
+            if ( count >= 10 ) {
+                calculatedWeight = 0;
+            }
+            else {
+                int remain = 10 - count;
+                float ratio = remain * 0.1f;
+                calculatedWeight = calculatedWeight * ratio;
+            }
+        }
         this.elements.add(element);
         this.weights[this.nextFreeWeightIndex] = calculatedWeight;
         this.weightSum = this.weightSum + calculatedWeight;
         this.nextFreeWeightIndex++;
+    }
+
+    public int countAdded(WeightElement element) {
+        int count = 0;
+        for ( int i = 0; i < this.elements.size(); i++ ) {
+            if ( this.elements.get(i).is(element) ) {
+                count++;
+            }
+        }
+        return count;
     }
     
     public void add(Weight other) {
