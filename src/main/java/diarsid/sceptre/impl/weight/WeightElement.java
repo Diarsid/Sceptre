@@ -1,5 +1,7 @@
 package diarsid.sceptre.impl.weight;
 
+import diarsid.support.objects.CommonEnum;
+
 import static java.lang.String.format;
 
 import static diarsid.sceptre.impl.weight.WeightElement.WeightCalculationType.APPLY_PERCENT_TO_SUM;
@@ -7,7 +9,7 @@ import static diarsid.sceptre.impl.weight.WeightElement.WeightCalculationType.DE
 import static diarsid.sceptre.impl.weight.WeightElement.WeightType.CALCULATED;
 import static diarsid.sceptre.impl.weight.WeightElement.WeightType.PREDEFINED;
 
-public enum WeightElement {
+public enum WeightElement implements CommonEnum<WeightElement> {
     
     CHAR_IS_ONE_CHAR_WORD(
             -19.2f, "char is one-char-word"),
@@ -33,6 +35,10 @@ public enum WeightElement {
             -3.27f, "single position and part of cluster denote word"),
     CLUSTER_IS_REJECTED_BY_ORDER_DIFFS(
             +24.73f, "cluster is rejected by order diffs"),
+    FIRST_CLUSTER_HAS_MISSED_WORD_START(
+            +17.61f, "word of first found cluster has not found start"),
+    FIRST_CLUSTER_IS_REJECTED(
+            +28.07f, "word of first found cluster has not found start"),
     
     VARIANT_EQUAL_PATTERN(
             "variant is equal to pattern"),
@@ -71,7 +77,7 @@ public enum WeightElement {
     CLUSTERS_ORDER_INCOSISTENT(
             "clusters order incosistency"),
     CLUSTER_CANDIDATES_SIMILARITY(
-            "cluster candidates similarity"),
+            "cluster candidates similarity", true /* fading */),
     CLUSTERS_ARE_WEAK_2_LENGTH(
             "all clusters are weak (2 length)"),
     PLACING_PENALTY(
@@ -99,6 +105,11 @@ public enum WeightElement {
             "meaningful positions"),
     NO_CLUSTERS_ALL_SEPARATED_POSITIONS_MEANINGFUL(
             "all positions are meaningful"),
+
+    FOUND_POSITIONS_DENOTES_ALL_WORDS(
+            "all found positions belong to all variant words"),
+    FOUND_POSITIONS_BELONG_TO_ONE_WORD(
+            "all found positions belong to one word"),
     
     PERCENT_FOR_MISSED(
             "decrease to percent for missed", 
@@ -118,13 +129,23 @@ public enum WeightElement {
 
 
 
-    private final float predefinedWeight;
-    private final String description;
-    private final WeightType type;
-    private final WeightCalculationType calculationType;
+    public final float predefinedWeight;
+    public final boolean isFading;
+    public final String description;
+    public final WeightType type;
+    public final WeightCalculationType calculationType;
 
     WeightElement(String description) {
         this.predefinedWeight = 0;
+        this.isFading = false;
+        this.description = description;
+        this.type = CALCULATED;
+        this.calculationType = DEFAULT_CALCULATION_TYPE;
+    }
+
+    WeightElement(String description, boolean isFading) {
+        this.predefinedWeight = 0;
+        this.isFading = isFading;
         this.description = description;
         this.type = CALCULATED;
         this.calculationType = DEFAULT_CALCULATION_TYPE;
@@ -132,6 +153,7 @@ public enum WeightElement {
 
     WeightElement(float predefinedWeight, String description) {
         this.predefinedWeight = predefinedWeight;
+        this.isFading = false;
         this.description = description;
         this.type = PREDEFINED;
         this.calculationType = DEFAULT_CALCULATION_TYPE;
@@ -139,6 +161,7 @@ public enum WeightElement {
 
     WeightElement(String description, WeightCalculationType calculationType) {
         this.predefinedWeight = 0;
+        this.isFading = false;
         this.description = description;
         this.type = CALCULATED;
         this.calculationType = calculationType;
@@ -147,17 +170,10 @@ public enum WeightElement {
     WeightElement(
             float predefinedWeight, String description, WeightCalculationType calculationType) {
         this.predefinedWeight = predefinedWeight;
+        this.isFading = false;
         this.description = description;
         this.type = PREDEFINED;
         this.calculationType = calculationType;
-    }
-    
-    float predefinedWeight() {
-        return this.predefinedWeight;
-    }
-    
-    public String description() {
-        return this.description;
     }
     
     void weightTypeMustBe(WeightType someType) {

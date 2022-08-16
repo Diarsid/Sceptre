@@ -100,6 +100,22 @@ class Cluster
     int firstPosition() {
         return this.firstPosition;
     }
+
+    int position(int order) {
+        if ( order < 0 ) {
+            throw new IllegalArgumentException();
+        }
+
+        if ( order == 0 ) {
+            return this.firstPosition;
+        }
+
+        if ( order > length-1 ) {
+            throw new IllegalArgumentException();
+        }
+
+        return this.firstPosition + order;
+    }
     
     int lastPosition() {
         return this.firstPosition + this.length - 1;
@@ -239,8 +255,11 @@ class Cluster
         if ( this.hasOnlyOneExccessCharBetween ) {
             return false;
         }
-        
-//        int tearDown = this.ordersDiffCount();
+
+        if ( this.length > 4 && this.ordersDiffCount == 1 ) {
+            return false;
+        }
+
         int tearDown = this.length - sumInts(this.repeatQties);
         
         if ( this.length > 2 && repeats.isEmpty() ) {

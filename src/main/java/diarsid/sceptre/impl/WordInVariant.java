@@ -4,9 +4,15 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
+import diarsid.support.objects.CommonEnum;
 import diarsid.support.objects.PooledReusable;
 
 public class WordInVariant extends PooledReusable {
+
+    public static enum Placing implements CommonEnum<Placing> {
+        INDEPENDENT,
+        DEPENDENT
+    }
 
     public final static int INITIAL_LENGTH = 10;
     public final static int NOT_SET = -1;
@@ -15,10 +21,12 @@ public class WordInVariant extends PooledReusable {
 
     char[] chars;
     char[] charsInVariant;
+    int index;
     int startIndex;
     int endIndex;
     int length;
     boolean completed;
+    Placing placing;
 
     WordInVariant() {
         chars = new char[INITIAL_LENGTH];
@@ -29,6 +37,8 @@ public class WordInVariant extends PooledReusable {
         endIndex = NOT_SET;
         length = ZERO;
         completed = false;
+        placing = null;
+        index = NOT_SET;
     }
 
     public void set(int i, char c) {
@@ -122,13 +132,40 @@ public class WordInVariant extends PooledReusable {
         return this.startIndex <= rangeStartIndex && this.endIndex >= rangeEndIndex;
     }
 
-    public boolean contains(List<Integer> indexes) {
+    public boolean containsStartEndOrEnclosed(int rangeStartIndex, int rangeLength) {
+        int rangeEndIndex = rangeStartIndex + rangeLength - 1;
+
+        boolean containsStart = this.startIndex <= rangeStartIndex && this.endIndex >= rangeStartIndex;
+        boolean containsEnd = this.startIndex <= rangeEndIndex && this.endIndex >= rangeEndIndex;
+        boolean isEnclosedByRange = this.startIndex >= rangeStartIndex && this.endIndex<= rangeEndIndex;
+
+        return containsStart || containsEnd || isEnclosedByRange;
+    }
+
+    public int countContains(List<Integer> indexes) {
+        int count = 0;
         for ( int index : indexes ) {
-            if ( this.startIndex > index || this.endIndex < index ) {
-                return false;
+            if ( index < 0 ) {
+                continue;
+            }
+            if ( this.startIndex <= index && this.endIndex >= index ) {
+                count++;
             }
         }
-        return true;
+        return count;
+    }
+
+    public int countContains(int[] indexes) {
+        int count = 0;
+        for ( int index : indexes ) {
+            if ( index < 0 ) {
+                continue;
+            }
+            if ( this.startIndex <= index && this.endIndex >= index ) {
+                count++;
+            }
+        }
+        return count;
     }
 
     public boolean hasStartIn(Set<Integer> indexes) {
@@ -139,6 +176,37 @@ public class WordInVariant extends PooledReusable {
         int matches = 0;
         for ( int index : indexes ) {
             if ( index >= startIndex && index <= endIndex ) {
+                matches++;
+            }
+        }
+        return matches;
+    }
+
+    public int intersections(Set<Integer> indexes, int excludingPosition) {
+        int matches = 0;
+        for ( int index : indexes ) {
+            if ( index == excludingPosition ) {
+                continue;
+            }
+            if ( index >= startIndex && index <= endIndex ) {
+                matches++;
+            }
+        }
+        return matches;
+    }
+
+    public int intersections(int afterPosition, int[] positions) {
+        int positionInVariant;
+        int matches = 0;
+        for ( int i = 0; i < positions.length; i++) {
+            positionInVariant = positions[i];
+            if ( positionInVariant < 0 ) {
+                continue;
+            }
+            if ( afterPosition >= positionInVariant ) {
+                continue;
+            }
+            if ( positionInVariant >= startIndex && positionInVariant <= endIndex ) {
                 matches++;
             }
         }
@@ -205,6 +273,8 @@ public class WordInVariant extends PooledReusable {
         endIndex = NOT_SET;
         length = ZERO;
         completed = false;
+        placing = null;
+        index = NOT_SET;
     }
 
     private static String string(char[] chars) {

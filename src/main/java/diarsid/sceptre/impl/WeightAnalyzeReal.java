@@ -57,9 +57,13 @@ public class WeightAnalyzeReal implements LimitedWeightAnalyze {
                 WordInVariant.class,
                 () -> new WordInVariant());
 
+        GuardedPool<WordsInVariant.WordsInRange> wordsInRangePool = pools.createPool(
+                WordsInVariant.WordsInRange.class,
+                () -> new WordsInVariant.WordsInRange());
+
         this.analyzeUnitsPool = pools.createPool(
                 AnalyzeUnit.class, 
-                () -> new AnalyzeUnit(clusterPool, wordPool));
+                () -> new AnalyzeUnit(clusterPool, wordPool, wordsInRangePool));
         
 //        BiFunction<String, String, Float> weightFunction = (target, pattern) -> {
 //            return this.weightStringInternally(pattern, target, NOT_USE_CACHE);

@@ -29,7 +29,7 @@ class PositionCandidate {
     private int position;
     private int orderDiffInPattern;
     private int orderDiffInVariant;
-    private int placementDiff;
+//    private int placementDiff;
     private boolean isNearSeparator;
     private Integer distanceToNearestFilledPosition;
     private int clusteredAround;
@@ -41,7 +41,7 @@ class PositionCandidate {
         this.position = UNINITIALIZED;
         this.orderDiffInPattern = UNINITIALIZED;
         this.orderDiffInVariant = UNINITIALIZED;
-        this.placementDiff = UNINITIALIZED;
+//        this.placementDiff = UNINITIALIZED;
         this.isNearSeparator = false;
         this.distanceToNearestFilledPosition = null;
         this.clusteredAround = UNINITIALIZED;
@@ -50,7 +50,7 @@ class PositionCandidate {
     }
     
     void tryToMutate(
-            int position, 
+            int otherPosition,
             int positionInPatternIndex, 
             int orderDiffInVariant, 
             int orderDiffInPattern, 
@@ -60,53 +60,68 @@ class PositionCandidate {
             int charsRemained) {
         this.mutationsAttempts++;
         
-        int variantPlacement = percentAsInt(position, this.data.variant.length()) / 10;
-        int patternPlacement = percentAsInt(positionInPatternIndex, this.data.pattern.length()) / 10;
-        int otherPlacementDiff = absDiff(variantPlacement, patternPlacement);
+//        int variantPlacement = percentAsInt(position, this.data.variant.length()) / 10;
+//        int patternPlacement = percentAsInt(positionInPatternIndex, this.data.pattern.length()) / 10;
+//        int otherPlacementDiff = absDiff(variantPlacement, patternPlacement);
         
         if (AnalyzeLogType.POSITIONS_SEARCH.isEnabled()) {
-            logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "          [info] candidate %s in variant has:", position);
+            logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "          [info] candidate %s in variant has:", otherPosition);
             logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "             pattern order diff     %s", orderDiffInPattern == UNINITIALIZED ? "_" : orderDiffInPattern);
             logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "             variant order diff     %s", orderDiffInVariant == UNINITIALIZED ? "_" : orderDiffInVariant);
-            logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "             approx. placement diff %s%%", otherPlacementDiff);
+//            logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "             approx. placement diff %s%%", otherPlacementDiff);
             logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "             is near separator      %s", isNearSeparator);
             logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "             to nearest position    %s", isNull(distanceToNearestFilledPosition) ? "_" : distanceToNearestFilledPosition);
             logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "             clustered positions    %s", clusteredAround);
             logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "             chars remained         %s", charsRemained);
         }
         
-        /* DEBUG */ if ( position == 12 ) {
+        /* DEBUG */ if ( otherPosition == 12 ) {
         /* DEBUG */     int a = 5;
         /* DEBUG */ }
         if ( this.isCurrentStateWorseThan(
+                otherPosition,
                 orderDiffInVariant, 
                 orderDiffInPattern, 
-                otherPlacementDiff, 
+//                otherPlacementDiff,
                 isNearSeparator, 
                 distanceToNearestFilledPosition, 
                 clusteredAround) ) {
-            logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "          [info] accept %s", position);
-            this.position = position;
+            logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "          [info] accept %s", otherPosition);
+            this.position = otherPosition;
             this.orderDiffInPattern = orderDiffInPattern;
             this.orderDiffInVariant = orderDiffInVariant;
-            this.placementDiff = otherPlacementDiff;
+//            this.placementDiff = otherPlacementDiff;
             this.isNearSeparator = isNearSeparator;
             this.distanceToNearestFilledPosition = distanceToNearestFilledPosition;
             this.clusteredAround = clusteredAround;
             this.mutationsCommitted++;
         } else {
-            logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "          [info] worse than %s, reject %s", this.position, position);
+            logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "          [info] worse than %s, reject %s", this.position, otherPosition);
         }       
     }
     
     private boolean isCurrentStateWorseThan(
+            int otherPosition,
             int otherOrderDiffInVariant, 
             int otherOrderDiffInPattern, 
-            int otherPlacementDiff,
+//            int otherPlacementDiff,
             boolean otherIsNearSeparator,
             Integer otherDistanceToNearestFilledPosition,
             int otherClusteredAround) {
         if ( this.position == UNINITIALIZED ) {
+            return CURRENT_IS_WORSE;
+        }
+
+        WordInVariant thisWord = this.data.wordsInVariant.wordOf(this.position);
+        WordInVariant otherWord = this.data.wordsInVariant.wordOf(otherPosition);
+
+        int thisIntersections = thisWord.intersections(this.data.positionsAnalyze.filledPositions, this.position);
+        int otherIntersections = otherWord.intersections(this.data.positionsAnalyze.filledPositions, otherPosition);
+
+        if ( thisIntersections > otherIntersections ) {
+            return CURRENT_IS_BETTER;
+        }
+        else if ( thisIntersections < otherIntersections ) {
             return CURRENT_IS_WORSE;
         }
         
@@ -122,145 +137,121 @@ class PositionCandidate {
         
         if ( isNull(this.distanceToNearestFilledPosition) || this.distanceToNearestFilledPosition < 0 ) {
             if ( this.isNearSeparator != otherIsNearSeparator ) {
-                return compareDependingOnNearSeparator(
-                        otherOrderDiffInPattern, 
-                        otherClusteredAround, 
-                        otherOrderDiffInVariant, 
-                        otherPlacementDiff);
+                int thisSum = zeroIfNotInit(this.orderDiffInPattern) - this.clusteredAround;
+                int otherSum = zeroIfNotInit(otherOrderDiffInPattern) - otherClusteredAround;
+
+                if ( this.isNearSeparator ) {
+                    otherSum = otherSum + zeroIfNotInit(otherOrderDiffInVariant);
+//                            + otherPlacementDiff;
+                } else {
+                    thisSum = thisSum + zeroIfNotInit(this.orderDiffInVariant);
+//                            + this.placementDiff;
+                }
+
+                if ( thisSum > otherSum ) {
+                    return CURRENT_IS_WORSE;
+                } else {
+                    return CURRENT_IS_BETTER;
+                }
             } else {
-                return compareAsUsual(
-                        otherOrderDiffInPattern, 
-                        otherOrderDiffInVariant, 
-                        otherPlacementDiff, 
-                        otherClusteredAround);
+                int thisSum =
+                        zeroIfNotInit(this.orderDiffInPattern) +
+                                zeroIfNotInit(this.orderDiffInVariant) +
+//                                this.placementDiff -
+                                this.clusteredAround;
+                int otherSum =
+                        zeroIfNotInit(otherOrderDiffInPattern) +
+                                zeroIfNotInit(otherOrderDiffInVariant) +
+//                                otherOrderDiffAbsolute -
+                                otherClusteredAround;
+
+                if ( thisSum > otherSum ) {
+                    return CURRENT_IS_WORSE;
+                } else {
+                    return CURRENT_IS_BETTER;
+                }
             }
         } else {
             if ( this.distanceToNearestFilledPosition.equals(otherDistanceToNearestFilledPosition) ) {
                 if ( this.isNearSeparator != otherIsNearSeparator ) {
-                    return compareDependingOnNearSeparator(
-                            otherOrderDiffInPattern, 
-                            otherClusteredAround, 
-                            otherOrderDiffInVariant, 
-                            otherPlacementDiff);
+                    int thisSum = zeroIfNotInit(this.orderDiffInPattern) - this.clusteredAround;
+                    int otherSum = zeroIfNotInit(otherOrderDiffInPattern) - otherClusteredAround;
+
+                    if ( this.isNearSeparator ) {
+                        otherSum = otherSum + zeroIfNotInit(otherOrderDiffInVariant);
+//                        + otherPlacementDiff;
+                    } else {
+                        thisSum = thisSum + zeroIfNotInit(this.orderDiffInVariant);
+//                        + this.placementDiff;
+                    }
+
+                    if ( thisSum > otherSum ) {
+                        return CURRENT_IS_WORSE;
+                    } else {
+                        return CURRENT_IS_BETTER;
+                    }
                 } else {
-                    return compareAsUsual(
-                            otherOrderDiffInPattern, 
-                            otherOrderDiffInVariant, 
-                            otherPlacementDiff, 
-                            otherClusteredAround);
+                    int thisSum =
+                            zeroIfNotInit(this.orderDiffInPattern) +
+                                    zeroIfNotInit(this.orderDiffInVariant) +
+//                                    this.placementDiff -
+                                    this.clusteredAround;
+                    int otherSum =
+                            zeroIfNotInit(otherOrderDiffInPattern) +
+                                    zeroIfNotInit(otherOrderDiffInVariant) +
+//                                    otherOrderDiffAbsolute -
+                                    otherClusteredAround;
+
+                    if ( thisSum > otherSum ) {
+                        return CURRENT_IS_WORSE;
+                    } else {
+                        return CURRENT_IS_BETTER;
+                    }
                 }
             } else {
                 if ( this.isNearSeparator != otherIsNearSeparator ) {
-                    return compareDependingOnNearSeparatorAndDistanceToFilledPosition(
-                            otherOrderDiffInPattern, 
-                            otherClusteredAround, 
-                            otherOrderDiffInVariant, 
-                            otherPlacementDiff,
-                            otherDistanceToNearestFilledPosition);
+                    int thisSum = zeroIfNotInit(this.orderDiffInPattern) +
+                            this.distanceToNearestFilledPosition -
+                            this.clusteredAround;
+                    int otherSum = zeroIfNotInit(otherOrderDiffInPattern) +
+                            otherDistanceToNearestFilledPosition -
+                            otherClusteredAround;
+
+                    if ( this.isNearSeparator ) {
+                        otherSum = otherSum + zeroIfNotInit(otherOrderDiffInVariant);
+//                        + otherPlacementDiff;
+                    } else {
+                        thisSum = thisSum + zeroIfNotInit(this.orderDiffInVariant);
+//                        + this.placementDiff;
+                    }
+
+                    if ( thisSum > otherSum ) {
+                        return CURRENT_IS_WORSE;
+                    } else {
+                        return CURRENT_IS_BETTER;
+                    }
                 } else {
-                    return compareDependingOnDistanceToFilledPosition(
-                            otherOrderDiffInPattern, 
-                            otherClusteredAround, 
-                            otherOrderDiffInVariant, 
-                            otherPlacementDiff,
-                            otherDistanceToNearestFilledPosition);
+                    int thisSum =
+                            zeroIfNotInit(this.orderDiffInPattern) +
+                                    zeroIfNotInit(this.orderDiffInVariant) +
+//                                    max(this.placementDiff, this.distanceToNearestFilledPosition) -
+                                    this.distanceToNearestFilledPosition -
+                                    this.clusteredAround;
+                    int otherSum =
+                            zeroIfNotInit(otherOrderDiffInPattern) +
+                                    zeroIfNotInit(otherOrderDiffInVariant) +
+//                                    max(otherOrderDiffAbsolute, otherDistanceToNearestFilledPosition) -
+                                    otherDistanceToNearestFilledPosition -
+                                    otherClusteredAround;
+
+                    if ( thisSum > otherSum ) {
+                        return CURRENT_IS_WORSE;
+                    } else {
+                        return CURRENT_IS_BETTER;
+                    }
                 }
             }
         }      
-    }
-    
-    private boolean compareDependingOnDistanceToFilledPosition(
-            int otherOrderDiffInPattern, 
-            int otherClusteredAround, 
-            int otherOrderDiffInVariant, 
-            int otherOrderDiffAbsolute,
-            int otherDistanceToNearestFilledPosition) {
-        int thisSum =
-                zeroIfNotInit(this.orderDiffInPattern) +
-                zeroIfNotInit(this.orderDiffInVariant) +
-                max(this.placementDiff, this.distanceToNearestFilledPosition) -
-                this.clusteredAround;
-        int otherSum =
-                zeroIfNotInit(otherOrderDiffInPattern) +
-                zeroIfNotInit(otherOrderDiffInVariant) +
-                max(otherOrderDiffAbsolute, otherDistanceToNearestFilledPosition) - 
-                otherClusteredAround;
-        
-        if ( thisSum > otherSum ) {
-            return CURRENT_IS_WORSE;
-        } else {
-            return CURRENT_IS_BETTER;
-        }
-    }
-    
-    private boolean compareDependingOnNearSeparatorAndDistanceToFilledPosition(
-            int otherOrderDiffInPattern, 
-            int otherClusteredAround, 
-            int otherOrderDiffInVariant, 
-            int otherPlacementDiff,
-            int otherDistanceToNearestFilledPosition) {
-        int thisSum = zeroIfNotInit(this.orderDiffInPattern) + 
-                      this.distanceToNearestFilledPosition - 
-                      this.clusteredAround;
-        int otherSum = zeroIfNotInit(otherOrderDiffInPattern) + 
-                       otherDistanceToNearestFilledPosition - 
-                       otherClusteredAround;
-        
-        if ( this.isNearSeparator ) {
-            otherSum = otherSum + zeroIfNotInit(otherOrderDiffInVariant) + otherPlacementDiff;
-        } else {
-            thisSum = thisSum + zeroIfNotInit(this.orderDiffInVariant) + this.placementDiff;
-        }
-        
-        if ( thisSum > otherSum ) {
-            return CURRENT_IS_WORSE;
-        } else {
-            return CURRENT_IS_BETTER;
-        }
-    }
-
-    private boolean compareDependingOnNearSeparator(
-            int otherOrderDiffInPattern, 
-            int otherClusteredAround, 
-            int otherOrderDiffInVariant, 
-            int otherPlacementDiff) {
-        int thisSum = zeroIfNotInit(this.orderDiffInPattern) - this.clusteredAround;
-        int otherSum = zeroIfNotInit(otherOrderDiffInPattern) - otherClusteredAround;
-        
-        if ( this.isNearSeparator ) {
-            otherSum = otherSum + zeroIfNotInit(otherOrderDiffInVariant) + otherPlacementDiff;
-        } else {
-            thisSum = thisSum + zeroIfNotInit(this.orderDiffInVariant) + this.placementDiff;
-        }
-        
-        if ( thisSum > otherSum ) {
-            return CURRENT_IS_WORSE;
-        } else {
-            return CURRENT_IS_BETTER;
-        }
-    }
- 
-    private boolean compareAsUsual(
-            int otherOrderDiffInPattern, 
-            int otherOrderDiffInVariant, 
-            int otherOrderDiffAbsolute, 
-            int otherClusteredAround) {
-        int thisSum =
-                zeroIfNotInit(this.orderDiffInPattern) +
-                zeroIfNotInit(this.orderDiffInVariant) +
-                this.placementDiff -
-                this.clusteredAround;
-        int otherSum =
-                zeroIfNotInit(otherOrderDiffInPattern) +
-                zeroIfNotInit(otherOrderDiffInVariant) +
-                otherOrderDiffAbsolute - 
-                otherClusteredAround;
-        
-        if ( thisSum > otherSum ) {
-            return CURRENT_IS_WORSE;
-        } else {
-            return CURRENT_IS_BETTER;
-        }        
     }
     
     boolean isPresent() {
@@ -291,7 +282,7 @@ class PositionCandidate {
         this.position = UNINITIALIZED;
         this.orderDiffInPattern = UNINITIALIZED;
         this.orderDiffInVariant = UNINITIALIZED;
-        this.placementDiff = UNINITIALIZED;
+//        this.placementDiff = UNINITIALIZED;
         this.isNearSeparator = false;
         this.distanceToNearestFilledPosition = null;
         this.clusteredAround = UNINITIALIZED;

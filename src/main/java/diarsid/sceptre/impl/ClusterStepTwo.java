@@ -5,15 +5,13 @@ import java.util.List;
 import java.util.Objects;
 
 import diarsid.sceptre.impl.logs.AnalyzeLogType;
-import diarsid.support.exceptions.UnsupportedLogicException;
 
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
 import static java.lang.Math.abs;
 import static java.lang.String.format;
-import static java.util.Objects.isNull;
-import static java.util.Objects.nonNull;
 
+import static diarsid.sceptre.impl.MatchType.MATCH_DIRECTLY;
 import static diarsid.sceptre.impl.WeightAnalyzeReal.logAnalyze;
 import static diarsid.support.misc.MathFunctions.absDiff;
 
@@ -306,7 +304,7 @@ class ClusterStepTwo {
         return this.existingPositionView;
     }
     
-    boolean isSet() {
+    boolean hasChars() {
         return this.chars.size() > 0;
     }
 
@@ -350,6 +348,17 @@ class ClusterStepTwo {
         }
     }
 
+    boolean hasBackwardTypos() {
+        int position;
+        for ( int i = 0; i < this.variantPositions.size(); i++ ) {
+            position = this.variantPositions.get(i);
+            if ( position < this.assessedCharVariantPosition ) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private void remove(int i) {
         char c = this.chars.remove(i);
         int patternPosition = this.patternPositions.remove(i);
@@ -377,6 +386,26 @@ class ClusterStepTwo {
             MatchType matchType,
             Boolean isCandidate) {
         int alreadyExistedInPattern = this.patternPositions.indexOf(patternPosition);
+
+        if ( isFilledInPattern ) {
+            int cPositionInVariant = this.analyze.positions[patternPosition];
+            if ( cPositionInVariant != variantPosition ) {
+                WordInVariant wordOfFilledChar = this.analyze.data.wordsInVariant.wordOf(cPositionInVariant);
+                WordInVariant wordAnother = this.analyze.data.wordsInVariant.wordOf(variantPosition);
+
+                if ( ! wordOfFilledChar.equals(wordAnother) ) {
+                    int distance = abs(wordOfFilledChar.index - wordAnother.index);
+                    if ( distance > 1 ) {
+                        logAnalyze(
+                                AnalyzeLogType.POSITIONS_SEARCH,
+                                "          [info] positions-in-cluster false-positive '%s' pattern:%s, variant:%s, included: %s, %s",
+                                c, patternPosition, variantPosition, isFilled, matchType.name());
+                        return;
+                    }
+                }
+            }
+        }
+
         if ( alreadyExistedInPattern > -1 ) {
             StepTwoClusterPositionView existingPosition = this.positionViewAt(alreadyExistedInPattern);
             StepTwoClusterPositionView possiblePosition = this.possiblePositionView.fill(c, patternPosition, variantPosition, isFilled, isFilledInPattern, matchType);
@@ -402,8 +431,8 @@ class ClusterStepTwo {
                             "          [info] positions-in-cluster duplicate: new position rejected");
                 }
 
-                this.mergedDuplicates++;
             }
+            this.mergedDuplicates++;
         }
         else {
             int alreadyExistedInVariant = this.variantPositions.indexOf(variantPosition);
@@ -478,22 +507,66 @@ class ClusterStepTwo {
             }
         }        
     }
+
+    private int countDirectMatches() {
+        if ( this.matches.isEmpty() ) {
+            return 0;
+        }
+
+        if ( this.matches.size() == 1 ) {
+            return this.matches.get(0).is(MATCH_DIRECTLY) ? 1 : 0;
+        }
+
+        int count = 0;
+        for (int i = 0; i < this.matches.size(); i++) {
+            if ( this.matches.get(i).is(MATCH_DIRECTLY) ) {
+                count++;
+            }
+        }
+
+        return count;
+    }
     
     boolean isBetterThan(ClusterStepTwo other) {
         if ( this.filledQty == 0 && other.filledQty == 0 ) {
             /* comparison of found subclusters, both are new */
             /* prefer subcluster that have more matches to fill more chars */
+            int thisMatchDirectly = this.countDirectMatches();
+            int otherMatchDirectly = other.countDirectMatches();
+
+            if ( thisMatchDirectly > otherMatchDirectly ) {
+                return true;
+            }
+            else if ( thisMatchDirectly < otherMatchDirectly ) {
+                return false;
+            }
+
             if ( this.matched() > other.matched() ) {
                 return true;
             } else if ( this.matched() < other.matched() ) {
                 return false;
             } else {
-                if ( this.matchStrength > other.matchStrength ) {
+                WordInVariant thisAssessedCharWord = this.analyze.data.wordsInVariant.wordOf(this.assessedCharVariantPosition);
+                WordInVariant otherAssessedCharWord = other.analyze.data.wordsInVariant.wordOf(other.assessedCharVariantPosition);
+
+                int thisAssessedCharWordIntersections = thisAssessedCharWord.intersections(this.analyze.filledPositions);
+                int otherAssessedCharWordIntersections = otherAssessedCharWord.intersections(other.analyze.filledPositions);
+
+                int thisMatchStrength = this.matchStrength + thisAssessedCharWordIntersections;
+                int otherMatchStrength = other.matchStrength + otherAssessedCharWordIntersections;
+
+                if ( thisMatchStrength > otherMatchStrength ) {
                     return true;
                 }
-                else if ( this.matchStrength < other.matchStrength ) {
+                else if ( thisMatchStrength < otherMatchStrength ) {
                     return false;
                 }
+//                if ( this.matchStrength > other.matchStrength ) {
+//                    return true;
+//                }
+//                else if ( this.matchStrength < other.matchStrength ) {
+//                    return false;
+//                }
                 else {
                     int thisDiff = this.calculatedDiff();
                     int otherDiff = other.calculatedDiff();
@@ -505,18 +578,18 @@ class ClusterStepTwo {
                         return false;
                     }
                     else {
-                        WordInVariant thisWord = this.analyze.data.wordsInVariant.wordOfRange(this.variantPositions);
-                        WordInVariant otherWord = this.analyze.data.wordsInVariant.wordOfRange(other.variantPositions);
+                        WordsInVariant.WordsInRange thisPositionsWords = this.analyze.data.wordsInVariant.wordsOfRange(this.variantPositions);
+                        WordsInVariant.WordsInRange otherPositionsWords = other.analyze.data.wordsInVariant.wordsOfRange(other.variantPositions);
 
-                        if ( nonNull(thisWord) && Objects.isNull(otherWord) ) {
+                        if ( thisPositionsWords.areNotEmpty() && otherPositionsWords.areEmpty() ) {
                             return true;
                         }
-                        else if ( isNull(thisWord) && nonNull(otherWord) ) {
+                        else if ( thisPositionsWords.areEmpty() && otherPositionsWords.areNotEmpty() ) {
                             return false;
                         }
                         else {
-                            int thisIntersections = thisWord.intersections(this.analyze.filledPositions);
-                            int otherIntersections = otherWord.intersections(this.analyze.filledPositions);
+                            int thisIntersections = thisPositionsWords.intersections(this.analyze.filledPositions);
+                            int otherIntersections = otherPositionsWords.intersections(this.analyze.filledPositions);
 
                             if ( thisIntersections > otherIntersections ) {
                                 return true;
@@ -525,7 +598,23 @@ class ClusterStepTwo {
                                 return false;
                             }
                             else {
-                                return true; // prefer new
+                                if ( thisPositionsWords.independents() > otherPositionsWords.independents() ) {
+                                    return true;
+                                }
+                                else if ( thisPositionsWords.independents() < otherPositionsWords.independents() ) {
+                                    return false;
+                                }
+                                else {
+                                    if ( this.mergedDuplicates > other.mergedDuplicates ) {
+                                        return true;
+                                    }
+                                    else if ( this.mergedDuplicates < other.mergedDuplicates ) {
+                                        return false;
+                                    }
+                                    else {
+                                        return true;
+                                    }
+                                }
                             }
                         }
                     }
@@ -544,7 +633,23 @@ class ClusterStepTwo {
                 } else if ( this.matched() < other.matched() ) {
                     return false;
                 } else {
-                    return this.matchStrength >= other.matchStrength;
+                    if ( this.matchStrength > other.matchStrength ) {
+                        return true;
+                    }
+                    else if ( this.matchStrength < other.matchStrength ) {
+                        return false;
+                    }
+                    else {
+                        if ( this.mergedDuplicates > other.mergedDuplicates ) {
+                            return true;
+                        }
+                        else if ( this.mergedDuplicates < other.mergedDuplicates ) {
+                            return false;
+                        }
+                        else {
+                            return false;
+                        }
+                    }
                 }
             }
         }        
@@ -579,7 +684,8 @@ class ClusterStepTwo {
     }
     
     int matched() {
-        return this.chars.size() + this.mergedDuplicates;
+        return this.chars.size() ;
+//        + this.mergedDuplicates;
     }
     
     void clear() {
