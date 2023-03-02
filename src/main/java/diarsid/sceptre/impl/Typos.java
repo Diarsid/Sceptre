@@ -9,7 +9,7 @@ import diarsid.support.objects.StatefulClearable;
 import diarsid.support.objects.references.Possible;
 
 import static diarsid.sceptre.impl.Typos.Placing.BEFORE;
-import static diarsid.sceptre.impl.WeightAnalyzeReal.logAnalyze;
+import static diarsid.sceptre.impl.AnalyzeImpl.logAnalyze;
 import static diarsid.support.objects.Pools.pools;
 import static diarsid.support.objects.references.References.simplePossibleButEmpty;
 
@@ -104,6 +104,14 @@ class Typos implements StatefulClearable, AutoCloseable {
     int qtyAfter() {
         return this.typosAfter.size();
     }
+
+    Typo getBefore(int i) {
+        return this.typosBefore.get(i);
+    }
+
+    void removeFromBefore(int i) {
+        this.typosBefore.remove(i);
+    }
     
     int qtyTotal() {
         return this.qtyBefore() + this.qtyAfter();
@@ -123,6 +131,15 @@ class Typos implements StatefulClearable, AutoCloseable {
     
     boolean hasInAfter(int variantIndex) {
         return hasIndexInTypos(variantIndex, this.typosAfter);
+    }
+
+    boolean areBeforeIn(WordInVariant word) {
+        for ( Typo typo : this.typosBefore ) {
+            if ( typo.variantIndex() < word.startIndex || word.endIndex < typo.variantIndex() ) {
+                return false;
+            }
+        }
+        return true;
     }
     
     private static boolean hasIndexInTypos(int variantIndex, List<Typo> typos) {

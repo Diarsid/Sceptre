@@ -7,13 +7,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import diarsid.sceptre.api.LimitedWeightAnalyze;
+import diarsid.sceptre.api.Sceptre;
 import diarsid.sceptre.api.model.Variant;
 import diarsid.sceptre.api.model.Variants;
-import diarsid.sceptre.api.WeightAnalyze;
 import diarsid.sceptre.impl.logs.AnalyzeLogType;
-import diarsid.strings.similarity.api.Similarity;
-import diarsid.support.configuration.Configuration;
+import diarsid.support.model.versioning.Version;
 import diarsid.support.objects.GuardedPool;
 import diarsid.support.objects.Pools;
 
@@ -26,28 +24,28 @@ import static java.util.Locale.US;
 import static java.util.Objects.nonNull;
 import static java.util.stream.Collectors.toList;
 
+import static diarsid.sceptre.api.Sceptre.Weight.Estimate.BAD;
 import static diarsid.support.log.Logging.logFor;
 import static diarsid.support.misc.MathFunctions.absDiff;
 import static diarsid.support.objects.collections.CollectionUtils.shrink;
 import static diarsid.support.strings.StringUtils.containsWordsSeparator;
 import static diarsid.support.strings.StringUtils.lower;
 
-public class WeightAnalyzeReal implements LimitedWeightAnalyze {
-    
-    private final int weightAlgorithmVersion = 20;
-//    private final PersistentAnalyzeCache<Float> cache;
-    private final Float tooBadWeight;
+public class AnalyzeImpl implements Sceptre.Analyze.LimitedBySize {
+
+    public static final Version VERSION = new Version("1.2.3-improvements");
+
     private final GuardedPool<AnalyzeUnit> analyzeUnitsPool;
-    private final Similarity similarity;
     
     private final int defaultWeightResultLimit;
     private boolean isWeightedResultLimitPresent;
     private int weightedResultLimit;
     
-    public WeightAnalyzeReal(Configuration configuration, Similarity similarity, Pools pools) {
-        this.similarity = similarity;
-        this.defaultWeightResultLimit = configuration.asInt("analyze.result.variants.limit");        
-        this.tooBadWeight = 9000.0f;
+    public AnalyzeImpl(int analyzeResultVariantsLimit, Pools pools) {
+        this.defaultWeightResultLimit = analyzeResultVariantsLimit;
+
+        this.isWeightedResultLimitPresent = true;
+        this.weightedResultLimit = defaultWeightResultLimit;
 
         GuardedPool<Cluster> clusterPool = pools.createPool(
                 Cluster.class, 
@@ -83,11 +81,37 @@ public class WeightAnalyzeReal implements LimitedWeightAnalyze {
 //                logFor(WeightAnalyze.class).info("cache loaded");            
 //            });
 //        });
-        
-        this.isWeightedResultLimitPresent = true;
-        this.weightedResultLimit = defaultWeightResultLimit;        
     }
-    
+
+
+    public AnalyzeImpl(Pools pools) {
+        this.defaultWeightResultLimit = -1;
+
+        this.isWeightedResultLimitPresent = false;
+        this.weightedResultLimit = defaultWeightResultLimit;
+
+        GuardedPool<Cluster> clusterPool = pools.createPool(
+                Cluster.class,
+                () -> new Cluster());
+
+        GuardedPool<WordInVariant> wordPool = pools.createPool(
+                WordInVariant.class,
+                () -> new WordInVariant());
+
+        GuardedPool<WordsInVariant.WordsInRange> wordsInRangePool = pools.createPool(
+                WordsInVariant.WordsInRange.class,
+                () -> new WordsInVariant.WordsInRange());
+
+        this.analyzeUnitsPool = pools.createPool(
+                AnalyzeUnit.class,
+                () -> new AnalyzeUnit(clusterPool, wordPool, wordsInRangePool));
+    }
+
+    @Override
+    public Version version() {
+        return VERSION;
+    }
+
     @Override
     public int resultsLimit() {
         return this.weightedResultLimit;
@@ -140,13 +164,13 @@ public class WeightAnalyzeReal implements LimitedWeightAnalyze {
     }
     
     @Override
-    public Variants weightStrings(String pattern, List<String> variants) {
-        return this.weightVariants(pattern, stringsToVariants(variants));
+    public Variants processStrings(String pattern, List<String> variants) {
+        return this.processVariants(pattern, stringsToVariants(variants));
     }
     
     @Override
-    public Variants weightStrings(String pattern, String noWorseThan, List<String> variants) {
-        return this.weightVariants(pattern, noWorseThan, stringsToVariants(variants));
+    public Variants processStrings(String pattern, String noWorseThan, List<String> variants) {
+        return this.processVariants(pattern, noWorseThan, stringsToVariants(variants));
     }
     
     private static boolean canBeEvaluatedByStrictSimilarity(String pattern, String target) {
@@ -169,49 +193,21 @@ public class WeightAnalyzeReal implements LimitedWeightAnalyze {
             }
         }
     }
-
-    @Override
-    public boolean isBad(float weight) {
-        return (weight == this.tooBadWeight) || weight > this.tooBadWeight;
-    }
-
-    @Override
-    public boolean isGood(float weight) {
-        return weight < this.tooBadWeight;
-    }
-
-    @Override
-    public boolean isSatisfiable(String pattern, String name) {
-        if ( canBeEvaluatedByStrictSimilarity(pattern, name) ) {
-            return this.similarity.isSimilar(name, pattern);
-        } else {
-            return this.isGood(weightStringInternally(pattern, name));
-        }        
-    }
     
     @Override
-    public boolean isSatisfiable(String pattern, Variant variant) {
-        if ( canBeEvaluatedByStrictSimilarity(pattern, variant.value()) ) {
-            return this.similarity.isSimilar(variant.value(), pattern);
-        } else {
-            return this.isGood(weightStringInternally(pattern, variant.value()));
-        }        
-    }
-    
-    @Override
-    public Optional<Variant> weightVariant(String pattern, Variant variant) {
+    public Optional<Variant> processVariant(String pattern, Variant variant) {
         return this.weightVariantInternally(pattern, variant);
     }
 
     @Override
-    public float weightString(String pattern, String string) {
+    public float processString(String pattern, String string) {
         return this.weightStringInternally(pattern, string);
     }
 
     private Optional<Variant> weightVariantInternally(
             String pattern, Variant variant) {
         Float weight = this.weightStringInternally(pattern, variant.value());
-        if ( this.isGood(weight) ) {
+        if ( Sceptre.Weight.Estimate.of(weight).isBetterThan(BAD) ) {
             variant.set(weight, variant.value().equalsIgnoreCase(pattern));
             return Optional.of(variant);
         } else {
@@ -255,13 +251,13 @@ public class WeightAnalyzeReal implements LimitedWeightAnalyze {
 //                if ( cacheUsage.equals(USE_CACHE) ) {
 //                    this.cache.addToCache(target, pattern, this.tooBadWeight);
 //                }
-                return this.tooBadWeight;
+                return Sceptre.Weight.TOO_BAD;
             }
             if ( analyze.areTooMuchPositionsMissed() ) {
 //                if ( cacheUsage.equals(USE_CACHE) ) {
 //                    this.cache.addToCache(target, pattern, this.tooBadWeight);
 //                }
-                return this.tooBadWeight;
+                return Sceptre.Weight.TOO_BAD;
             }
             analyze.calculateClustersImportance();
             analyze.isFirstCharMatchInVariantAndPattern(pattern);
@@ -272,7 +268,7 @@ public class WeightAnalyzeReal implements LimitedWeightAnalyze {
 //                if ( cacheUsage.equals(USE_CACHE) ) {
 //                    this.cache.addToCache(target, pattern, this.tooBadWeight);
 //                }
-                return this.tooBadWeight;
+                return Sceptre.Weight.TOO_BAD;
             }
             
 //            if ( cacheUsage.equals(USE_CACHE) ) {
@@ -286,38 +282,38 @@ public class WeightAnalyzeReal implements LimitedWeightAnalyze {
     }
     
     @Override
-    public Variants weightVariants(String pattern, List<Variant> variants) {
-        List<Variant> weightedVariants = this.weightVariantsList(pattern, variants);
+    public Variants processVariants(String pattern, List<Variant> variants) {
+        List<Variant> weightedVariants = this.processVariantsToList(pattern, variants);
         return new VariantsImpl(weightedVariants);
     }
     
     @Override
-    public Variants weightVariants(String pattern, String noWorseThan, List<Variant> variants) {
-        List<Variant> weightedVariants = this.weightVariantsList(pattern, noWorseThan, variants);
+    public Variants processVariants(String pattern, String noWorseThan, List<Variant> variants) {
+        List<Variant> weightedVariants = this.processVariantsToList(pattern, noWorseThan, variants);
         return new VariantsImpl(weightedVariants);
     }
     
     @Override
-    public List<Variant> weightVariantsList(String pattern, List<Variant> variants) {
+    public List<Variant> processVariantsToList(String pattern, List<Variant> variants) {
         return this.weightVariantsListInternally(
                 pattern, null, variants);
     }
     
     @Override
-    public List<Variant> weightVariantsList(
+    public List<Variant> processVariantsToList(
             String pattern, String noWorseThan, List<Variant> variants) {
         return this.weightVariantsListInternally(
                 pattern, noWorseThan, variants);
     }
     
     @Override
-    public List<Variant> weightStringsList(String pattern, List<String> strings) {
+    public List<Variant> processStringsToList(String pattern, List<String> strings) {
         return this.weightVariantsListInternally(
                 pattern, null, stringsToVariants(strings));
     }
     
     @Override
-    public List<Variant> weightStringsList(
+    public List<Variant> processStringsToList(
             String pattern, String noWorseThan, List<String> strings) {
         return this.weightVariantsListInternally(
                 pattern, noWorseThan, stringsToVariants(strings));
@@ -329,7 +325,7 @@ public class WeightAnalyzeReal implements LimitedWeightAnalyze {
         Float weightLimit = 0.0f;
         if ( nonNull(noWorseThan) ) {
             weightLimit = weightStringInternally(pattern, noWorseThan);
-            weightLimitPresent = this.isGood(weightLimit);
+            weightLimitPresent = Sceptre.Weight.Estimate.of(weightLimit).isBetterThan(BAD);
         } else {
             weightLimitPresent = false;
         }
@@ -497,20 +493,20 @@ public class WeightAnalyzeReal implements LimitedWeightAnalyze {
                 
                 variant.set(analyzeUnit.weight.sum(), analyzeUnit.variantEqualsToPattern);
                 if ( variant.doesHaveName() ) {
-                    logFor(WeightAnalyze.class).info(variantText + ":" + variantName);
+                    logFor(Sceptre.Analyze.class).info(variantText + ":" + variantName);
                     if ( variantsByName.containsKey(lowerVariantName) ) {
                         duplicateByName = variantsByName.get(lowerVariantName);
                         if ( variant.isBetterThan(duplicateByName) ) {
                             if ( weightLimitPresent ) {
                                 if ( variant.weight() <= weightLimit ) {
-                                    logFor(WeightAnalyze.class).info("[DUPLICATE] " + variantText + " is better than: " + duplicateByName.value());
+                                    logFor(Sceptre.Analyze.class).info("[DUPLICATE] " + variantText + " is better than: " + duplicateByName.value());
                                     variantsByName.put(lowerVariantName, variant);
                                     weightedVariants.add(variant);
                                 } else {
-                                    logFor(WeightAnalyze.class).info(variantText + " is worse than: " + noWorseThan);
+                                    logFor(Sceptre.Analyze.class).info(variantText + " is worse than: " + noWorseThan);
                                 }
                             } else {
-                                logFor(WeightAnalyze.class).info("[DUPLICATE] " + variantText + " is better than: " + duplicateByName.value());
+                                logFor(Sceptre.Analyze.class).info("[DUPLICATE] " + variantText + " is better than: " + duplicateByName.value());
                                 variantsByName.put(lowerVariantName, variant);
                                 weightedVariants.add(variant);
                             } 
@@ -521,7 +517,7 @@ public class WeightAnalyzeReal implements LimitedWeightAnalyze {
                                 variantsByName.put(lowerVariantName, variant);
                                 weightedVariants.add(variant);     
                             } else {
-                                logFor(WeightAnalyze.class).info(variantText + " is worse than: " + noWorseThan);
+                                logFor(Sceptre.Analyze.class).info(variantText + " is worse than: " + noWorseThan);
                             }
                         } else {
                             variantsByName.put(lowerVariantName, variant);
@@ -533,7 +529,7 @@ public class WeightAnalyzeReal implements LimitedWeightAnalyze {
                         if ( variant.weight() <= weightLimit ) {
                             weightedVariants.add(variant);             
                         } else {
-                            logFor(WeightAnalyze.class).info(variantText + " is worse than: " + noWorseThan);
+                            logFor(Sceptre.Analyze.class).info(variantText + " is worse than: " + noWorseThan);
                         }
                     } else {
                         weightedVariants.add(variant);             
@@ -554,10 +550,10 @@ public class WeightAnalyzeReal implements LimitedWeightAnalyze {
         if ( this.isWeightedResultLimitPresent ) {
             shrink(weightedVariants, this.weightedResultLimit);
         }
-        logFor(WeightAnalyze.class).info("weightedVariants qty: " + weightedVariants.size());        
+        logFor(Sceptre.Analyze.class).info("weightedVariants qty: " + weightedVariants.size());
         weightedVariants
                 .stream()
-                .forEach(candidate -> logFor(WeightAnalyze.class).info(format(US, "%.3f : %s:%s", candidate.weight(), candidate.value(), candidate.name())));
+                .forEach(candidate -> logFor(Sceptre.Analyze.class).info(format(US, "%.3f : %s:%s", candidate.weight(), candidate.value(), candidate.name())));
 
         return weightedVariants;
     }

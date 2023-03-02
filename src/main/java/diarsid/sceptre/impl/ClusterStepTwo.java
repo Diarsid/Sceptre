@@ -12,7 +12,7 @@ import static java.lang.Math.abs;
 import static java.lang.String.format;
 
 import static diarsid.sceptre.impl.MatchType.MATCH_DIRECTLY;
-import static diarsid.sceptre.impl.WeightAnalyzeReal.logAnalyze;
+import static diarsid.sceptre.impl.AnalyzeImpl.logAnalyze;
 import static diarsid.support.misc.MathFunctions.absDiff;
 
 class ClusterStepTwo {

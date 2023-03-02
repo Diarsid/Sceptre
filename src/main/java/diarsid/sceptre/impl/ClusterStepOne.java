@@ -4,10 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import diarsid.sceptre.impl.logs.AnalyzeLogType;
 import diarsid.support.objects.references.Possible;
 
 import static java.lang.Integer.min;
 
+import static diarsid.sceptre.impl.AnalyzeImpl.logAnalyze;
 import static diarsid.sceptre.impl.ClusterPreference.PREFER_LEFT;
 import static diarsid.sceptre.impl.ClusterPreference.PREFER_RIGHT;
 import static diarsid.sceptre.impl.Typos.Placing.AFTER;
@@ -257,6 +259,61 @@ class ClusterStepOne {
     
     boolean doesEndBeforeSeparator() {
         return this.endsBeforeSeparator;
+    }
+
+    WordsInVariant.WordsInRange findWords(AnalyzeUnit unit) {
+        return unit.wordsInVariant.wordsOfRange(this.allVariantPositions);
+    }
+
+    boolean  isPositionsAtStartOf(WordInVariant word) {
+        return word.startIndex == this.allVariantPositions.get(0);
+    }
+
+    boolean  isPositionsAtEndOf(WordInVariant word) {
+        return word.endIndex == this.allVariantPositions.get(this.allVariantPositions.size()-1);
+    }
+
+    boolean hasTyposBefore() {
+        return this.typos.hasBefore();
+    }
+
+    boolean areTyposBeforeIn(WordInVariant word) {
+        return this.typos.areBeforeIn(word);
+    }
+
+    private int firstVariantPosition() {
+        int i = 0;
+        int position = -1;
+
+        while ( position < 0 ) {
+            position = this.allVariantPositions.get(i);
+            i++;
+        }
+
+        return position;
+    }
+
+    void tryToMergeTyposBeforeIntoPositions(WordInVariant word) {
+        logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "          [info] typo merging attempt... ", "");
+        Typo typo;
+        int pointer = this.firstVariantPosition() - 1; // place pointer on a char in word before added in cluster
+        for ( int i = this.typos.qtyBefore()-1 ; i >=0 && pointer >= word.startIndex; i-- ) {
+            typo = this.typos.getBefore(i);
+            if ( typo.variantIndex() == pointer ) {
+                logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "             [typo merge] %s (%s in variant) merged to positions", typo.patternIndex(), typo.variantIndex());
+                this.mergeInPositions(typo);
+                this.typos.removeFromBefore(i);
+                if ( pointer == word.startIndex ) {
+                    this.variantPositionsAtStart = true;
+                }
+                pointer--;
+            }
+        }
+    }
+
+    private void mergeInPositions(Typo typo) {
+        this.allVariantPositions.add(0, typo.variantIndex());
+        this.allPatternPositions.add(0, typo.patternIndex());
     }
     
     private void finishIfNot() {
@@ -687,9 +744,9 @@ class ClusterStepOne {
         return length;
     }
 
-    public int firstVariantPosition() {
-        return this.allVariantPositions.get(0);        
-    }
+//    public int firstVariantPosition() {
+//        return this.allVariantPositions.get(0);
+//    }
     
     public int lastVariantPosition() {
         return lastFrom(this.allVariantPositions);

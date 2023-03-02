@@ -3,12 +3,14 @@ package diarsid.sceptre.api.model;
 import java.io.Serializable;
 import java.util.Objects;
 
+import diarsid.sceptre.api.Sceptre;
+
 import static java.lang.String.format;
 import static java.util.Objects.nonNull;
 
 import static diarsid.support.strings.StringUtils.lower;
 
-public final class Variant implements Serializable, Comparable<Variant>, Reindexable {
+public final class Variant implements Serializable, Reindexable, Weightable {
     
     private String value;
     private String name;
@@ -82,18 +84,20 @@ public final class Variant implements Serializable, Comparable<Variant>, Reindex
         return this;
     }
     
-    public boolean hasEqualOrBetterWeightThan(WeightEstimate otherEstimate) {
-        return WeightEstimate.estimateWeightOf(this).isEqualOrBetterThan(otherEstimate);
+    public boolean hasEqualOrBetterWeightThan(Sceptre.Weight.Estimate otherEstimate) {
+        return Sceptre.Weight.Estimate.of(this).isEqualOrBetterThan(otherEstimate);
     }
-    
-    public boolean isBetterThan(Variant other) {
-        return this.weight < other.weight;
+
+    @Override
+    public boolean isBetterThan(Weightable other) {
+        return this.weight < other.weight();
     }
     
     public boolean isEqualToPattern() {
         return this.equalsToPattern;
     }
 
+    @Override
     public float weight() {
         return this.weight;
     }
@@ -151,15 +155,17 @@ public final class Variant implements Serializable, Comparable<Variant>, Reindex
     }
     
     @Override
-    public int compareTo(Variant other) {
-        if ( this.weight > other.weight) {
+    public int compareTo(Weightable other) {
+        float otherWeight = other.weight();
+
+        if ( this.weight > otherWeight ) {
             return 1;
-        } else if ( this.weight < other.weight ) {
+        } else if ( this.weight < otherWeight ) {
             return -1;
         } else {
-            if ( this.index >  other.index ) {
+            if ( this.index >  otherWeight ) {
                 return 1;
-            } else if ( this.index < other.index ) {
+            } else if ( this.index < otherWeight ) {
                 return -1;
             } else {
                 return 0;

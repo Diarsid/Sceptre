@@ -7,7 +7,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import diarsid.sceptre.api.model.Variant;
 import diarsid.sceptre.api.model.Variants;
-import diarsid.strings.similarity.api.Similarity;
 import diarsid.support.objects.GuardedPool;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -33,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class AnalyzeTest {
 
     private static final Logger log = LoggerFactory.getLogger(AnalyzeTest.class);
-    private static WeightAnalyzeReal analyzeInstance;
+    private static AnalyzeImpl analyzeInstance;
     private static int totalVariantsQuantity;
     private static long start;
     private static long stop;
@@ -49,7 +48,7 @@ public class AnalyzeTest {
                 "analyze.similarity.log.advanced = true");
     }
     
-    private WeightAnalyzeReal analyze;
+    private AnalyzeImpl analyze;
     private boolean expectedToFail;
     private String pattern;
     private String noWorseThan;
@@ -63,8 +62,9 @@ public class AnalyzeTest {
     
     @BeforeAll
     public static void setUpClass() {
-        Similarity similarity = Similarity.createInstance(actualConfiguration());
-        analyzeInstance = new WeightAnalyzeReal(actualConfiguration(), similarity, pools());
+        analyzeInstance = new AnalyzeImpl(
+                actualConfiguration().asInt("analyze.result.variants.limit"),
+                pools());
         start = currentTimeMillis();
     }
     
@@ -475,6 +475,22 @@ public class AnalyzeTest {
                 "Engines/Java/Path/JAVA_HOME/bin/jvisualvm.exe"
         );
         
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_javaEngines_enginsjv_positive() {
+        pattern = "enginsjv";
+
+        variants = asList(
+                "Engines/Java/Path/JAVA_HOME/bin/javavisualvm.exe",
+                "Engines/Java");
+
+        expected = asList(
+                "Engines/Java",
+                "Engines/Java/Path/JAVA_HOME/bin/javavisualvm.exe"
+        );
+
         weightVariantsAndCheckMatching();
     }
 
@@ -1717,12 +1733,64 @@ public class AnalyzeTest {
         pattern = "ukrptnotfclntsts";
 
         variants = asList(
+                "D:/DEV/1__Projects/UkrPoshta/UkrposhtaStatusNotificationService",
                 "D:/DEV/1__Projects/UkrPoshta/UkrposhtaStatusNotificationServiceClient",
                 "D:/DEV/1__Projects/UkrPoshta/UkrposhtaStatusNotificationGenerator"
         );
 
         expected = asList(
                 "D:/DEV/1__Projects/UkrPoshta/UkrposhtaStatusNotificationServiceClient");
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_UkrposhtaStatusNotificationServiceClient_upshstnoftftclnt() {
+        pattern = "upshstnoftftclnt";
+
+        variants = asList(
+//                "D:/DEV/1__Projects/UkrPoshta/UkrposhtaStatusNotificationService",
+                "D:/DEV/1__Projects/UkrPoshta/UkrposhtaStatusNotificationServiceClient"
+//                ,
+//                "D:/DEV/1__Projects/UkrPoshta/UkrposhtaStatusNotificationGenerator"
+        );
+
+        expected = asList(
+                "D:/DEV/1__Projects/UkrPoshta/UkrposhtaStatusNotificationServiceClient");
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_tolkien_0_lorofrngbyjrrtolk() {
+
+        pattern = "lorofrngbyjrrtolk";
+
+        variants = asList(
+                "The Fellowship Of The Ring (Turtleback School & Library Binding Edition) (Lord of the Rings) by J.R.R. Tolkien",
+                "Lord of the Rings by J.R.R Tolkien",
+                "The Return of the King (The Lord of the Rings #3) by Rob Inglis and J.R.R. Tolkien, and Brian Sibley"
+        );
+
+        expected = asList(
+                "Lord of the Rings by J.R.R Tolkien",
+                "The Return of the King (The Lord of the Rings #3) by Rob Inglis and J.R.R. Tolkien, and Brian Sibley",
+                "The Fellowship Of The Ring (Turtleback School & Library Binding Edition) (Lord of the Rings) by J.R.R. Tolkien"
+        );
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_tolkien_1_lorofrngbyjrrtolk() {
+
+        pattern = "lorofrngbyjrrtolk";
+
+        variants = asList(
+                "The Return of the King (The Lord of the Rings #3) by Rob Inglis and J.R.R. Tolkien, and Brian Sibley"
+        );
+
+        expectedSameOrderAsVariants();
 
         weightVariantsAndCheckMatching();
     }
@@ -2155,6 +2223,127 @@ public class AnalyzeTest {
 
         weightVariantsAndCheckMatching();
     }
+
+    @Test
+    public void test_kwistchadrech_multiple() {
+        pattern = "kwistchadrech";
+
+        variants = asList(
+                "originsthe term originated from the bene gesserits prescient powers and their inability to venture into a specific region of prescient knowledge this region though mysterious in nature was known to be unattainable to females specifically the spice melange allowed the bene gesserit to unlock genetic memory but only on their maternal side female humans carry two x chromosomes while males possess an x chromosome and a y chromosome a kwisatz haderach would be capable of accessing genetic memories stored within both chromosomes while those memories were inaccessible to bene gesserit memories from male ancestors are still accessible to females with access to genetic memory alia is able to make contact with the ego memory of vladimir harkonnen for instance but due to the lack of the y chromosome the memories were incomplete accessing the full paternal memories was impossible for the bene gesserit and the very thought of trying was terrifying to them further melange also exposed the sisterhood and others to a limited form of prescience   thoughts feelings images into the near future but no morebene gesserit attemptthe bene gesserit desire to uncover this knowledge and its associated powers drove them to initiate a long running genetic breeding program this would yield a male with mental powers capable of bridging space and time and that he would be under the direct control of the sisterhood the bene gesserit knew that not only would their kwisatz haderach possess other memory on both the male and female side but that he would be able to predict the future precisely he would be bene gesserit reverend mother mentat and guild navigator all in oneafter the emergence of this male   paul atreides   the term kwisatz haderach was also understood as meaning one who can be many places at once and became synonymous with paul in time it also came to encompass his sister alia atreides and his son leto atreides ii since they all had similar abilitiesthe initial bene gesserit plan was to breed the daughter of duke leto atreides to a harkonnen male which would produce the kwisatz haderach this was to be the culmination of more than 10000 years of careful breeding this plan would have seen the end of the centuries old feud between the great houses atreides and harkonnen and placed a prescient bene gesserit controlled male on the golden lion throne the kwisatz haderach however because of her love for duke leto the lady jessica disobeyed her fellow bene gesserit and gave birth to a son instead of a daughter to give him an heir paulit seemed fairly certain from early in pauls life that he would in fact be the kwisatz haderach since he showed an ability to see into the future it was when he was fifteen years of age that the bene gesserit sent a reverend mother to test pauls prescience and his training in the bene gesserit ways this event appeared to be a significant catalyst for the events that would befall the universe for the next several thousand years pauls testing with the gom jabbar as well as the sisterhoods silent complicity in his fathers death proved to instill significant negativity in paul against the sisterhood as a result when he reached young adulthood and ascended to the golden lion throne he vowed that he would never be under the control of the sisterhood because of this the sisterhood lost control of their breeding program their kwisatz haderach and the possibility of placing a bene gesserit on the thronepaul leaves the golden pathindeed it appeared that the majority of people did not realize that to know the future is to be trapped by it paul could see that he would have to lead humanity onto a drastic course in order for it to escape its own annihilation as a result he chose to escape the golden path by allowing himself to be blinded so that he could walk into the desert and not be a burden on his tribe the mantle of the golden path was subsequently taken up by leto iiimpactas kwisatz haderach both paul and his son leto would at times experience significant grief because they knew they were trapped by their own destinies one of the few people who understood this was in fact one of pauls enemies it was through the failed tleilaxu kwisatz haderach experiment that the tleilaxu master scytale could in fact sympathize with paul and the decisions he had to makewhen leto ii the next kwisatz haderach ascended to the throne not only did he manage to avoid bene gesserit control but he also took control of their breeding program he then relegated them to a relatively insignificant role in the universe throughout the 3500 years of his reignthe scatteringafter the famine times prompted by leto ii after his death the remaining power brokers in the old empire either forgot about the concept of the kwisatz or vehemently guarded against the rise of another of the super beings the bene gesserit would go so far as to terminate the life of humans that showed aspects of enhanced abilities but as was shown with the wild atreides line the heightened human abilities continually showed themselvesafter the the scattering both miles teg and his daughter darwi odrade descendants of the atreides showed super normal actions teg was able to move at lightning fast speed and disabled his kidnappers on gammu odrade had limited prescience that enabled her to know that the misguided honored matres and bene gesserit should merge to form one single organizationbut it was the ghola of duncan idaho which caused the most concern for all involved the conservative branch of the sisterhood led by schwangyu would go so far as to disobey the order of the mother superior alma mavis taraza and terminate the life of a young duncan ghola   even as she has sworn to be his protector from the tleilaxu who had allied themselves temporarily with the returning honored matresbehind the scenesits likely that the term was borrowed by frank herbert from the kabbala the compilation of jewish mysticism the core of which is entitled hazohar the book of splendor ascribed to rabbi shimon bar yohai ascribed by jews to have been written in the 1st century ce modern scholars ascribe it to a sephardic jewish author around the 13th century the term itself is hebrew kfitzat ha derekh קְפִיצַת הַדֶּרֶךְ literally the leap of the way by means of which an initiate may travel some distance instantaneously appearing to be in two or more places at once"
+        );
+
+        expected = asList(
+                "originsthe term originated from the bene gesserits prescient powers and their inability to venture into a specific region of prescient knowledge this region though mysterious in nature was known to be unattainable to females specifically the spice melange allowed the bene gesserit to unlock genetic memory but only on their maternal side female humans carry two x chromosomes while males possess an x chromosome and a y chromosome a kwisatz haderach would be capable of accessing genetic memories stored within both chromosomes while those memories were inaccessible to bene gesserit memories from male ancestors are still accessible to females with access to genetic memory alia is able to make contact with the ego memory of vladimir harkonnen for instance but due to the lack of the y chromosome the memories were incomplete accessing the full paternal memories was impossible for the bene gesserit and the very thought of trying was terrifying to them further melange also exposed the sisterhood and others to a limited form of prescience   thoughts feelings images into the near future but no morebene gesserit attemptthe bene gesserit desire to uncover this knowledge and its associated powers drove them to initiate a long running genetic breeding program this would yield a male with mental powers capable of bridging space and time and that he would be under the direct control of the sisterhood the bene gesserit knew that not only would their kwisatz haderach possess other memory on both the male and female side but that he would be able to predict the future precisely he would be bene gesserit reverend mother mentat and guild navigator all in oneafter the emergence of this male   paul atreides   the term kwisatz haderach was also understood as meaning one who can be many places at once and became synonymous with paul in time it also came to encompass his sister alia atreides and his son leto atreides ii since they all had similar abilitiesthe initial bene gesserit plan was to breed the daughter of duke leto atreides to a harkonnen male which would produce the kwisatz haderach this was to be the culmination of more than 10000 years of careful breeding this plan would have seen the end of the centuries old feud between the great houses atreides and harkonnen and placed a prescient bene gesserit controlled male on the golden lion throne the kwisatz haderach however because of her love for duke leto the lady jessica disobeyed her fellow bene gesserit and gave birth to a son instead of a daughter to give him an heir paulit seemed fairly certain from early in pauls life that he would in fact be the kwisatz haderach since he showed an ability to see into the future it was when he was fifteen years of age that the bene gesserit sent a reverend mother to test pauls prescience and his training in the bene gesserit ways this event appeared to be a significant catalyst for the events that would befall the universe for the next several thousand years pauls testing with the gom jabbar as well as the sisterhoods silent complicity in his fathers death proved to instill significant negativity in paul against the sisterhood as a result when he reached young adulthood and ascended to the golden lion throne he vowed that he would never be under the control of the sisterhood because of this the sisterhood lost control of their breeding program their kwisatz haderach and the possibility of placing a bene gesserit on the thronepaul leaves the golden pathindeed it appeared that the majority of people did not realize that to know the future is to be trapped by it paul could see that he would have to lead humanity onto a drastic course in order for it to escape its own annihilation as a result he chose to escape the golden path by allowing himself to be blinded so that he could walk into the desert and not be a burden on his tribe the mantle of the golden path was subsequently taken up by leto iiimpactas kwisatz haderach both paul and his son leto would at times experience significant grief because they knew they were trapped by their own destinies one of the few people who understood this was in fact one of pauls enemies it was through the failed tleilaxu kwisatz haderach experiment that the tleilaxu master scytale could in fact sympathize with paul and the decisions he had to makewhen leto ii the next kwisatz haderach ascended to the throne not only did he manage to avoid bene gesserit control but he also took control of their breeding program he then relegated them to a relatively insignificant role in the universe throughout the 3500 years of his reignthe scatteringafter the famine times prompted by leto ii after his death the remaining power brokers in the old empire either forgot about the concept of the kwisatz or vehemently guarded against the rise of another of the super beings the bene gesserit would go so far as to terminate the life of humans that showed aspects of enhanced abilities but as was shown with the wild atreides line the heightened human abilities continually showed themselvesafter the the scattering both miles teg and his daughter darwi odrade descendants of the atreides showed super normal actions teg was able to move at lightning fast speed and disabled his kidnappers on gammu odrade had limited prescience that enabled her to know that the misguided honored matres and bene gesserit should merge to form one single organizationbut it was the ghola of duncan idaho which caused the most concern for all involved the conservative branch of the sisterhood led by schwangyu would go so far as to disobey the order of the mother superior alma mavis taraza and terminate the life of a young duncan ghola   even as she has sworn to be his protector from the tleilaxu who had allied themselves temporarily with the returning honored matresbehind the scenesits likely that the term was borrowed by frank herbert from the kabbala the compilation of jewish mysticism the core of which is entitled hazohar the book of splendor ascribed to rabbi shimon bar yohai ascribed by jews to have been written in the 1st century ce modern scholars ascribe it to a sephardic jewish author around the 13th century the term itself is hebrew kfitzat ha derekh קְפִיצַת הַדֶּרֶךְ literally the leap of the way by means of which an initiate may travel some distance instantaneously appearing to be in two or more places at once"
+        );
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_kwistchadrech() {
+        pattern = "kwistchadrech";
+
+        variants = asList(
+                "young adulthood kwisatz haderach he reached century ce modern taraza odrade scholars duncan idaho which"
+        );
+
+        expected = asList(
+                "young adulthood kwisatz haderach he reached century ce modern taraza odrade scholars duncan idaho which"
+        );
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_projscs() {
+        pattern = "projscs";
+
+        variants = asList(
+                "Raspberry Pi Projects for the Evil Genius by Donald Norris",
+                "D:/DEV/1__Projects/Diarsid/src",
+                "D:/DEV/1__Projects/Diarsid"
+        );
+
+        expected = asList(
+                "D:/DEV/1__Projects/Diarsid",
+                "D:/DEV/1__Projects/Diarsid/src",
+                "Raspberry Pi Projects for the Evil Genius by Donald Norris"
+        );
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_srvsmsg() {
+        pattern = "srvsmsg";
+
+        variants = asList(
+                "D:/DEV/3__Tools/Servers/Message_Servers"
+        );
+
+        expectedSameOrderAsVariants();
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_srvsmesg() {
+        pattern = "srvsmesg";
+
+        variants = asList(
+                "D:/DEV/3__Tools/Servers/Message_Servers"
+        );
+
+        expectedSameOrderAsVariants();
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_uposhtarch() {
+        pattern = "uposhtarch";
+
+        variants = asList(
+                "D:/DEV/1__Projects/X__Archive/UkrPoshta"
+        );
+
+        expectedSameOrderAsVariants();
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_passnjss() {
+        pattern = "passnjss";
+
+        variants = asList(
+                "The Passion of Jesus Christ by John Piper"
+        );
+
+        expectedSameOrderAsVariants();
+
+        weightVariantsAndCheckMatching();
+    }
+
+
+
+    @Test
+    public void test_virtlservs_virtual_servers() {
+        pattern = "virtlservs";
+
+        variants = asList(
+                "Resurrection After Rape: A guide to transforming from victim to survivor by Matt Atkinson",
+                "D:/DEV/3__Tools/Servers/Virtualization_Servers",
+                "On Vital Reserves by Stephen Vicchio and James William Martin"
+        );
+
+        expected = asList(
+                "D:/DEV/3__Tools/Servers/Virtualization_Servers",
+                "On Vital Reserves by Stephen Vicchio and James William Martin"
+                );
+
+        weightVariantsAndCheckMatching();
+    }
     
     @Test
     public void test_mathCase_math() {
@@ -2488,9 +2677,9 @@ public class AnalyzeTest {
     
     private void weightVariantsAndCheckMatchingInternally() {
         if ( isNull(this.noWorseThan) ) {
-            weightedVariants = this.analyze.weightStrings(pattern, variants);
+            weightedVariants = this.analyze.processStrings(pattern, variants);
         } else {
-            weightedVariants = this.analyze.weightStrings(pattern, noWorseThan, variants);
+            weightedVariants = this.analyze.processStrings(pattern, noWorseThan, variants);
         }        
         
         String expectedVariant;
@@ -2510,7 +2699,7 @@ public class AnalyzeTest {
         
         while ( weightedVariants.next() && ( counter.get() < expected.size() ) ) {
             
-            if ( weightedVariants.currentIsMuchBetterThanNext() ) {
+            if ( weightedVariants.isCurrentMuchBetterThanNext() ) {
                 
                 expectedVariant = expected.get(counter.getAndIncrement());
                 actualVariant = weightedVariants.current().value();
@@ -2603,7 +2792,7 @@ public class AnalyzeTest {
         weightedVariants.resetTraversing();
 
         while ( weightedVariants.next() ) {            
-            if ( weightedVariants.currentIsMuchBetterThanNext() ) {
+            if ( weightedVariants.isCurrentMuchBetterThanNext() ) {
                 variantsWithWeight.add("\n" + weightedVariants.current().value() + " is much better than next: " + weightedVariants.current().weight());
             } else {
                 variantsWithWeight.add("\nnext candidates are similar: ");                

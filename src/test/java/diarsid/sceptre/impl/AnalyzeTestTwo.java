@@ -7,7 +7,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import diarsid.sceptre.api.model.Variant;
 import diarsid.sceptre.api.model.Variants;
-import diarsid.strings.similarity.api.Similarity;
 import diarsid.support.objects.GuardedPool;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -22,8 +21,7 @@ import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.joining;
 
-import static diarsid.sceptre.impl.WeightAnalyzeReal.stringsToVariants;
-import static diarsid.support.configuration.Configuration.actualConfiguration;
+import static diarsid.sceptre.impl.AnalyzeImpl.stringsToVariants;
 import static diarsid.support.configuration.Configuration.configure;
 import static diarsid.support.objects.Pools.pools;
 import static diarsid.support.objects.collections.CollectionUtils.nonEmpty;
@@ -42,12 +40,12 @@ public class AnalyzeTestTwo {
                 "analyze.similarity.log.advanced = true");
     }
     
-    private static WeightAnalyzeReal analyzeInstance;
+    private static AnalyzeImpl analyzeInstance;
     private static int totalVariantsQuantity;
     private static long start;
     private static long stop;
     
-    private WeightAnalyzeReal analyze;
+    private AnalyzeImpl analyze;
     private boolean expectedToFail;
     private String pattern;
     private List<String> variants;
@@ -59,8 +57,7 @@ public class AnalyzeTestTwo {
 
     @BeforeAll
     public static void setUpClass() {
-        Similarity similarity = Similarity.createInstance(actualConfiguration());
-        analyzeInstance = new WeightAnalyzeReal(actualConfiguration(), similarity, pools());
+        analyzeInstance = new AnalyzeImpl(pools());
         start = currentTimeMillis();
     }
     
@@ -148,7 +145,7 @@ public class AnalyzeTestTwo {
     }
     
     private void weightVariantsAndCheckMatchingInternally() {
-        weightedVariants = this.analyze.weightVariants(pattern, stringsToVariants(variants));
+        weightedVariants = this.analyze.processVariants(pattern, stringsToVariants(variants));
         
         String expectedVariant;
         String actualVariant;
@@ -166,7 +163,7 @@ public class AnalyzeTestTwo {
         
         while ( weightedVariants.next() && ( counter.get() < expected.size() ) ) {
             
-            if ( weightedVariants.currentIsMuchBetterThanNext() ) {
+            if ( weightedVariants.isCurrentMuchBetterThanNext() ) {
                 
                 expectedVariant = expected.get(counter.getAndIncrement());
                 actualVariant = weightedVariants.current().value();
@@ -249,7 +246,7 @@ public class AnalyzeTestTwo {
         weightedVariants.resetTraversing();
 
         while ( weightedVariants.next() ) {            
-            if ( weightedVariants.currentIsMuchBetterThanNext() ) {
+            if ( weightedVariants.isCurrentMuchBetterThanNext() ) {
                 variantsWithWeight.add("\n" + weightedVariants.current().value() + " is much better than next: " + weightedVariants.current().weight());
             } else {
                 variantsWithWeight.add("\nnext candidates are similar: ");                

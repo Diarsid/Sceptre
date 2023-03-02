@@ -2,8 +2,6 @@ package diarsid.sceptre.impl;
 
 import diarsid.sceptre.api.model.Variant;
 
-import static java.lang.Integer.MIN_VALUE;
-
 import static diarsid.support.misc.MathFunctions.percentAsInt;
 import static diarsid.support.misc.MathFunctions.ratio;
 

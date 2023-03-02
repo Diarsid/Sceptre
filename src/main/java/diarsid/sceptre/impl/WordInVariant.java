@@ -168,6 +168,41 @@ public class WordInVariant extends PooledReusable {
         return count;
     }
 
+    public boolean isEnclosedByFound(Set<Integer> indexes, int askedIndex) {
+        int matchesBefore = 0;
+        int matchesAfter = 0;
+
+        boolean matchesStart = false;
+        boolean matchesEnd = false;
+
+        for ( int index : indexes ) {
+            if ( index == askedIndex ) {
+                continue;
+            }
+
+            if ( index >= startIndex && index <= endIndex ) {
+                if ( index == startIndex ) {
+                    matchesStart = true;
+                }
+                if ( index == endIndex ) {
+                    matchesEnd = true;
+                }
+
+                if ( index < askedIndex ) {
+                    matchesBefore++;
+                }
+
+                if ( index > askedIndex ) {
+                    matchesAfter++;
+                }
+            }
+        }
+
+        return (matchesStart || matchesEnd)
+                && matchesBefore > 0
+                && matchesAfter > 0;
+    }
+
     public boolean hasStartIn(Set<Integer> indexes) {
         return indexes.contains(this.startIndex);
     }

@@ -17,6 +17,8 @@ public enum WeightElement implements CommonEnum<WeightElement> {
             -7.71f, "previous char is word separator, current char is at pattern start!"),
     PREVIOUS_CHAR_IS_SEPARATOR(
             -3.1f, "previous char is word separator"),
+    PREVIOUS_CHAR_IS_SEPARATOR_ONLY_SINGLE_CHAR_FOUND_IN_WORD(
+            +2.3f, "previous char is word separator, but no other chars are found in this word"),
     CLUSTER_BEFORE_SEPARATOR(
             -10.5f, "there is cluster before separator!"),
     CLUSTER_STARTS_WITH_VARIANT(

@@ -228,7 +228,7 @@ public class VariantsImpl implements Variants {
     }
     
     @Override
-    public boolean currentIsMuchBetterThanNext() {
+    public boolean isCurrentMuchBetterThanNext() {
         if ( this.currentVariantIndex < this.variants.size() - 1 ) {
             if ( this.currentVariantIndex < 0 ) {
                 throw new IllegalStateException(
@@ -284,7 +284,7 @@ public class VariantsImpl implements Variants {
         }        
         boolean proceed = true;
         while ( this.currentVariantIndex < this.variants.size() && proceed ) {
-            if ( ! this.currentIsMuchBetterThanNext() ) {
+            if ( ! this.isCurrentMuchBetterThanNext() ) {
                 this.currentSimilarVariants.add(this.current());
                 this.currentVariantIndex++;
             } else {

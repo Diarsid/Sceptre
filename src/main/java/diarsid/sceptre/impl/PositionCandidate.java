@@ -7,13 +7,11 @@ package diarsid.sceptre.impl;
 
 import diarsid.sceptre.impl.logs.AnalyzeLogType;
 
-import static java.lang.Integer.max;
 import static java.lang.String.format;
 import static java.util.Objects.isNull;
 
-import static diarsid.sceptre.impl.WeightAnalyzeReal.logAnalyze;
+import static diarsid.sceptre.impl.AnalyzeImpl.logAnalyze;
 import static diarsid.support.misc.MathFunctions.absDiff;
-import static diarsid.support.misc.MathFunctions.percentAsInt;
 
 /**
  *

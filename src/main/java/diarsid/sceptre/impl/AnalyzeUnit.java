@@ -19,12 +19,12 @@ import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static java.util.stream.Collectors.joining;
 
-import static diarsid.sceptre.api.model.WeightEstimate.estimatePreliminarily;
+import static diarsid.sceptre.api.Sceptre.Weight.Estimate.preliminarilyOf;
 import static diarsid.sceptre.impl.AnalyzeUtil.lengthImportanceRatio;
 import static diarsid.sceptre.impl.AnalyzeUtil.missedTooMuch;
 import static diarsid.sceptre.impl.PositionsAnalyze.POS_NOT_FOUND;
 import static diarsid.sceptre.impl.PositionsAnalyze.POS_UNINITIALIZED;
-import static diarsid.sceptre.impl.WeightAnalyzeReal.logAnalyze;
+import static diarsid.sceptre.impl.AnalyzeImpl.logAnalyze;
 import static diarsid.sceptre.impl.WordInVariant.Placing.DEPENDENT;
 import static diarsid.sceptre.impl.WordInVariant.Placing.INDEPENDENT;
 import static diarsid.sceptre.impl.weight.WeightElement.CLUSTERS_IMPORTANCE;
@@ -40,8 +40,8 @@ import static diarsid.sceptre.impl.weight.WeightElement.VARIANT_CONTAINS_PATTERN
 import static diarsid.sceptre.impl.weight.WeightElement.VARIANT_EQUAL_PATTERN;
 import static diarsid.sceptre.impl.weight.WeightElement.VARIANT_PATH_SEPARATORS;
 import static diarsid.sceptre.impl.weight.WeightElement.VARIANT_TEXT_SEPARATORS;
-import static diarsid.sceptre.api.model.WeightEstimate.BAD;
-import static diarsid.sceptre.api.model.WeightEstimate.estimate;
+import static diarsid.sceptre.api.Sceptre.Weight.Estimate.BAD;
+import static diarsid.sceptre.api.Sceptre.Weight.Estimate.of;
 import static diarsid.support.misc.MathFunctions.percentAsFloat;
 import static diarsid.support.misc.MathFunctions.percentAsInt;
 import static diarsid.support.misc.MathFunctions.ratio;
@@ -364,11 +364,11 @@ class AnalyzeUnit extends PooledReusable {
         return 
                 this.canClustersBeBad &&
                 this.positionsAnalyze.clustersQty > 0 && 
-                estimatePreliminarily(this.positionsAnalyze.weight.sum()).equals(BAD);
+                preliminarilyOf(this.positionsAnalyze.weight.sum()).equals(BAD);
     }
 
     boolean isVariantTooBad() {
-        return nonEmpty(this.positionsAnalyze.badReason) || estimate(this.weight.sum()).equals(BAD);
+        return nonEmpty(this.positionsAnalyze.badReason) || of(this.weight.sum()).equals(BAD);
     }
 
     void isFirstCharMatchInVariantAndPattern(String pattern) {

@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package diarsid.sceptre.impl;
 
 import java.util.ArrayList;
@@ -20,7 +15,7 @@ import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static java.util.stream.Collectors.joining;
 
-import static diarsid.sceptre.impl.WeightAnalyzeReal.logAnalyze;
+import static diarsid.sceptre.impl.AnalyzeImpl.logAnalyze;
 import static diarsid.support.misc.MathFunctions.absDiff;
 import static diarsid.support.misc.MathFunctions.mean;
 import static diarsid.support.misc.MathFunctions.percentAsFloat;
@@ -32,10 +27,6 @@ import static diarsid.support.objects.collections.CollectionUtils.isNotEmpty;
 import static diarsid.support.objects.collections.Lists.lastFrom;
 import static diarsid.support.objects.references.References.simplePossibleButEmpty;
 
-/**
- *
- * @author Diarsid
- */
 class Clusters implements StatefulClearable {
     
     private static final int UNKNOWN_VALUE;

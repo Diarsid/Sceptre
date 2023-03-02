@@ -38,7 +38,7 @@ public interface Variants extends Serializable {
 
     boolean next();
 
-    boolean currentIsMuchBetterThanNext();
+    boolean isCurrentMuchBetterThanNext();
 
     Variant current();
 

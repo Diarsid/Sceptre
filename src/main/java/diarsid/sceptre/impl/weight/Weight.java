@@ -9,7 +9,7 @@ import static java.lang.Float.MIN_VALUE;
 import static java.util.Arrays.fill;
 
 import static diarsid.sceptre.impl.logs.AnalyzeLogType.POSITIONS_CLUSTERS;
-import static diarsid.sceptre.impl.WeightAnalyzeReal.logAnalyze;
+import static diarsid.sceptre.impl.AnalyzeImpl.logAnalyze;
 import static diarsid.sceptre.impl.weight.WeightElement.WeightCalculationType.ADD_VALUE_TO_SUM;
 import static diarsid.sceptre.impl.weight.WeightElement.WeightCalculationType.APPLY_PERCENT_TO_SUM;
 import static diarsid.sceptre.impl.weight.WeightElement.WeightType.CALCULATED;
