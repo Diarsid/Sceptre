@@ -1,6 +1,7 @@
 package diarsid.sceptre.impl;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -142,7 +143,17 @@ public class WordInVariant extends PooledReusable {
         return containsStart || containsEnd || isEnclosedByRange;
     }
 
-    public int countContains(List<Integer> indexes) {
+    public int firstIntersectionInVariant(Collection<Integer> candidatePositions) {
+        for ( int i = this.startIndex; i <= this.endIndex; i++ ) {
+            if ( candidatePositions.contains(i) ) {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    public int intersections(List<Integer> indexes) {
         int count = 0;
         for ( int index : indexes ) {
             if ( index < 0 ) {
@@ -155,7 +166,7 @@ public class WordInVariant extends PooledReusable {
         return count;
     }
 
-    public int countContains(int[] indexes) {
+    public int intersections(int[] indexes) {
         int count = 0;
         for ( int index : indexes ) {
             if ( index < 0 ) {
@@ -203,8 +214,32 @@ public class WordInVariant extends PooledReusable {
                 && matchesAfter > 0;
     }
 
-    public boolean hasStartIn(Set<Integer> indexes) {
+    public boolean hasStartIn(Collection<Integer> indexes) {
         return indexes.contains(this.startIndex);
+    }
+
+    public boolean hasMiddlesIn(Collection<Integer> indexes) {
+        for ( int index : indexes ) {
+            if ( index > startIndex && index < endIndex ) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public boolean hasEndIn(Collection<Integer> indexes) {
+        return indexes.contains(this.endIndex);
+    }
+
+    public boolean hasIntersections(Collection<Integer> indexes) {
+        for ( int index : indexes ) {
+            if ( index >= startIndex && index <= endIndex ) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public int intersections(Set<Integer> indexes) {
@@ -285,21 +320,6 @@ public class WordInVariant extends PooledReusable {
         return matches;
     }
 
-    public int intersections(int[] positions) {
-        int positionInVariant;
-        int matches = 0;
-        for ( int i = 0; i < positions.length; i++) {
-            positionInVariant = positions[i];
-            if ( positionInVariant < 0 ) {
-                continue;
-            }
-            if ( positionInVariant >= startIndex && positionInVariant <= endIndex ) {
-                matches++;
-            }
-        }
-        return matches;
-    }
-
     @Override
     protected void clearForReuse() {
         Arrays.fill(chars, EMPTY);
@@ -315,11 +335,25 @@ public class WordInVariant extends PooledReusable {
     private static String string(char[] chars) {
         StringBuilder sb = new StringBuilder();
         sb.append('[');
-        for ( int i = 0; i < chars.length - 1; i++ ) {
-            sb.append(chars[i]).append(' ');
+        char c;
+        int last = chars.length - 1;
+        for ( int i = 0; i < last; i++ ) {
+            c = chars[i];
+            if ( c == '_') {
+                continue;
+            }
+            sb.append(c).append(' ');
         }
-        sb.append(chars[chars.length-1]).append(']');
+        c = chars[last];
+        if ( c != '_') {
+            sb.append(c);
+        }
+        sb.append(']');
         return sb.toString();
+    }
+
+    String charsString() {
+        return string(chars);
     }
 
     @Override

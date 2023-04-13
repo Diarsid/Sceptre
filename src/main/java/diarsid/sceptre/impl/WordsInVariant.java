@@ -1,6 +1,7 @@
 package diarsid.sceptre.impl;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -8,6 +9,7 @@ import diarsid.support.objects.GuardedPool;
 import diarsid.support.objects.PooledReusable;
 import diarsid.support.objects.StatefulClearable;
 
+import static diarsid.sceptre.impl.WordInVariant.Placing.DEPENDENT;
 import static diarsid.sceptre.impl.WordInVariant.Placing.INDEPENDENT;
 
 public class WordsInVariant implements StatefulClearable {
@@ -17,15 +19,11 @@ public class WordsInVariant implements StatefulClearable {
         private static final int UNINITIALIZED = -1;
 
         private int rangeStartIndex;
-        private int rangeLength;
-        private final List<Integer> rangeIndexes;
         private final List<WordInVariant> found;
         private int length;
 
         public WordsInRange() {
             this.rangeStartIndex = UNINITIALIZED;
-            this.rangeLength = UNINITIALIZED;
-            this.rangeIndexes = new ArrayList<>();
             this.found = new ArrayList<>();
             this.length = 0;
         }
@@ -46,8 +44,6 @@ public class WordsInVariant implements StatefulClearable {
         @Override
         public void clearForReuse() {
             this.rangeStartIndex = UNINITIALIZED;
-            this.rangeLength = UNINITIALIZED;
-            this.rangeIndexes.clear();
             this.found.clear();
             this.length = 0;
         }
@@ -69,10 +65,8 @@ public class WordsInVariant implements StatefulClearable {
             return count;
         }
 
-        private void addToRangeIndexes(int[] positions) {
-            for ( int i = 0; i < positions.length; i++) {
-                this.rangeIndexes.add(i);
-            }
+        public List<WordInVariant> all() {
+            return this.found;
         }
 
         public boolean areEmpty() {
@@ -121,7 +115,7 @@ public class WordsInVariant implements StatefulClearable {
             return intersections;
         }
 
-        public boolean hasStartIn(Set<Integer> indexes) {
+        public boolean hasStartIn(Collection<Integer> indexes) {
             if ( this.areEmpty() ) {
                 return false;
             }
@@ -146,6 +140,7 @@ public class WordsInVariant implements StatefulClearable {
     private final GuardedPool<WordInVariant> wordsPool;
     private final GuardedPool<WordsInRange> wordsInRangePool;
     private final List<WordsInRange> usedWordsInRanges;
+    private final List<WordInVariant> wordsByCharInVariantIndex;
     final List<WordInVariant> all;
     int variantLength;
 
@@ -154,36 +149,90 @@ public class WordsInVariant implements StatefulClearable {
         this.wordsInRangePool = wordsInRangePool;
         this.all = new ArrayList<>();
         this.usedWordsInRanges = new ArrayList<>();
+        this.wordsByCharInVariantIndex = new ArrayList<>(128);
     }
 
     public WordInVariant next(WordInVariant.Placing placing) {
-        WordInVariant wordInVariant = wordsPool.give();
+        WordInVariant wordInVariant = this.wordsPool.give();
         wordInVariant.placing = placing;
-        wordInVariant.index = all.size();
-        all.add(wordInVariant);
+        wordInVariant.index = this.all.size();
+        this.all.add(wordInVariant);
         return wordInVariant;
     }
 
     @Override
     public void clear() {
-        wordsPool.takeBackAll(all);
-        wordsInRangePool.takeBackAll(usedWordsInRanges);
-        all.clear();
-        usedWordsInRanges.clear();
+        this.wordsByCharInVariantIndex.clear();
+        this.wordsPool.takeBackAll(this.all);
+        this.wordsInRangePool.takeBackAll(usedWordsInRanges);
+        this.all.clear();
+        this.usedWordsInRanges.clear();
         this.variantLength = -1;
     }
 
     void complete() {
+        int iVariant = 0;
+        int iWord = 0;
 
+        WordInVariant word = null;
+        for ( ; iVariant < this.variantLength; iVariant++ ) {
+            if ( word == null && iWord < this.all.size() ) {
+                word = this.all.get(iWord);
+            }
+
+            if ( word.hasIndex(iVariant) ) {
+                this.wordsByCharInVariantIndex.add(word);
+                if ( iVariant == word.endIndex ) {
+                    word = null;
+                    iWord++;
+                }
+            }
+            else if ( iVariant < word.startIndex ) {
+                this.wordsByCharInVariantIndex.add(null);
+            }
+            else if ( iVariant > word.endIndex ) {
+                this.wordsByCharInVariantIndex.add(null);
+                word = null;
+            }
+        }
     }
 
-    public WordInVariant wordOf(int indexInVariant) {
-        for ( WordInVariant word : all ) {
-            if ( word.hasIndex(indexInVariant) ) {
+    public WordInVariant firstIndependentBefore(WordInVariant dependentWord) {
+        dependentWord.placing.mustBe(DEPENDENT);
+
+        WordInVariant word;
+        for ( int i = dependentWord.index-1; i > -1; i-- ) {
+            word = this.all.get(i);
+            if ( word.placing.is(INDEPENDENT) ) {
                 return word;
             }
         }
-        throw new IllegalArgumentException();
+
+        throw new IllegalStateException();
+    }
+
+    public WordInVariant wordOf(int indexInVariant) {
+        WordInVariant word = this.wordsByCharInVariantIndex.get(indexInVariant);
+        if ( word == null ) {
+            throw new IllegalArgumentException();
+        }
+        return word;
+    }
+
+    public WordInVariant wordBeforeOrNull(WordInVariant word) {
+        if ( word.index == 0 ) {
+            return null;
+        }
+
+        return this.all.get(word.index - 1);
+    }
+
+    public WordInVariant wordAfterOrNull(WordInVariant word) {
+        if ( word.index == all.size() - 1 ) {
+            return null;
+        }
+
+        return this.all.get(word.index + 1);
     }
 
     public WordsInRange wordsOfRange(int afterPosition, int[] positions) {
@@ -194,16 +243,14 @@ public class WordsInVariant implements StatefulClearable {
 
         if ( wordExcluded.index == all.size() - 1 ) {
             words.rangeStartIndex = wordExcluded.endIndex;
-            words.rangeLength = 0;
 
             return words;
         }
 
         words.rangeStartIndex = wordExcluded.endIndex;
-        words.rangeLength = this.variantLength - words.rangeStartIndex;
 
         WordInVariant word;
-        for ( int i = wordExcluded.index + 1; i < all.size(); i++ ) {
+        for ( int i = wordExcluded.index + 1; i < this.all.size(); i++ ) {
             word = all.get(i);
             if ( word.intersections(afterPosition, positions) > 0 ) {
                 words.add(word);
@@ -218,7 +265,6 @@ public class WordsInVariant implements StatefulClearable {
         this.usedWordsInRanges.add(words);
 
         words.rangeStartIndex = rangeStartIndex;
-        words.rangeLength = rangeLength;
 
         for ( WordInVariant word : all ) {
             if ( word.containsRange(rangeStartIndex, rangeLength) ) {
@@ -237,10 +283,8 @@ public class WordsInVariant implements StatefulClearable {
         WordsInRange words = this.wordsInRangePool.give();
         this.usedWordsInRanges.add(words);
 
-        words.rangeIndexes.addAll(positions);
-
         for ( WordInVariant word : all ) {
-            if ( word.countContains(positions) > 0 ) {
+            if ( word.intersections(positions) > 0 ) {
                 words.add(word);
             }
         }
@@ -252,10 +296,8 @@ public class WordsInVariant implements StatefulClearable {
         WordsInRange words = this.wordsInRangePool.give();
         this.usedWordsInRanges.add(words);
 
-        words.addToRangeIndexes(positions);
-
         for ( WordInVariant word : all ) {
-            if ( word.countContains(positions) > 0 ) {
+            if ( word.intersections(positions) > 0 ) {
                 words.add(word);
             }
         }

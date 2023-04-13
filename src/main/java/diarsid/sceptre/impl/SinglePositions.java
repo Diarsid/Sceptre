@@ -14,23 +14,42 @@ class SinglePositions {
     }
     
     private final static Integer MISS = -3;
-    
-    private final List<Integer> positions;
+
+    private final List<Integer> filledPositions;
+    private final List<Integer> allPositions;
     private final List<Integer> uninterruptedPositions;
     private int added;
     private int missed;
     private Event lastEvent;
 
     SinglePositions() {
-        this.positions = new ArrayList<>();
+        this.filledPositions = new ArrayList<>();
+        this.allPositions = new ArrayList<>();
         this.uninterruptedPositions = new ArrayList<>();
         this.added = 0;
         this.missed = 0;
         this.lastEvent = Event.UNINIT;
     }
 
+    int lastBetween(int startIncl, int endIncl) {
+        int position;
+        for ( int i = this.filledPositions.size()-1; i > -1 ; i-- ) {
+            position = this.filledPositions.get(i);
+            if ( position > startIncl && position < endIncl ) {
+                return position;
+            }
+        }
+
+        return -1;
+    }
+
+    boolean contains(int position) {
+        return this.allPositions.contains(position);
+    }
+
     void clear() {
-        this.positions.clear();
+        this.filledPositions.clear();
+        this.allPositions.clear();
         this.uninterruptedPositions.clear();
         this.added = 0;
         this.missed = 0;
@@ -40,23 +59,28 @@ class SinglePositions {
     void add(int position) {
         if ( this.lastEvent.equals(Event.ADDED) ) {
             if ( this.uninterruptedPositions.isEmpty() ) {
-                this.uninterruptedPositions.add(lastFrom(this.positions));
+                this.uninterruptedPositions.add(lastFrom(this.allPositions));
             }
             this.uninterruptedPositions.add(position);
         }
-        this.positions.add(position);
+        this.filledPositions.add(position);
+        this.allPositions.add(position);
         this.added++;
         this.lastEvent = Event.ADDED;
     }
 
     void miss() {
-        this.positions.add(MISS);
+        this.allPositions.add(MISS);
         this.missed++;
         this.lastEvent = Event.MISSED;
     }
     
     void end() {
         
+    }
+
+    List<Integer> filled() {
+        return this.filledPositions;
     }
     
     boolean doHaveUninterruptedRow() {

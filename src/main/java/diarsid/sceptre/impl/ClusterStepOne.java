@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Objects;
 
 import diarsid.sceptre.impl.logs.AnalyzeLogType;
+import diarsid.support.exceptions.UnsupportedLogicException;
 import diarsid.support.objects.references.Possible;
 
 import static java.lang.Integer.min;
@@ -65,8 +66,18 @@ class ClusterStepOne {
         @Override
         public void goToNext() {
             this.i++;
-        }        
-        
+        }
+
+        @Override
+        public String match() {
+            return "STEP_1_DIRECT_MATCH";
+        }
+
+        @Override
+        public char character() {
+            throw new UnsupportedLogicException();
+        }
+
         @Override
         public int patternPosition() {
             return this.cluster.allPatternPositions.get(this.i);
@@ -698,15 +709,17 @@ class ClusterStepOne {
         return this.prevsVariantPositions.size() + 3 + this.nextsVariantPositions.size();
     }
     
-    boolean isBetterThan(ClusterStepOne other) {
+    boolean isBetterThan(ClusterStepOne other, WordsInVariant wordsInVariant) {
         int thisLengthWithNearTypos = this.lengthWithNearTypos();
         int otherLengthWithNearTypos = other.lengthWithNearTypos();
         
         if ( thisLengthWithNearTypos > otherLengthWithNearTypos ) {
             return true;
-        } else if ( thisLengthWithNearTypos < otherLengthWithNearTypos ) {
+        }
+        else if ( thisLengthWithNearTypos < otherLengthWithNearTypos ) {
             return false;
-        } else {
+        }
+        else {
             int thisTotalTypos = this.typos.qtyTotal();
             int thisLength = this.coreLength();
             int otherTotalTypos = other.typos.qtyTotal();
@@ -716,10 +729,23 @@ class ClusterStepOne {
             
             if ( thisTotalLength > otherTotalLength ) {
                 return true;
-            } else if ( thisTotalLength < otherTotalLength ) {
+            }
+            else if ( thisTotalLength < otherTotalLength ) {
                 return false;
-            } else {
-                return true;
+            }
+            else {
+                WordsInVariant.WordsInRange thisWords = wordsInVariant.wordsOfRange(this.allVariantPositions);
+                WordsInVariant.WordsInRange otherWords = wordsInVariant.wordsOfRange(other.allVariantPositions);
+
+                if ( thisWords.hasStartIn(this.allVariantPositions) ) {
+                    return true;
+                }
+                else if ( otherWords.hasStartIn(other.allVariantPositions) ) {
+                    return false;
+                }
+                else {
+                    return true;
+                }
             }
         }
     }

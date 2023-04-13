@@ -2,12 +2,15 @@ package diarsid.sceptre.impl;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.IntFunction;
 
+import diarsid.sceptre.impl.collections.ArrayChar;
+import diarsid.sceptre.impl.collections.impl.ArrayCharImpl;
 import diarsid.sceptre.impl.logs.AnalyzeLogType;
 import diarsid.sceptre.impl.weight.Weight;
 import diarsid.support.objects.GuardedPool;
@@ -42,6 +45,7 @@ import static diarsid.sceptre.impl.weight.WeightElement.VARIANT_PATH_SEPARATORS;
 import static diarsid.sceptre.impl.weight.WeightElement.VARIANT_TEXT_SEPARATORS;
 import static diarsid.sceptre.api.Sceptre.Weight.Estimate.BAD;
 import static diarsid.sceptre.api.Sceptre.Weight.Estimate.of;
+import static diarsid.sceptre.impl.weight.WeightElement.WeightCalculationType.APPLY_PERCENT_TO_SUM;
 import static diarsid.support.misc.MathFunctions.percentAsFloat;
 import static diarsid.support.misc.MathFunctions.percentAsInt;
 import static diarsid.support.misc.MathFunctions.ratio;
@@ -96,7 +100,7 @@ class AnalyzeUnit extends PooledReusable {
         count.set(0);
     };
     
-    int missedPercent;
+    int notMissedPercent;
         
     AnalyzeUnit(GuardedPool<Cluster> clusterPool, GuardedPool<WordInVariant> wordPool, GuardedPool<WordsInVariant.WordsInRange> wordsInRangePool) {
         super();
@@ -143,7 +147,7 @@ class AnalyzeUnit extends PooledReusable {
         this.calculatedAsUsualClusters = true;
         this.canClustersBeBad = true;
         this.allPositionsPresentSortedAndNotPathSeparatorsBetween = false;
-        this.missedPercent = 0;
+        this.notMissedPercent = 0;
         this.wordsInVariant.clear();
         this.patternCharsCount.values().forEach(this.patternCharsCounterClear);
     }
@@ -290,8 +294,8 @@ class AnalyzeUnit extends PooledReusable {
             addWeightForVariantTextSeparators();
 
             if ( this.positionsAnalyze.missed > 0 ) {
-                this.missedPercent = 100 - percentAsInt(this.positionsAnalyze.missed, this.pattern.length());
-                this.weight.applyPercent(missedPercent, PERCENT_FOR_MISSED);
+                this.notMissedPercent = 100 - percentAsInt(this.positionsAnalyze.missed, this.pattern.length());
+                this.weight.applyPercent(this.notMissedPercent, PERCENT_FOR_MISSED);
             }
         }        
     }
@@ -412,7 +416,12 @@ class AnalyzeUnit extends PooledReusable {
         if (AnalyzeLogType.POSITIONS_CLUSTERS.isEnabled()) {
             logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, "  weight elements:");
             this.weight.observeAll((i, weightValue, element) -> {
-                logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, format("      %1$s) %2$-+7.2f : %3$s", i, weightValue, element.description));
+                if ( element.calculationType.is(APPLY_PERCENT_TO_SUM) ) {
+                    logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, format("      %1$s) x%2$7.2f%% : %3$s", i, weightValue, element.description));
+                }
+                else {
+                    logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, format("      %1$s) %2$-+7.2f : %3$s", i, weightValue, element.description));
+                }
             });
         }
         logAnalyze(AnalyzeLogType.BASE, "    %1$-25s %2$s", "total weight", this.weight);
@@ -430,7 +439,7 @@ class AnalyzeUnit extends PooledReusable {
         logAnalyze(AnalyzeLogType.BASE, "    %1$-25s %2$s", "nonClusteredImportance", positionsAnalyze.nonClusteredImportance);
         logAnalyze(AnalyzeLogType.BASE, "    %1$-25s %2$s", "clustersImportance", positionsAnalyze.clustersImportance);
         logAnalyze(AnalyzeLogType.BASE, "    %1$-25s %2$s", "missed", positionsAnalyze.missed);
-        logAnalyze(AnalyzeLogType.BASE, "    %1$-25s %2$s%%", "missedPercent", this.missedPercent);
+        logAnalyze(AnalyzeLogType.BASE, "    %1$-25s %2$s%%", "notMissedPercent", this.notMissedPercent);
     }
 
     boolean areTooMuchPositionsMissed() {
@@ -470,6 +479,7 @@ class AnalyzeUnit extends PooledReusable {
     }
     
     private void doWhenSingleCluster() {
+//        this.positionsAnalyze.applySingleWordQuality();
         if ( this.positionsAnalyze.clusters.firstCluster().length() < 4 ) {
             logAnalyze(AnalyzeLogType.BASE, "    [mark sequence] ");
             if ( this.weight.contains(VARIANT_CONTAINS_PATTERN) ) {
@@ -483,7 +493,7 @@ class AnalyzeUnit extends PooledReusable {
     }
     
     private void doWhenManyClusters() {
-        // no logic here yet
+//        this.positionsAnalyze.applySingleWordQuality();
     }
     
     boolean isVariantEqualsPattern() {
@@ -525,6 +535,10 @@ class AnalyzeUnit extends PooledReusable {
             current = i;
             c = s.charAt(current);
             currentIsSeparator = false;
+
+            if ( i == 34 ) {
+                int a = 5;
+            }
 
             if ( isPathSeparator(c) ) {
                 this.variantPathSeparators.add(current);
@@ -614,6 +628,13 @@ class AnalyzeUnit extends PooledReusable {
         this.patternChars = this.pattern.toCharArray();
         this.positionsAnalyze.positions = new int[this.patternChars.length];
         fill(this.positionsAnalyze.positions, POS_UNINITIALIZED);
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private static void fillNulls(List list, int length) {
+        for ( int i = 0; i < length; i++ ) {
+            list.add(null);
+        }
     }
     
     private static float patternLengthRatio(String pattern) {

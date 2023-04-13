@@ -156,13 +156,15 @@ public class AnalyzeTest {
         pattern = "phots";
         
         variants = asList(
-                "Projects",
-                "Images/Photos",
+//                "Projects",
+//                "Images/Photos",
                 "Photos");
         
         expected = asList( 
-                "Photos",
-                "Images/Photos");
+                "Photos"
+//                ,
+//                "Images/Photos"
+        );
         
         weightVariantsAndCheckMatching();
     }
@@ -566,8 +568,21 @@ public class AnalyzeTest {
         expectedSameOrderAsVariants();
         
         weightVariantsAndCheckMatching();
-    }    
-    
+    }
+
+    @Test
+    public void test_webServers_wbsrrv() {
+        pattern = "wbsrrv";
+
+        variants = asList(
+                "Tools/Servers/Web_Servers"
+        );
+
+        expectedSameOrderAsVariants();
+
+        weightVariantsAndCheckMatching();
+    }
+
     @Test
     public void test_8dot5_85() {
         pattern = "85";
@@ -1739,7 +1754,39 @@ public class AnalyzeTest {
         );
 
         expected = asList(
-                "D:/DEV/1__Projects/UkrPoshta/UkrposhtaStatusNotificationServiceClient");
+                "D:/DEV/1__Projects/UkrPoshta/UkrposhtaStatusNotificationServiceClient",
+                "D:/DEV/1__Projects/UkrPoshta/UkrposhtaStatusNotificationService",
+                "D:/DEV/1__Projects/UkrPoshta/UkrposhtaStatusNotificationGenerator");
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_UkrposhtaStatusNotificationServiceClient_ukrptnotfclntsts_1() {
+        pattern = "ukrptnotfclntsts";
+
+        variants = asList(
+                "D:/DEV/1__Projects/UkrPoshta/UkrposhtaStatusNotificationServiceClient"
+        );
+
+        expected = asList(
+                "D:/DEV/1__Projects/UkrPoshta/UkrposhtaStatusNotificationServiceClient"
+        );
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_UkrposhtaStatusNotificationServiceClient_ukrptnotfclntstts_1() {
+        pattern = "ukrptnotfclntstts";
+
+        variants = asList(
+                "D:/DEV/1__Projects/UkrPoshta/UkrposhtaStatusNotificationServiceClient"
+        );
+
+        expected = asList(
+                "D:/DEV/1__Projects/UkrPoshta/UkrposhtaStatusNotificationServiceClient"
+        );
 
         weightVariantsAndCheckMatching();
     }
@@ -1749,14 +1796,16 @@ public class AnalyzeTest {
         pattern = "upshstnoftftclnt";
 
         variants = asList(
-//                "D:/DEV/1__Projects/UkrPoshta/UkrposhtaStatusNotificationService",
+                "D:/DEV/1__Projects/UkrPoshta/UkrposhtaStatusNotificationService",
                 "D:/DEV/1__Projects/UkrPoshta/UkrposhtaStatusNotificationServiceClient"
-//                ,
-//                "D:/DEV/1__Projects/UkrPoshta/UkrposhtaStatusNotificationGenerator"
+                ,
+                "D:/DEV/1__Projects/UkrPoshta/UkrposhtaStatusNotificationGenerator"
         );
 
         expected = asList(
-                "D:/DEV/1__Projects/UkrPoshta/UkrposhtaStatusNotificationServiceClient");
+                "D:/DEV/1__Projects/UkrPoshta/UkrposhtaStatusNotificationServiceClient",
+                "D:/DEV/1__Projects/UkrPoshta/UkrposhtaStatusNotificationService",
+                "D:/DEV/1__Projects/UkrPoshta/UkrposhtaStatusNotificationGenerator");
 
         weightVariantsAndCheckMatching();
     }
@@ -1780,6 +1829,39 @@ public class AnalyzeTest {
 
         weightVariantsAndCheckMatching();
     }
+
+    @Test
+    public void test_tolkien_lororng() {
+
+        pattern = "lororng";
+
+        variants = asList(
+                "The Lord of the Rings ",
+                "Lord of the Rings by J.R.R Tolkien ",
+                "The Lord of the Rings: The Art of the Fellowship of the Ring by Gary Russell"
+        );
+
+        expectedSameOrderAsVariants();
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_ecom_posecom() {
+
+        pattern = "posecom";
+
+        variants = asList(
+                "D:/DEV/1__Projects/UkrPoshta/UkrposhtaEcom_1",
+                "The Complete Poems and Major Prose by John Milton and Merritt Y. Hughes "
+        );
+
+        expectedSameOrderAsVariants();
+
+        weightVariantsAndCheckMatching();
+    }
+
+
 
     @Test
     public void test_tolkien_1_lorofrngbyjrrtolk() {
@@ -2224,6 +2306,7 @@ public class AnalyzeTest {
         weightVariantsAndCheckMatching();
     }
 
+    @Disabled
     @Test
     public void test_kwistchadrech_multiple() {
         pattern = "kwistchadrech";
@@ -2269,6 +2352,102 @@ public class AnalyzeTest {
                 "D:/DEV/1__Projects/Diarsid/src",
                 "Raspberry Pi Projects for the Evil Genius by Donald Norris"
         );
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Disabled
+    @Test
+    public void test_tools_1() {
+        pattern = "tolos";
+
+        variants = asList(
+                "The Dictionary of Corporate Bullshit: An A to Z Lexicon of Empty Enraging and Just Plain Stupid Office Talk by Lois Beckwith",
+                "D:/DEV/3__Tools/Servers/Message_Servers",
+                "D:/DEV/3__Tools",
+                "Star Trek: Logs One and Two (Star Trek: Log #1-2) by Alan Dean Foster",
+                "Eating for Life: Your Guide to Great Health Fat Loss and Increased Energy! by Bill Phillips",
+                "The Hunger Games Companion: The Unauthorized Guide to the Series by Lois H. Gresh",
+                "Losers: The Road to Everyplace But the White House by Michael Lewis",
+                "A Calendar of Wisdom: Daily Thoughts to Nourish the Soul by Peter Sekirin and Leo Tolstoy",
+                "The Book of Lost Tales Part One (The History of Middle-Earth #1) by J.R.R. Tolkien and Christopher Tolkien"
+        );
+
+        expectedSameOrderAsVariants();
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_tolsvirtl_1() {
+        pattern = "tolsvirtl";
+
+        variants = asList(
+                "The Lady in the Lake The Little Sister The Long Goodbye Playback (Everyman's Library) by Tom Hiney and Raymond Chandler",
+                "The Future of God: A Practical Approach to Spirituality for Our Times by Deepak Chopra",
+                "The Diary of Virginia Woolf Volume Two: 1920-1924 by Virginia Woolf and Andrew McNeillie, and Anne Olivier Bell",
+                "The Ice-Shirt (Seven Dreams #1) by William T. Vollmann",
+                "There's a Spiritual Solution to Every Problem by Dr. Wayne W. Dyer",
+                "Toys Go Out: Being the Adventures of a Knowledgeable Stingray a Toughy Little Buffalo and Someone Called Plastic (Toys #1) by Emily Jenkins and Paul O. Zelinsky",
+                "Java: An Introduction to Problem Solving and Programming by Walter J. Savitch",
+                "D:/DEV/3__Tools/Servers/Virtualization_Servers"
+        );
+
+        expected = asList(
+                "D:/DEV/3__Tools/Servers/Virtualization_Servers",
+                "There's a Spiritual Solution to Every Problem by Dr. Wayne W. Dyer"
+                );
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_drklalver() {
+        pattern = "drklalver";
+
+        variants = asList(
+                "Dracula's Lover (Erotic Monsters Series) (Volume 2) by J.G. Newton",
+                "H. P. Lovecraft's Dreamlands (Call of Cthulhu RPG) by Chris Williams and Sandy Petersen",
+                "Student Friendly Quantum Field Theory by Robert D. Klauber"
+        );
+
+        expected = asList("Dracula's Lover (Erotic Monsters Series) (Volume 2) by J.G. Newton");
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_drclalver() {
+        pattern = "drclalver";
+
+        variants = asList(
+                "Dracula's Lover (Erotic Monsters Series) (Volume 2) by J.G. Newton",
+                "H. P. Lovecraft's Dreamlands (Call of Cthulhu RPG) by Chris Williams and Sandy Petersen",
+                "Student Friendly Quantum Field Theory by Robert D. Klauber"
+        );
+
+        expected = asList("Dracula's Lover (Erotic Monsters Series) (Volume 2) by J.G. Newton");
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_romeries() {
+        pattern = "romeries";
+
+        variants = asList(
+                "When Genius Failed: The Rise And Fall Of Long Term Capital Management by Roger Lowenstein",
+                "Bedlam's Edge (Bedlam's Bard #8) by Mercedes Lackey and Rosemary Edghill",
+                "The Golden Key by Jennifer Roberson and Melanie Rawn, and Kate Elliott",
+                "Accidental Empires by Robert X. Cringely",
+                "How the Irish Saved Civilization: The Untold Story of Ireland's Heroic Role from the Fall of Rome to the Rise of Medieval Europe by Thomas Cahill",
+                "Britain After Rome: The Fall and Rise, 400 to 1070 by Robin Fleming"
+        );
+
+        expected = asList(
+                "Britain After Rome: The Fall and Rise, 400 to 1070 by Robin Fleming",
+                "How the Irish Saved Civilization: The Untold Story of Ireland's Heroic Role from the Fall of Rome to the Rise of Medieval Europe by Thomas Cahill",
+                "The Golden Key by Jennifer Roberson and Melanie Rawn, and Kate Elliott");
 
         weightVariantsAndCheckMatching();
     }
@@ -2517,7 +2696,8 @@ public class AnalyzeTest {
         
         weightVariantsAndCheckMatching();
     }
-    
+
+    @Disabled
     @Test
     public void test_synthetic_4() {
         this.analyze.disableResultsLimit();

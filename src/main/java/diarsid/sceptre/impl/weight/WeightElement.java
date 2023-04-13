@@ -115,21 +115,24 @@ public enum WeightElement implements CommonEnum<WeightElement> {
     
     PERCENT_FOR_MISSED(
             "decrease to percent for missed", 
-            APPLY_PERCENT_TO_SUM);
+            APPLY_PERCENT_TO_SUM),
 
-    static enum WeightType {
+    WORD_QUALITY(
+            "word quality");
+
+    public static enum WeightType implements CommonEnum<WeightType> {
+
         CALCULATED,
         PREDEFINED;
     }
 
-    static enum WeightCalculationType {
+    public static enum WeightCalculationType implements CommonEnum<WeightCalculationType> {
+
         ADD_VALUE_TO_SUM,
         APPLY_PERCENT_TO_SUM;
 
         static final WeightCalculationType DEFAULT_CALCULATION_TYPE = ADD_VALUE_TO_SUM;
     }
-
-
 
     public final float predefinedWeight;
     public final boolean isFading;

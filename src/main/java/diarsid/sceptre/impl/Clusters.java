@@ -53,16 +53,18 @@ class Clusters implements StatefulClearable {
     private boolean allClustersSeparatedByOneChar;
 
     /* Placing variables block */
-    final Possible<String> placingCase;
-    final Possible<String> placingBonusNotApplicableReason;
-    int clustersPercentInVariant;        
-    int meanPosition = UNKNOWN_VALUE;
-    int adjustedVariantLength = UNKNOWN_VALUE;
-    float placingPercent = UNKNOWN_VALUE;
-    float clustersPlacingImportance = UNKNOWN_VALUE;
-    float distanceBetweenClustersImportance = UNKNOWN_VALUE;
-    float placingBonus;
-    float placingBonusLimit;
+    private final Possible<String> placingCase;
+    private final Possible<String> placingBonusNotApplicableReason;
+    private int clustersPercentInVariant;
+    private int meanPosition = UNKNOWN_VALUE;
+    private int adjustedVariantLength = UNKNOWN_VALUE;
+    private float placingPercent = UNKNOWN_VALUE;
+    private float clustersPlacingImportance = UNKNOWN_VALUE;
+    private float distanceBetweenClustersImportance = UNKNOWN_VALUE;
+    private float placingBonus;
+    private float placingBonusLimit;
+
+    private final List<Cluster> chosenByWord;
 
     Clusters(
             AnalyzeUnit analyzeData, 
@@ -91,6 +93,8 @@ class Clusters implements StatefulClearable {
         this.placingBonusLimit = UNKNOWN_VALUE;
         this.placingCase = simplePossibleButEmpty();
         this.placingBonusNotApplicableReason = simplePossibleButEmpty();
+
+        this.chosenByWord = new ArrayList<>();
     }
     
     Cluster getUnprocessed() {
@@ -130,6 +134,20 @@ class Clusters implements StatefulClearable {
         } 
         
         return this.distanceBetweenClusters;
+    }
+
+    void chooseAllOf(WordInVariant word) {
+        this.chosenByWord.clear();
+
+        for ( Cluster cluster : this.clusters ) {
+            if ( cluster.intersectsWith(word) ) {
+                this.chosenByWord.add(cluster);
+            }
+        }
+    }
+
+    List<Cluster> chosenInWord() {
+        return this.chosenByWord;
     }
     
     int totalLength() {
@@ -1347,6 +1365,8 @@ class Clusters implements StatefulClearable {
         this.placingBonusLimit = UNKNOWN_VALUE;
         this.placingCase.nullify();
         this.placingBonusNotApplicableReason.nullify();
+
+        this.chosenByWord.clear();
     }
     
     @Override

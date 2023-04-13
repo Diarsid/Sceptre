@@ -73,7 +73,7 @@ class PositionCandidate {
             logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "             chars remained         %s", charsRemained);
         }
         
-        /* DEBUG */ if ( otherPosition == 12 ) {
+        /* DEBUG */ if ( otherPosition == 42 ) {
         /* DEBUG */     int a = 5;
         /* DEBUG */ }
         if ( this.isCurrentStateWorseThan(

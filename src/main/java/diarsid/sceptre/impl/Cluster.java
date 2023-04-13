@@ -111,6 +111,10 @@ class Cluster
 
         return this.firstPosition + order;
     }
+
+    boolean contains(int position) {
+        return this.firstPosition <= position && position <= this.lastPosition();
+    }
     
     int lastPosition() {
         return this.firstPosition + this.length - 1;
@@ -168,21 +172,67 @@ class Cluster
         return this.teardown;
     }
     
-    boolean isMarkedForTeardown() {
+    boolean hasTeardown() {
         return this.teardown > 0;
     }
 
     boolean isRejected() {
         return this.rejected;
     }
+
+    boolean intersectsWith(WordInVariant word) {
+        int lastPosition = this.lastPosition();
+
+        boolean isCompletelyInWord =
+                this.firstPosition >= word.startIndex &&
+                lastPosition <= word.endIndex;
+
+        if ( isCompletelyInWord ) {
+            return true;
+        }
+
+        boolean wordIsCompletelyInCluster =
+                word.startIndex >= this.firstPosition &&
+                word.endIndex <= lastPosition;
+
+        if ( wordIsCompletelyInCluster ) {
+            return true;
+        }
+
+        boolean clusterTouchesWordStart =
+                word.startIndex <= this.firstPosition &&
+                word.endIndex <= lastPosition &&
+                word.endIndex > this.firstPosition;
+
+        if ( clusterTouchesWordStart ) {
+            return true;
+        }
+
+        boolean clusterTouchesWordEnd =
+                word.startIndex >= this.firstPosition &&
+                word.startIndex <= lastPosition &&
+                word.endIndex > lastPosition;
+
+        if ( clusterTouchesWordEnd ) {
+            return true;
+        }
+
+        return false;
+    }
     
-    void finish() {        
-        boolean repeatsContainsZero = this.repeats.contains(0);
-        boolean repeatsContainsAbsOne = this.repeats.contains(-1) || this.repeats.contains(1);
-        boolean repeateOnlyTwo = this.repeatQties.size() == 2;
-        
-        this.hasOnlyOneExccessCharBetween = 
-                repeatsContainsZero && repeatsContainsAbsOne && repeateOnlyTwo;        
+    void finish() {
+        if ( this.length > 2 ) {
+            boolean repeatsContainsZero = this.repeats.contains(0);
+            boolean repeatsContainsAbsOne = this.repeats.contains(-1) || this.repeats.contains(1);
+            boolean repeateOnlyTwo = this.repeatQties.size() == 2;
+
+            this.hasOnlyOneExccessCharBetween =
+                    repeatsContainsZero && repeatsContainsAbsOne && repeateOnlyTwo;
+        }
+        else {
+            this.hasOnlyOneExccessCharBetween = this.ordersDiffSumReal == 1;
+        }
+
     }
     
     boolean testOnTeardown() {
