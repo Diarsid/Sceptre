@@ -1,11 +1,12 @@
 package diarsid.sceptre.impl;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
+import diarsid.sceptre.impl.collections.ListChar;
 import diarsid.sceptre.impl.collections.ListInt;
+import diarsid.sceptre.impl.collections.impl.ListCharImpl;
 import diarsid.sceptre.impl.collections.impl.ListIntImpl;
 import diarsid.sceptre.impl.logs.AnalyzeLogType;
 import diarsid.support.objects.CommonEnum;
@@ -19,6 +20,7 @@ import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Objects.isNull;
 
+import static diarsid.sceptre.impl.AnalyzeImpl.logAnalyze;
 import static diarsid.sceptre.impl.ClusterStepTwo.PositionsInWordType.CHOSEN_OTHER_WORD;
 import static diarsid.sceptre.impl.ClusterStepTwo.PositionsInWordType.CHOSEN_WORD_END;
 import static diarsid.sceptre.impl.ClusterStepTwo.PositionsInWordType.CHOSEN_WORD_MIDDLE;
@@ -27,6 +29,7 @@ import static diarsid.sceptre.impl.ClusterStepTwo.PositionsInWordType.CHOSEN_WOR
 import static diarsid.sceptre.impl.ClusterStepTwo.PositionsInWordType.CHOSEN_WORD_START_END;
 import static diarsid.sceptre.impl.ClusterStepTwo.PositionsInWordType.CHOSEN_WORD_START_MIDDLE;
 import static diarsid.sceptre.impl.ClusterStepTwo.PositionsInWordType.CHOSEN_WORD_START_MIDDLE_END;
+import static diarsid.sceptre.impl.ClusterStepTwo.PositionsInWordType.NEW_OTHER_WORD;
 import static diarsid.sceptre.impl.ClusterStepTwo.PositionsInWordType.NEW_WORD_END;
 import static diarsid.sceptre.impl.ClusterStepTwo.PositionsInWordType.NEW_WORD_MIDDLE;
 import static diarsid.sceptre.impl.ClusterStepTwo.PositionsInWordType.NEW_WORD_MIDDLE_END;
@@ -34,7 +37,6 @@ import static diarsid.sceptre.impl.ClusterStepTwo.PositionsInWordType.NEW_WORD_S
 import static diarsid.sceptre.impl.ClusterStepTwo.PositionsInWordType.NEW_WORD_START_END;
 import static diarsid.sceptre.impl.ClusterStepTwo.PositionsInWordType.NEW_WORD_START_MIDDLE;
 import static diarsid.sceptre.impl.ClusterStepTwo.PositionsInWordType.NEW_WORD_START_MIDDLE_END;
-import static diarsid.sceptre.impl.ClusterStepTwo.PositionsInWordType.NEW_OTHER_WORD;
 import static diarsid.sceptre.impl.ClusterStepTwo.PositionsInWordType.PRIORITY_DIFF;
 import static diarsid.sceptre.impl.ClusterStepTwo.PositionsPlacing.END;
 import static diarsid.sceptre.impl.ClusterStepTwo.PositionsPlacing.MIDDLE;
@@ -42,7 +44,6 @@ import static diarsid.sceptre.impl.ClusterStepTwo.PositionsPlacing.START;
 import static diarsid.sceptre.impl.ClusterStepTwo.WordType.CHOSEN_WORD;
 import static diarsid.sceptre.impl.ClusterStepTwo.WordType.NEW_WORD;
 import static diarsid.sceptre.impl.MatchType.MATCH_DIRECTLY;
-import static diarsid.sceptre.impl.AnalyzeImpl.logAnalyze;
 import static diarsid.sceptre.impl.MatchType.MATCH_TYPO_LOOP;
 import static diarsid.sceptre.impl.MatchType.MATCH_TYPO_NEXT_IN_PATTERN_PREVIOUS_IN_VARIANT;
 import static diarsid.sceptre.impl.MatchType.MATCH_TYPO_PREVIOUS_IN_PATTERN_PREVIOUSx2_IN_VARIANT;
@@ -298,7 +299,7 @@ class ClusterStepTwo {
     }
 
     private final PositionsAnalyze analyze;
-    private final List<Character> chars;
+    private final ListChar chars;
     private final ListInt patternPositions;
     private final ListInt variantPositions;
     private final List<Boolean> candidates;
@@ -321,7 +322,7 @@ class ClusterStepTwo {
 
     public ClusterStepTwo(PositionsAnalyze analyze) {
         this.analyze = analyze;
-        this.chars = new ArrayList<>();
+        this.chars = new ListCharImpl();
         this.patternPositions = new ListIntImpl();
         this.variantPositions = new ListIntImpl();
         this.candidates = new ArrayList<>();
@@ -515,17 +516,17 @@ class ClusterStepTwo {
         int patternPosition = this.patternPositions.remove(i);
         int variantPosition = this.variantPositions.remove(i);
         MatchType matchType = this.matches.remove(i);
-        boolean isFilledInVarian = this.fillingsInVariant.remove(i);
+        boolean isFilledInVariant = this.fillingsInVariant.remove(i);
         this.fillingsInPattern.remove(i);
         this.candidates.remove(i);
-        if ( isFilledInVarian ) {
+        if ( isFilledInVariant ) {
             this.filledInVariantQty--;
         }
         this.matchStrength = this.matchStrength - matchType.strength();
         logAnalyze(
                 AnalyzeLogType.POSITIONS_SEARCH,
                 "          [info] reject candidate '%s' pattern:%s, variant:%s, included: %s, %s",
-                c, patternPosition, variantPosition, isFilledInVarian, matchType.name());
+                c, patternPosition, variantPosition, isFilledInVariant, matchType.name());
     }
     
     private void addInternal(

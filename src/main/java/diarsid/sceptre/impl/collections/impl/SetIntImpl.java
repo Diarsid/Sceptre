@@ -2,6 +2,7 @@ package diarsid.sceptre.impl.collections.impl;
 
 import java.util.Arrays;
 
+import diarsid.sceptre.impl.collections.Ints;
 import diarsid.sceptre.impl.collections.SetInt;
 
 import static diarsid.sceptre.impl.collections.impl.Constants.DEFAULT_ARRAY_SIZE;
@@ -9,10 +10,38 @@ import static diarsid.sceptre.impl.collections.impl.Constants.INT_NOT_SET;
 
 public class SetIntImpl implements SetInt {
 
+    private static class Elements implements Ints.Elements {
+
+        private final SetIntImpl set;
+        private int i;
+
+        public Elements(SetIntImpl set) {
+            this.set = set;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return this.i < this.set.size - 1;
+        }
+
+        @Override
+        public Ints.Elements next() {
+            this.i++;
+            return this;
+        }
+
+        @Override
+        public int current() {
+            return this.set.array[this.i];
+        }
+    }
+
+    private final Elements elements;
     private int[] array;
     private int size;
 
     public SetIntImpl() {
+        this.elements = new Elements(this);
         this.array = new int[DEFAULT_ARRAY_SIZE];
         Arrays.fill(this.array, INT_NOT_SET);
         this.size = 0;
@@ -62,7 +91,8 @@ public class SetIntImpl implements SetInt {
 
     @Override
     public Elements elements() {
-        return this.elements();
+        this.elements.i = -1;
+        return this.elements;
     }
 
     @Override

@@ -95,7 +95,6 @@ public class MapIntIntImpl implements MapIntInt {
     private static abstract class AbstractInts implements Ints {
 
         protected final MapIntIntImpl map;
-        protected Elements elements;
 
         public AbstractInts(MapIntIntImpl map) {
             this.map = map;
@@ -114,11 +113,6 @@ public class MapIntIntImpl implements MapIntInt {
         @Override
         public boolean isNotEmpty() {
             return this.map.size > 0;
-        }
-
-        @Override
-        public Elements elements() {
-            return this.elements;
         }
     }
 
@@ -140,8 +134,9 @@ public class MapIntIntImpl implements MapIntInt {
             }
 
             @Override
-            public void next() {
+            public Ints.Elements next() {
                 this.i++;
+                return this;
             }
 
             @Override
@@ -150,9 +145,11 @@ public class MapIntIntImpl implements MapIntInt {
             }
         }
 
+        private final Elements elements;
+
         public MapKeys(MapIntIntImpl map) {
             super(map);
-            super.elements = new Elements(map);
+            this.elements = new Elements(map);
         }
 
         public boolean contains(int key) {
@@ -195,6 +192,12 @@ public class MapIntIntImpl implements MapIntInt {
         }
 
         @Override
+        public Ints.Elements elements() {
+            this.elements.i = -1;
+            return this.elements;
+        }
+
+        @Override
         public String join(String delimiter) {
             StringBuilder sb = new StringBuilder();
 
@@ -227,8 +230,9 @@ public class MapIntIntImpl implements MapIntInt {
             }
 
             @Override
-            public void next() {
+            public Ints.Elements next() {
                 this.i++;
+                return this;
             }
 
             @Override
@@ -237,9 +241,17 @@ public class MapIntIntImpl implements MapIntInt {
             }
         }
 
+        private final Elements elements;
+
         public MapValues(MapIntIntImpl map) {
             super(map);
-            super.elements = new Elements(map);
+            this.elements = new Elements(map);
+        }
+
+        @Override
+        public Ints.Elements elements() {
+            this.elements.i = -1;
+            return this.elements;
         }
 
         @Override

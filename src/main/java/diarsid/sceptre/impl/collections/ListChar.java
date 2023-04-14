@@ -35,7 +35,7 @@ public interface ListChar {
 
     void set(int index, char element);
 
-    void remove(int index);
+    char remove(int index);
 
     void remove(char c);
 

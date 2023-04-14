@@ -1,5 +1,6 @@
 package diarsid.sceptre.impl.collections;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -13,7 +14,7 @@ public interface Ints {
 
         boolean hasNext();
 
-        void next();
+        Elements next();
 
         int current();
     }
@@ -115,5 +116,67 @@ public interface Ints {
         } else {
             return lower;
         }
+    }
+
+    public static int sumInts(Ints ints) {
+        int sum = 0;
+
+        Elements elements = ints.elements();
+        while ( elements.hasNext() ) {
+            elements.next();
+            sum = sum + elements.current();
+        }
+
+        return sum;
+    }
+
+    private static int getOne(Ints ints) {
+        if ( ints.isEmpty() ) {
+            throw new IndexOutOfBoundsException();
+        }
+
+        return ints.elements().next().current();
+    }
+
+    private static boolean hasOne(Ints ints) {
+        return ints.size() == 1;
+    }
+
+    private static boolean hasMany(Ints ints) {
+        return ints.size() > 0;
+    }
+
+    public static boolean containsAnyCommonElement(Ints ints1, Ints ints2) {
+        if ( ints1.isEmpty() || ints2.isEmpty() ) {
+            return false;
+        }
+
+        if ( hasOne(ints1) && hasOne(ints2) ) {
+            return getOne(ints1) == getOne(ints2);
+        }
+
+        if ( hasOne(ints1) && hasMany(ints2) ) {
+            int i = getOne(ints1);
+            return ints2.contains(i);
+        }
+
+        if ( hasOne(ints2) && hasMany(ints1) ) {
+            int i = getOne(ints2);
+            return ints1.contains(i);
+        }
+
+        Elements elements1 = ints1.elements();
+        Elements elements2 = ints2.elements();
+        while ( elements1.hasNext() ) {
+            elements1.next();
+            while ( elements2.hasNext() ) {
+                elements2.next();
+                if ( elements1.current() == elements2.current() ) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 }

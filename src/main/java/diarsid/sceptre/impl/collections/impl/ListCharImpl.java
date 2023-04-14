@@ -108,21 +108,27 @@ public class ListCharImpl implements ListChar {
     }
 
     @Override
-    public void remove(int index) {
+    public char remove(int index) {
         if ( index >= this.size ) {
             throw new IndexOutOfBoundsException();
         }
 
+        char removed;
+
         if ( index == 0 ) {
+            removed = this.array[0];
             System.arraycopy(this.array, 1, this.array, 0, this.size-1);
             this.array[this.size-1] = CHAR_NOT_SET;
         }
         else {
+            removed = this.array[index];
             System.arraycopy(this.array, index+1, this.array, index, this.size-index-1);
             this.array[this.size-1] = CHAR_NOT_SET;
         }
 
         this.size--;
+
+        return removed;
     }
 
     @Override

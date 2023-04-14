@@ -1,5 +1,7 @@
 package diarsid.sceptre.impl.collections;
 
+import java.util.stream.IntStream;
+
 import diarsid.sceptre.impl.collections.impl.Sort;
 
 public interface ListInt extends Ints {
@@ -31,4 +33,6 @@ public interface ListInt extends Ints {
     void fill(int element);
 
     void sort(Sort sort);
+
+    IntStream stream();
 }

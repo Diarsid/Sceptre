@@ -113,8 +113,9 @@ public class MapIntImpl<T> implements MapInt<T> {
             }
 
             @Override
-            public void next() {
+            public Ints.Elements next() {
                 this.i++;
+                return this;
             }
 
             @Override
