@@ -23,7 +23,7 @@ public class ArrayCharImpl implements ArrayChar {
 
         @Override
         public boolean hasNext() {
-            return this.i < this.arrayChar.size;
+            return this.i < this.arrayChar.size - 1;
         }
 
         @Override
