@@ -5,6 +5,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
+import diarsid.sceptre.impl.collections.ListInt;
+import diarsid.sceptre.impl.collections.impl.ListIntImpl;
 import diarsid.sceptre.impl.logs.AnalyzeLogType;
 import diarsid.support.objects.CommonEnum;
 import diarsid.support.objects.references.Possible;
@@ -297,8 +299,8 @@ class ClusterStepTwo {
 
     private final PositionsAnalyze analyze;
     private final List<Character> chars;
-    private final List<Integer> patternPositions;
-    private final List<Integer> variantPositions;
+    private final ListInt patternPositions;
+    private final ListInt variantPositions;
     private final List<Boolean> candidates;
     private final List<MatchType> matches;
     private final List<Boolean> fillingsInVariant;
@@ -320,8 +322,8 @@ class ClusterStepTwo {
     public ClusterStepTwo(PositionsAnalyze analyze) {
         this.analyze = analyze;
         this.chars = new ArrayList<>();
-        this.patternPositions = new ArrayList<>();
-        this.variantPositions = new ArrayList<>();
+        this.patternPositions = new ListIntImpl();
+        this.variantPositions = new ListIntImpl();
         this.candidates = new ArrayList<>();
         this.matches = new ArrayList<>();
         this.fillingsInVariant = new ArrayList<>();
@@ -920,7 +922,7 @@ class ClusterStepTwo {
         for ( int iVariant = toVariantExcl - 1; iVariant >= fromVariantIncl; iVariant-- ) {
             cVariant = this.analyze.data.variant.charAt(iVariant);
             for ( int iPattern = toPatternExcl - 1; iPattern >= fromPatternIncl; iPattern-- ) {
-                cPattern = this.analyze.data.patternChars[iPattern];
+                cPattern = this.analyze.data.patternChars.i(iPattern);
 
                 if ( cPattern == cVariant ) {
                     logAnalyze(
@@ -947,7 +949,7 @@ class ClusterStepTwo {
     }
 
     private int findFirstPatternPosition() {
-        int firstIntersectionInPattern = Collections.min(this.patternPositions);
+        int firstIntersectionInPattern = this.patternPositions.min();
 
         if ( this.assessedCharPatternPosition < firstIntersectionInPattern ) {
             return this.assessedCharPatternPosition;

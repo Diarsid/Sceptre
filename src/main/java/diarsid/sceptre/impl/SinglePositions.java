@@ -1,9 +1,7 @@
 package diarsid.sceptre.impl;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import static diarsid.support.objects.collections.Lists.lastFrom;
+import diarsid.sceptre.impl.collections.ListInt;
+import diarsid.sceptre.impl.collections.impl.ListIntImpl;
 
 class SinglePositions {
     
@@ -15,17 +13,17 @@ class SinglePositions {
     
     private final static Integer MISS = -3;
 
-    private final List<Integer> filledPositions;
-    private final List<Integer> allPositions;
-    private final List<Integer> uninterruptedPositions;
+    private final ListInt filledPositions;
+    private final ListInt allPositions;
+    private final ListInt uninterruptedPositions;
     private int added;
     private int missed;
     private Event lastEvent;
 
     SinglePositions() {
-        this.filledPositions = new ArrayList<>();
-        this.allPositions = new ArrayList<>();
-        this.uninterruptedPositions = new ArrayList<>();
+        this.filledPositions = new ListIntImpl();
+        this.allPositions = new ListIntImpl();
+        this.uninterruptedPositions = new ListIntImpl();
         this.added = 0;
         this.missed = 0;
         this.lastEvent = Event.UNINIT;
@@ -59,7 +57,7 @@ class SinglePositions {
     void add(int position) {
         if ( this.lastEvent.equals(Event.ADDED) ) {
             if ( this.uninterruptedPositions.isEmpty() ) {
-                this.uninterruptedPositions.add(lastFrom(this.allPositions));
+                this.uninterruptedPositions.add(this.allPositions.get(this.allPositions.size()-1));
             }
             this.uninterruptedPositions.add(position);
         }
@@ -79,7 +77,7 @@ class SinglePositions {
         
     }
 
-    List<Integer> filled() {
+    ListInt filled() {
         return this.filledPositions;
     }
     
@@ -87,7 +85,7 @@ class SinglePositions {
         return ! this.uninterruptedPositions.isEmpty();
     }
     
-    List<Integer> uninterruptedRow() {
+    ListInt uninterruptedRow() {
         return this.uninterruptedPositions;
     }
 

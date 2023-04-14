@@ -11,10 +11,38 @@ public class ArrayCharImpl implements ArrayChar {
     public final static char EMPTY = '=';
     private final static char NOT_AVAILABLE = '#';
 
+    private static class ElementsImpl implements Elements {
+
+        private final ArrayCharImpl arrayChar;
+        private int i;
+
+        public ElementsImpl(ArrayCharImpl arrayChar) {
+            this.arrayChar = arrayChar;
+            this.i = -1;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return this.i < this.arrayChar.size;
+        }
+
+        @Override
+        public void next() {
+            this.i++;
+        }
+
+        @Override
+        public char current() {
+            return this.arrayChar.array[this.i];
+        }
+    }
+
+    private final ElementsImpl elements;
     private char[] array;
     private int size;
 
     public ArrayCharImpl() {
+        this.elements = new ElementsImpl(this);
         this.array = new char[DEFAULT_ARRAY_SIZE];
         this.size = -1;
         Arrays.fill(this.array, NOT_AVAILABLE);
@@ -48,7 +76,7 @@ public class ArrayCharImpl implements ArrayChar {
     }
 
     @Override
-    public char get(int index) {
+    public char i(int index) {
         if ( index > this.size ) {
             throw new IndexOutOfBoundsException();
         }
@@ -82,8 +110,22 @@ public class ArrayCharImpl implements ArrayChar {
     }
 
     @Override
+    public void fillFrom(String s) {
+        this.setSize(s.length());
+        for ( int i = 0; i < this.size; i++ ) {
+            this.array[i] = s.charAt(i);
+        }
+    }
+
+    @Override
     public void clear() {
         this.size = -1;
         Arrays.fill(this.array, NOT_AVAILABLE);
+    }
+
+    @Override
+    public Elements elements() {
+        this.elements.i = -1;
+        return this.elements;
     }
 }

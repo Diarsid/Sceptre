@@ -1,6 +1,7 @@
 package diarsid.sceptre.impl.collections;
 
 import java.util.Iterator;
+import java.util.Set;
 
 import static java.lang.Math.round;
 
@@ -30,6 +31,14 @@ public interface Ints {
     Elements elements();
 
     String join(String delimiter);
+
+    public static boolean isNull(int i) {
+        return i == Integer.MIN_VALUE;
+    }
+
+    public static boolean nonNull(int i) {
+        return i != Integer.MIN_VALUE;
+    }
 
     public static int meanSmartIgnoringZeros(ListInt ints) {
         int sum = 0;
@@ -61,7 +70,7 @@ public interface Ints {
         }
     }
 
-    public static Integer getNearestToValueFromSetExcluding(int value, MapIntInt.Keys keys) {
+    public static int getNearestToValueFromSetExcluding(int value, Ints keys) {
         if ( keys.isEmpty() ) {
             throw new IllegalArgumentException("Set<Integer> should not be empty!");
         }

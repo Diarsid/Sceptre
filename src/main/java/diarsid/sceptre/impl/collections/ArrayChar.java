@@ -2,6 +2,15 @@ package diarsid.sceptre.impl.collections;
 
 public interface ArrayChar {
 
+    public static interface Elements {
+
+        boolean hasNext();
+
+        void next();
+
+        char current();
+    }
+
     int size();
 
     boolean contains(char value);
@@ -10,7 +19,7 @@ public interface ArrayChar {
 
     void setSize(int size);
 
-    char get(int index);
+    char i(int index);
 
     void set(int index, char element);
 
@@ -18,5 +27,9 @@ public interface ArrayChar {
 
     void fill(char element);
 
+    void fillFrom(String s);
+
     void clear();
+
+    Elements elements();
 }

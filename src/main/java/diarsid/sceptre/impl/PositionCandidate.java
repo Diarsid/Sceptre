@@ -8,9 +8,9 @@ package diarsid.sceptre.impl;
 import diarsid.sceptre.impl.logs.AnalyzeLogType;
 
 import static java.lang.String.format;
-import static java.util.Objects.isNull;
 
 import static diarsid.sceptre.impl.AnalyzeImpl.logAnalyze;
+import static diarsid.sceptre.impl.collections.Ints.isNull;
 import static diarsid.support.misc.MathFunctions.absDiff;
 
 /**
@@ -29,7 +29,7 @@ class PositionCandidate {
     private int orderDiffInVariant;
 //    private int placementDiff;
     private boolean isNearSeparator;
-    private Integer distanceToNearestFilledPosition;
+    private int distanceToNearestFilledPosition;
     private int clusteredAround;
     private int mutationsCommitted;
     private int mutationsAttempts;
@@ -41,7 +41,7 @@ class PositionCandidate {
         this.orderDiffInVariant = UNINITIALIZED;
 //        this.placementDiff = UNINITIALIZED;
         this.isNearSeparator = false;
-        this.distanceToNearestFilledPosition = null;
+        this.distanceToNearestFilledPosition = Integer.MIN_VALUE;
         this.clusteredAround = UNINITIALIZED;
         this.mutationsCommitted = 0;
         this.mutationsAttempts = 0;
@@ -54,7 +54,7 @@ class PositionCandidate {
             int orderDiffInPattern, 
             int clusteredAround, 
             boolean isNearSeparator,
-            Integer distanceToNearestFilledPosition,
+            int distanceToNearestFilledPosition,
             int charsRemained) {
         this.mutationsAttempts++;
         
@@ -104,7 +104,7 @@ class PositionCandidate {
             int otherOrderDiffInPattern, 
 //            int otherPlacementDiff,
             boolean otherIsNearSeparator,
-            Integer otherDistanceToNearestFilledPosition,
+            int otherDistanceToNearestFilledPosition,
             int otherClusteredAround) {
         if ( this.position == UNINITIALIZED ) {
             return CURRENT_IS_WORSE;
@@ -170,7 +170,7 @@ class PositionCandidate {
                 }
             }
         } else {
-            if ( this.distanceToNearestFilledPosition.equals(otherDistanceToNearestFilledPosition) ) {
+            if ( this.distanceToNearestFilledPosition == otherDistanceToNearestFilledPosition ) {
                 if ( this.isNearSeparator != otherIsNearSeparator ) {
                     int thisSum = zeroIfNotInit(this.orderDiffInPattern) - this.clusteredAround;
                     int otherSum = zeroIfNotInit(otherOrderDiffInPattern) - otherClusteredAround;
@@ -282,7 +282,7 @@ class PositionCandidate {
         this.orderDiffInVariant = UNINITIALIZED;
 //        this.placementDiff = UNINITIALIZED;
         this.isNearSeparator = false;
-        this.distanceToNearestFilledPosition = null;
+        this.distanceToNearestFilledPosition = Integer.MIN_VALUE;
         this.clusteredAround = UNINITIALIZED;
         this.mutationsAttempts = 0;
         this.mutationsCommitted = 0;

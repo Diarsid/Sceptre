@@ -1,9 +1,9 @@
 package diarsid.sceptre.impl;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
+import diarsid.sceptre.impl.collections.ListInt;
+import diarsid.sceptre.impl.collections.impl.ListIntImpl;
 import diarsid.sceptre.impl.logs.AnalyzeLogType;
 import diarsid.support.exceptions.UnsupportedLogicException;
 import diarsid.support.objects.references.Possible;
@@ -16,7 +16,6 @@ import static diarsid.sceptre.impl.ClusterPreference.PREFER_RIGHT;
 import static diarsid.sceptre.impl.Typos.Placing.AFTER;
 import static diarsid.sceptre.impl.Typos.Placing.BEFORE;
 import static diarsid.support.misc.MathFunctions.zeroIfNegative;
-import static diarsid.support.objects.collections.Lists.lastFrom;
 import static diarsid.support.objects.references.References.simplePossibleButEmpty;
 import static diarsid.support.strings.StringUtils.isWordsSeparator;
 import static diarsid.support.strings.StringUtils.joinAll;
@@ -122,7 +121,7 @@ class ClusterStepOne {
         }
         
         int lastPosition() {
-            return lastFrom(this.cluster.allPatternPositions);
+            return this.cluster.allPatternPositions.last();
         }
         
         int length() {
@@ -165,12 +164,12 @@ class ClusterStepOne {
     private final StepOneClusterPositionView positionView;
     private final PatternCluster patternCluster;
     
-    private final List<Integer> allVariantPositions;
-    private final List<Integer> allPatternPositions;
-    private final List<Integer> prevsVariantPositions;
-    private final List<Integer> prevsPatternPositions;
-    private final List<Integer> nextsVariantPositions;
-    private final List<Integer> nextsPatternPositions;
+    private final ListInt allVariantPositions;
+    private final ListInt allPatternPositions;
+    private final ListInt prevsVariantPositions;
+    private final ListInt prevsPatternPositions;
+    private final ListInt nextsVariantPositions;
+    private final ListInt nextsPatternPositions;
     
     private Boolean startsAfterSeparator;
     private Boolean endsBeforeSeparator;
@@ -201,12 +200,12 @@ class ClusterStepOne {
         this.positionIterableView = new StepOneClusterPositionIterableView(this);
         this.positionView = new StepOneClusterPositionView(this);
         this.patternCluster = new PatternCluster(this);
-        this.allVariantPositions = new ArrayList<>();
-        this.allPatternPositions = new ArrayList<>();
-        this.prevsVariantPositions = new ArrayList<>();
-        this.prevsPatternPositions = new ArrayList<>();
-        this.nextsVariantPositions = new ArrayList<>();
-        this.nextsPatternPositions = new ArrayList<>();
+        this.allVariantPositions = new ListIntImpl();
+        this.allPatternPositions = new ListIntImpl();
+        this.prevsVariantPositions = new ListIntImpl();
+        this.prevsPatternPositions = new ListIntImpl();
+        this.nextsVariantPositions = new ListIntImpl();
+        this.nextsPatternPositions = new ListIntImpl();
         this.prevVariantPosition = UNINITIALIZED;
         this.mainVariantPosition = UNINITIALIZED;
         this.nextVariantPosition = UNINITIALIZED;
@@ -775,7 +774,7 @@ class ClusterStepOne {
 //    }
     
     public int lastVariantPosition() {
-        return lastFrom(this.allVariantPositions);
+        return this.allVariantPositions.last();
     }
     
     boolean isBefore(ClusterStepOne other) {

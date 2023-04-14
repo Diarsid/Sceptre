@@ -5,6 +5,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
+import diarsid.sceptre.impl.collections.Ints;
+import diarsid.sceptre.impl.collections.ListInt;
+import diarsid.sceptre.impl.collections.SetInt;
 import diarsid.support.objects.CommonEnum;
 import diarsid.support.objects.PooledReusable;
 
@@ -143,7 +146,7 @@ public class WordInVariant extends PooledReusable {
         return containsStart || containsEnd || isEnclosedByRange;
     }
 
-    public int firstIntersectionInVariant(Collection<Integer> candidatePositions) {
+    public int firstIntersectionInVariant(ListInt candidatePositions) {
         for ( int i = this.startIndex; i <= this.endIndex; i++ ) {
             if ( candidatePositions.contains(i) ) {
                 return i;
@@ -153,9 +156,11 @@ public class WordInVariant extends PooledReusable {
         return -1;
     }
 
-    public int intersections(List<Integer> indexes) {
+    public int intersections(ListInt indexes) {
         int count = 0;
-        for ( int index : indexes ) {
+        int index;
+        for ( int i = 0; i < indexes.size(); i++ ) {
+            index = indexes.get(i);
             if ( index < 0 ) {
                 continue;
             }
@@ -179,14 +184,19 @@ public class WordInVariant extends PooledReusable {
         return count;
     }
 
-    public boolean isEnclosedByFound(Set<Integer> indexes, int askedIndex) {
+    public boolean isEnclosedByFound(Ints indexes, int askedIndex) {
         int matchesBefore = 0;
         int matchesAfter = 0;
 
         boolean matchesStart = false;
         boolean matchesEnd = false;
 
-        for ( int index : indexes ) {
+        Ints.Elements elements = indexes.elements();
+        int index;
+        while ( elements.hasNext() ) {
+            elements.next();
+            index = elements.current();
+
             if ( index == askedIndex ) {
                 continue;
             }
@@ -214,12 +224,14 @@ public class WordInVariant extends PooledReusable {
                 && matchesAfter > 0;
     }
 
-    public boolean hasStartIn(Collection<Integer> indexes) {
+    public boolean hasStartIn(Ints indexes) {
         return indexes.contains(this.startIndex);
     }
 
-    public boolean hasMiddlesIn(Collection<Integer> indexes) {
-        for ( int index : indexes ) {
+    public boolean hasMiddlesIn(ListInt indexes) {
+        int index;
+        for ( int i = 0; i < indexes.size(); i++ ) {
+            index = indexes.get(i);
             if ( index > startIndex && index < endIndex ) {
                 return true;
             }
@@ -228,12 +240,16 @@ public class WordInVariant extends PooledReusable {
         return false;
     }
 
-    public boolean hasEndIn(Collection<Integer> indexes) {
+    public boolean hasEndIn(ListInt indexes) {
         return indexes.contains(this.endIndex);
     }
 
-    public boolean hasIntersections(Collection<Integer> indexes) {
-        for ( int index : indexes ) {
+    public boolean hasIntersections(Ints indexes) {
+        Ints.Elements elements = indexes.elements();
+        int index;
+        while ( elements.hasNext() ) {
+            elements.next();
+            index = elements.current();
             if ( index >= startIndex && index <= endIndex ) {
                 return true;
             }
@@ -242,9 +258,13 @@ public class WordInVariant extends PooledReusable {
         return false;
     }
 
-    public int intersections(Set<Integer> indexes) {
+    public int intersections(Ints indexes) {
         int matches = 0;
-        for ( int index : indexes ) {
+        Ints.Elements elements = indexes.elements();
+        int index;
+        while ( elements.hasNext() ) {
+            elements.next();
+            index = elements.current();
             if ( index >= startIndex && index <= endIndex ) {
                 matches++;
             }
@@ -252,9 +272,13 @@ public class WordInVariant extends PooledReusable {
         return matches;
     }
 
-    public int intersections(Set<Integer> indexes, int excludingPosition) {
+    public int intersections(Ints indexes, int excludingPosition) {
         int matches = 0;
-        for ( int index : indexes ) {
+        Ints.Elements elements = indexes.elements();
+        int index;
+        while ( elements.hasNext() ) {
+            elements.next();
+            index = elements.current();
             if ( index == excludingPosition ) {
                 continue;
             }

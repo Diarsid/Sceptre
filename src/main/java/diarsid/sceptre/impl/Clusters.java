@@ -588,7 +588,7 @@ class Clusters implements StatefulClearable {
             return;
         }
         
-        float presentPercent = percentAsFloat(this.data.patternChars.length - positionsData.missed, this.data.patternChars.length);
+        float presentPercent = percentAsFloat(this.data.patternChars.size() - positionsData.missed, this.data.patternChars.size());
         
         logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, "    [cluster placing] missed position placing penalty : *%s%%", presentPercent);
         this.placingBonus = percentAsFloatOf(this.placingBonus, presentPercent);

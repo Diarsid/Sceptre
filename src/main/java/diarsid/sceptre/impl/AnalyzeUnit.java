@@ -89,7 +89,7 @@ class AnalyzeUnit extends PooledReusable {
     boolean calculatedAsUsualClusters;
     boolean canClustersBeBad = true;
     
-    char[] patternChars;
+    final ArrayChar patternChars;
     String pattern;
     final Map<Character, AtomicInteger> patternCharsCount;
     private final Consumer<AtomicInteger> patternCharsCounterClear = (count) -> {
@@ -108,6 +108,7 @@ class AnalyzeUnit extends PooledReusable {
                 this, 
                 new Clusters(this, clusterPool), 
                 new PositionCandidate(this));
+        this.patternChars = new ArrayCharImpl();
         this.variantSeparators = new TreeSet<>();
         this.variantPathSeparators = new TreeSet<>();
         this.variantTextSeparators = new TreeSet<>();
@@ -222,7 +223,7 @@ class AnalyzeUnit extends PooledReusable {
                         tresholdRatio = 0.4f;
                     }
                     
-                    if ( ratio(this.positionsAnalyze.nonClustered, this.patternChars.length) > tresholdRatio ) {
+                    if ( ratio(this.positionsAnalyze.nonClustered, this.patternChars.size()) > tresholdRatio ) {
                         if ( this.allPositionsPresentSortedAndNotPathSeparatorsBetween ) {
                             this.calculateAsSeparatedCharsWithoutClusters();
                             this.calculatedAsUsualClusters = false;
@@ -443,7 +444,7 @@ class AnalyzeUnit extends PooledReusable {
     }
 
     boolean areTooMuchPositionsMissed() {
-        boolean tooMuchMissed = missedTooMuch(this.positionsAnalyze.missed, this.patternChars.length);
+        boolean tooMuchMissed = missedTooMuch(this.positionsAnalyze.missed, this.patternChars.size());
         if ( tooMuchMissed ) {
             logAnalyze(AnalyzeLogType.BASE, "    %s, missed: %s to much, skip variant!", this.variant, this.positionsAnalyze.missed);
         }
@@ -625,8 +626,8 @@ class AnalyzeUnit extends PooledReusable {
     }
 
     void setPatternCharsAndPositions() {
-        this.patternChars = this.pattern.toCharArray();
-        this.positionsAnalyze.positions = new int[this.patternChars.length];
+        this.patternChars.fillFrom(this.pattern);
+        this.positionsAnalyze.positions = new int[this.patternChars.size()];
         fill(this.positionsAnalyze.positions, POS_UNINITIALIZED);
     }
 

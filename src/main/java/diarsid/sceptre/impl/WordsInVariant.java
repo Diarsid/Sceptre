@@ -5,6 +5,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
+import diarsid.sceptre.impl.collections.Ints;
+import diarsid.sceptre.impl.collections.ListInt;
 import diarsid.support.objects.GuardedPool;
 import diarsid.support.objects.PooledReusable;
 import diarsid.support.objects.StatefulClearable;
@@ -81,7 +83,7 @@ public class WordsInVariant implements StatefulClearable {
             return this.found.size();
         }
 
-        public int intersections(Set<Integer> indexes) {
+        public int intersections(Ints indexes) {
             if ( this.areEmpty() ) {
                 return 0;
             }
@@ -115,7 +117,7 @@ public class WordsInVariant implements StatefulClearable {
             return intersections;
         }
 
-        public boolean hasStartIn(Collection<Integer> indexes) {
+        public boolean hasStartIn(Ints indexes) {
             if ( this.areEmpty() ) {
                 return false;
             }
@@ -279,7 +281,7 @@ public class WordsInVariant implements StatefulClearable {
         return words;
     }
 
-    public WordsInRange wordsOfRange(List<Integer> positions) {
+    public WordsInRange wordsOfRange(ListInt positions) {
         WordsInRange words = this.wordsInRangePool.give();
         this.usedWordsInRanges.add(words);
 

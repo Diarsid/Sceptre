@@ -2,7 +2,7 @@ package diarsid.sceptre.impl.collections;
 
 public interface SetInt extends Ints {
 
-    boolean add(int element);
+    void add(int element);
 
     boolean remove(int element);
 
@@ -17,4 +17,6 @@ public interface SetInt extends Ints {
     int first();
 
     int last();
+
+    void clear();
 }
