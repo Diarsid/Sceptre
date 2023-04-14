@@ -245,6 +245,7 @@ public class ListIntImpl implements ListInt {
 
     @Override
     public Ints.Elements elements() {
+        this.elements.i = -1;
         return this.elements;
     }
 
