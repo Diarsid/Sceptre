@@ -146,6 +146,8 @@ public class ListIntImpl implements ListInt {
         ListIntImpl listImpl = (ListIntImpl) list;
 
         System.arraycopy(listImpl.array, 0, this.array, this.size, listImpl.size);
+
+        this.size = newSize;
     }
 
     @Override
