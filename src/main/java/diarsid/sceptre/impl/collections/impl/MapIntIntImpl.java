@@ -140,8 +140,9 @@ public class MapIntIntImpl implements MapIntInt {
             }
 
             @Override
-            public void next() {
+            public Ints.Elements next() {
                 this.i++;
+                return this;
             }
 
             @Override
@@ -227,8 +228,9 @@ public class MapIntIntImpl implements MapIntInt {
             }
 
             @Override
-            public void next() {
+            public Ints.Elements next() {
                 this.i++;
+                return this;
             }
 
             @Override

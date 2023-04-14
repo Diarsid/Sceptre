@@ -1,6 +1,7 @@
 package diarsid.sceptre.impl.collections.impl;
 
 import java.util.Arrays;
+import java.util.stream.IntStream;
 
 import diarsid.sceptre.impl.collections.Ints;
 import diarsid.sceptre.impl.collections.ListInt;
@@ -28,8 +29,9 @@ public class ListIntImpl implements ListInt {
         }
 
         @Override
-        public void next() {
+        public Ints.Elements next() {
             this.i++;
+            return this;
         }
 
         @Override
@@ -273,6 +275,16 @@ public class ListIntImpl implements ListInt {
                 j--;
             }
         }
+    }
+
+    @Override
+    public IntStream stream() {
+        var stream = IntStream.builder();
+        for ( int i = 0; i < this.size; i++ ) {
+            stream.accept(this.array[i]);
+        }
+
+        return stream.build();
     }
 
     @Override

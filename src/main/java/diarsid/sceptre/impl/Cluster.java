@@ -6,10 +6,10 @@
 package diarsid.sceptre.impl;
 
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
+import diarsid.sceptre.impl.collections.ListInt;
+import diarsid.sceptre.impl.collections.impl.ListIntImpl;
 import diarsid.sceptre.impl.logs.AnalyzeLogType;
 import diarsid.support.objects.PooledReusable;
 
@@ -17,7 +17,7 @@ import static java.lang.Math.abs;
 import static java.lang.String.format;
 
 import static diarsid.sceptre.impl.AnalyzeImpl.logAnalyze;
-import static diarsid.support.misc.MathFunctions.sumInts;
+import static diarsid.sceptre.impl.collections.Ints.sumInts;
 
 class Cluster 
         extends 
@@ -25,8 +25,8 @@ class Cluster
         implements 
                 Comparable<Cluster> {
     
-    private final List<Integer> repeats;
-    private final List<Integer> repeatQties;
+    private final ListInt repeats;
+    private final ListInt repeatQties;
     private int firstPosition;
     private int patternLength;
     private int length;
@@ -43,8 +43,8 @@ class Cluster
 
     Cluster() {
         super();
-        this.repeats = new ArrayList<>();
-        this.repeatQties = new ArrayList<>();
+        this.repeats = new ListIntImpl();
+        this.repeatQties = new ListIntImpl();
         this.firstPosition = PositionsAnalyze.POS_UNINITIALIZED;
         this.length = 0;
         this.ordersDiffMean = 0;
@@ -84,11 +84,11 @@ class Cluster
         this.rejected = rejected;
     }
     
-    List<Integer> repeats() {
+    ListInt repeats() {
         return this.repeats;
     }
     
-    List<Integer> repeatQties() {
+    ListInt repeatQties() {
         return this.repeatQties;
     }
     

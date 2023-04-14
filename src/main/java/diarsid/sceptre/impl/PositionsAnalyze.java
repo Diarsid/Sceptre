@@ -3539,12 +3539,12 @@ class PositionsAnalyze {
             logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, "            [cluster stats] order repeats       %s", cluster
                     .repeats()
                     .stream()
-                    .map(repeating -> String.valueOf(repeating))
+                    .mapToObj(repeating -> String.valueOf(repeating))
                     .collect(joining(",", "<", ">")));
             logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, "            [cluster stats] order repeats qties %s", cluster
                     .repeatQties()
                     .stream()
-                    .map(repeating -> String.valueOf(repeating))
+                    .mapToObj(repeating -> String.valueOf(repeating))
                     .collect(joining(",", "<", ">")));
             logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, "            [cluster stats] order diff sum real %s", diffSumReal);
             logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, "            [cluster stats] order diff sum abs  %s", diffSumAbs);

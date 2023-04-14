@@ -16,13 +16,13 @@ import static java.util.Objects.nonNull;
 import static java.util.stream.Collectors.joining;
 
 import static diarsid.sceptre.impl.AnalyzeImpl.logAnalyze;
+import static diarsid.sceptre.impl.collections.Ints.containsAnyCommonElement;
 import static diarsid.support.misc.MathFunctions.absDiff;
 import static diarsid.support.misc.MathFunctions.mean;
 import static diarsid.support.misc.MathFunctions.percentAsFloat;
 import static diarsid.support.misc.MathFunctions.percentAsFloatOf;
 import static diarsid.support.misc.MathFunctions.percentAsInt;
 import static diarsid.support.misc.MathFunctions.percentAsIntOf;
-import static diarsid.support.objects.collections.CollectionUtils.containsAnyCommonElement;
 import static diarsid.support.objects.collections.CollectionUtils.isNotEmpty;
 import static diarsid.support.objects.collections.Lists.lastFrom;
 import static diarsid.support.objects.references.References.simplePossibleButEmpty;
