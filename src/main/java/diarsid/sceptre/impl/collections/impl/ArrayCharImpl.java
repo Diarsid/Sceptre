@@ -85,7 +85,7 @@ public class ArrayCharImpl implements ArrayChar {
     }
 
     @Override
-    public void set(int index, char element) {
+    public void i(int index, char element) {
         if ( index > this.size ) {
             throw new IndexOutOfBoundsException();
         }

@@ -1,16 +1,26 @@
 package diarsid.sceptre.impl.collections;
 
+import java.util.stream.IntStream;
+
+import diarsid.sceptre.impl.collections.impl.Sort;
+
 public interface ArrayInt extends Ints {
 
     void setSize(int size);
 
-    int get(int index);
+    int i(int index);
 
-    void set(int index, int element);
+    void i(int index, int element);
 
-    boolean indexOf(int element);
+    int indexOf(int element);
 
     void fill(int element);
 
     void clear();
+
+    int last();
+
+    IntStream stream();
+
+    void sort(Sort sort);
 }

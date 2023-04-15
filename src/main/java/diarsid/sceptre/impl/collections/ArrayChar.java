@@ -21,7 +21,7 @@ public interface ArrayChar {
 
     char i(int index);
 
-    void set(int index, char element);
+    void i(int index, char element);
 
     int indexOf(char element);
 

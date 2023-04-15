@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
+import diarsid.sceptre.impl.collections.ArrayInt;
 import diarsid.sceptre.impl.collections.Ints;
 import diarsid.sceptre.impl.collections.ListInt;
 import diarsid.support.objects.GuardedPool;
@@ -100,7 +101,7 @@ public class WordsInVariant implements StatefulClearable {
             return intersections;
         }
 
-        public int intersections(int[] positions, int startExcludingPosition, int length) {
+        public int intersections(ArrayInt positions, int startExcludingPosition, int length) {
             if ( this.areEmpty() ) {
                 return 0;
             }
@@ -237,7 +238,7 @@ public class WordsInVariant implements StatefulClearable {
         return this.all.get(word.index + 1);
     }
 
-    public WordsInRange wordsOfRange(int afterPosition, int[] positions) {
+    public WordsInRange wordsOfRange(int afterPosition, ArrayInt positions) {
         WordsInRange words = this.wordsInRangePool.give();
         this.usedWordsInRanges.add(words);
 
@@ -294,7 +295,7 @@ public class WordsInVariant implements StatefulClearable {
         return words;
     }
 
-    public WordsInRange wordsOfRange(int[] positions) {
+    public WordsInRange wordsOfRange(ArrayInt positions) {
         WordsInRange words = this.wordsInRangePool.give();
         this.usedWordsInRanges.add(words);
 

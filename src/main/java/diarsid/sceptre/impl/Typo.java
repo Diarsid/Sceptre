@@ -2,6 +2,8 @@ package diarsid.sceptre.impl;
 
 import java.util.Objects;
 
+import diarsid.sceptre.impl.collections.impl.PossibleChar;
+import diarsid.sceptre.impl.collections.impl.PossibleInt;
 import diarsid.support.objects.PooledReusable;
 import diarsid.support.objects.references.Possible;
 
@@ -9,14 +11,14 @@ import static diarsid.support.objects.references.References.simplePossibleButEmp
 
 public class Typo extends PooledReusable {
     
-    private final Possible<Integer> variantIndex;
-    private final Possible<Integer> patternIndex;
-    private final Possible<Character> character;
+    private final PossibleInt variantIndex;
+    private final PossibleInt patternIndex;
+    private final PossibleChar character;
 
     Typo() {
-        this.variantIndex = simplePossibleButEmpty();
-        this.patternIndex = simplePossibleButEmpty();
-        this.character = simplePossibleButEmpty();
+        this.variantIndex = new PossibleInt();
+        this.patternIndex = new PossibleInt();
+        this.character = new PossibleChar();
     }
     
     public void set(int variantI, int patternI, char c) {

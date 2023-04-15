@@ -5,6 +5,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.TreeSet;
 
+import diarsid.sceptre.impl.collections.Ints;
+import diarsid.sceptre.impl.collections.SetInt;
 import diarsid.sceptre.impl.logs.AnalyzeLogType;
 import diarsid.support.objects.GuardedPool;
 import diarsid.support.objects.StatefulClearable;
@@ -693,8 +695,8 @@ class Clusters implements StatefulClearable {
             return false;
         }
         
-        TreeSet<Integer> pathSeparators = this.data.variantPathSeparators;
-        Integer nextSeparatorPosition = pathSeparators.first();
+        SetInt pathSeparators = this.data.variantPathSeparators;
+        int nextSeparatorPosition = pathSeparators.first();
         
         Cluster clusterPrev;
         Cluster clusterNext;
@@ -709,8 +711,8 @@ class Clusters implements StatefulClearable {
                     clusterNext.firstPosition() > nextSeparatorPosition;
             
             if ( clustersSeparated ) {
-                nextSeparatorPosition = pathSeparators.higher(nextSeparatorPosition);
-                if ( isNull(nextSeparatorPosition) ) {
+                nextSeparatorPosition = pathSeparators.greaterThan(nextSeparatorPosition);
+                if ( Ints.isNull(nextSeparatorPosition) ) {
                     return this.lastCluster().equals(clusterNext);
                 } 
             } else {

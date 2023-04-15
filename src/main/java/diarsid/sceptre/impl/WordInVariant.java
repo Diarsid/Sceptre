@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
+import diarsid.sceptre.impl.collections.ArrayInt;
 import diarsid.sceptre.impl.collections.Ints;
 import diarsid.sceptre.impl.collections.ListInt;
 import diarsid.sceptre.impl.collections.SetInt;
@@ -289,11 +290,11 @@ public class WordInVariant extends PooledReusable {
         return matches;
     }
 
-    public int intersections(int afterPosition, int[] positions) {
+    public int intersections(int afterPosition, ArrayInt positions) {
         int positionInVariant;
         int matches = 0;
-        for ( int i = 0; i < positions.length; i++) {
-            positionInVariant = positions[i];
+        for ( int i = 0; i < positions.size(); i++) {
+            positionInVariant = positions.i(i);
             if ( positionInVariant < 0 ) {
                 continue;
             }
@@ -325,12 +326,12 @@ public class WordInVariant extends PooledReusable {
         return matches;
     }
 
-    public int intersections(int[] positions, int startExcludingPosition, int length) {
+    public int intersections(ArrayInt positions, int startExcludingPosition, int length) {
         int positionInVariant;
         int matches = 0;
         int endExcludingPosition = startExcludingPosition + length - 1;
-        for ( int i = 0; i < positions.length; i++) {
-            positionInVariant = positions[i];
+        for ( int i = 0; i < positions.size(); i++) {
+            positionInVariant = positions.i(i);
             if ( positionInVariant < 0 ) {
                 continue;
             }

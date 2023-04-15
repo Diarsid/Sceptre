@@ -5,9 +5,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import diarsid.sceptre.api.model.Variant;
-import diarsid.sceptre.api.model.Variants;
-import diarsid.support.objects.GuardedPool;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -17,17 +14,22 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import diarsid.sceptre.api.model.Variant;
+import diarsid.sceptre.api.model.Variants;
+import diarsid.support.objects.GuardedPool;
+
 import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
 import static java.util.Objects.isNull;
 import static java.util.stream.Collectors.joining;
 
+import static org.junit.jupiter.api.Assertions.fail;
+
 import static diarsid.support.configuration.Configuration.actualConfiguration;
 import static diarsid.support.configuration.Configuration.configure;
 import static diarsid.support.objects.Pools.pools;
 import static diarsid.support.objects.collections.CollectionUtils.nonEmpty;
-import static org.junit.jupiter.api.Assertions.fail;
 
 public class AnalyzeTest {
 

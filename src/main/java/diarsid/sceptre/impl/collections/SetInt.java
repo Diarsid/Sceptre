@@ -19,4 +19,6 @@ public interface SetInt extends Ints {
     int last();
 
     void clear();
+
+    void addAll(SetInt set);
 }

@@ -1,33 +1,32 @@
 package diarsid.sceptre.impl;
 
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeSet;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Consumer;
 import java.util.function.IntFunction;
 
 import diarsid.sceptre.impl.collections.ArrayChar;
+import diarsid.sceptre.impl.collections.CharsCount;
+import diarsid.sceptre.impl.collections.Ints;
+import diarsid.sceptre.impl.collections.SetInt;
 import diarsid.sceptre.impl.collections.impl.ArrayCharImpl;
+import diarsid.sceptre.impl.collections.impl.CharsCountImpl;
+import diarsid.sceptre.impl.collections.impl.SetIntImpl;
 import diarsid.sceptre.impl.logs.AnalyzeLogType;
 import diarsid.sceptre.impl.weight.Weight;
 import diarsid.support.objects.GuardedPool;
 import diarsid.support.objects.PooledReusable;
 
 import static java.lang.String.format;
-import static java.util.Arrays.fill;
-import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static java.util.stream.Collectors.joining;
 
+import static diarsid.sceptre.api.Sceptre.Weight.Estimate.BAD;
+import static diarsid.sceptre.api.Sceptre.Weight.Estimate.of;
 import static diarsid.sceptre.api.Sceptre.Weight.Estimate.preliminarilyOf;
+import static diarsid.sceptre.impl.AnalyzeImpl.logAnalyze;
 import static diarsid.sceptre.impl.AnalyzeUtil.lengthImportanceRatio;
 import static diarsid.sceptre.impl.AnalyzeUtil.missedTooMuch;
 import static diarsid.sceptre.impl.PositionsAnalyze.POS_NOT_FOUND;
 import static diarsid.sceptre.impl.PositionsAnalyze.POS_UNINITIALIZED;
-import static diarsid.sceptre.impl.AnalyzeImpl.logAnalyze;
 import static diarsid.sceptre.impl.WordInVariant.Placing.DEPENDENT;
 import static diarsid.sceptre.impl.WordInVariant.Placing.INDEPENDENT;
 import static diarsid.sceptre.impl.weight.WeightElement.CLUSTERS_IMPORTANCE;
@@ -43,13 +42,10 @@ import static diarsid.sceptre.impl.weight.WeightElement.VARIANT_CONTAINS_PATTERN
 import static diarsid.sceptre.impl.weight.WeightElement.VARIANT_EQUAL_PATTERN;
 import static diarsid.sceptre.impl.weight.WeightElement.VARIANT_PATH_SEPARATORS;
 import static diarsid.sceptre.impl.weight.WeightElement.VARIANT_TEXT_SEPARATORS;
-import static diarsid.sceptre.api.Sceptre.Weight.Estimate.BAD;
-import static diarsid.sceptre.api.Sceptre.Weight.Estimate.of;
 import static diarsid.sceptre.impl.weight.WeightElement.WeightCalculationType.APPLY_PERCENT_TO_SUM;
 import static diarsid.support.misc.MathFunctions.percentAsFloat;
 import static diarsid.support.misc.MathFunctions.percentAsInt;
 import static diarsid.support.misc.MathFunctions.ratio;
-import static diarsid.support.objects.collections.CollectionUtils.isNotEmpty;
 import static diarsid.support.strings.StringIgnoreCaseUtil.indexOfIgnoreCase;
 import static diarsid.support.strings.StringUtils.isPathSeparator;
 import static diarsid.support.strings.StringUtils.isTextSeparator;
@@ -73,9 +69,9 @@ class AnalyzeUnit extends PooledReusable {
     final PositionsAnalyze positionsAnalyze;
     final WordsInVariant wordsInVariant;
 
-    final TreeSet<Integer> variantSeparators;
-    final TreeSet<Integer> variantPathSeparators;
-    final TreeSet<Integer> variantTextSeparators;
+    final SetInt variantSeparators;
+    final SetInt variantPathSeparators;
+    final SetInt variantTextSeparators;
 
     String variant;
     String variantOriginal;
@@ -83,7 +79,7 @@ class AnalyzeUnit extends PooledReusable {
     boolean variantContainsPattern;
     int patternInVariantIndex;
     
-    Weight weight;
+    final Weight weight;
     float lengthDelta;
     boolean allPositionsPresentSortedAndNotPathSeparatorsBetween;
     boolean calculatedAsUsualClusters;
@@ -91,14 +87,7 @@ class AnalyzeUnit extends PooledReusable {
     
     final ArrayChar patternChars;
     String pattern;
-    final Map<Character, AtomicInteger> patternCharsCount;
-    private final Consumer<AtomicInteger> patternCharsCounterClear = (count) -> {
-        if ( count.get() == 0 ) {
-            return;
-        }
-
-        count.set(0);
-    };
+    final CharsCount patternCharsCount;
     
     int notMissedPercent;
         
@@ -109,12 +98,12 @@ class AnalyzeUnit extends PooledReusable {
                 new Clusters(this, clusterPool), 
                 new PositionCandidate(this));
         this.patternChars = new ArrayCharImpl();
-        this.variantSeparators = new TreeSet<>();
-        this.variantPathSeparators = new TreeSet<>();
-        this.variantTextSeparators = new TreeSet<>();
+        this.variantSeparators = new SetIntImpl();
+        this.variantPathSeparators = new SetIntImpl();
+        this.variantTextSeparators = new SetIntImpl();
         this.wordsInVariant = new WordsInVariant(wordPool, wordsInRangePool);
         this.weight = new Weight();
-        this.patternCharsCount = new HashMap<>();
+        this.patternCharsCount = new CharsCountImpl();
     }
     
     void set(String pattern, String variant) {
@@ -150,18 +139,7 @@ class AnalyzeUnit extends PooledReusable {
         this.allPositionsPresentSortedAndNotPathSeparatorsBetween = false;
         this.notMissedPercent = 0;
         this.wordsInVariant.clear();
-        this.patternCharsCount.values().forEach(this.patternCharsCounterClear);
-    }
-
-    void incrementPatternCharCount(Character c) {
-        AtomicInteger count = this.patternCharsCount.get(c);
-
-        if ( isNull(count) ) {
-            count = new AtomicInteger(0);
-            this.patternCharsCount.put(c, count);
-        }
-
-        count.incrementAndGet();
+        this.patternCharsCount.clear();
     }
 
     void calculateWeight() {        
@@ -261,8 +239,8 @@ class AnalyzeUnit extends PooledReusable {
                 if ( first < 0 || last < 0 ) {
                     this.allPositionsPresentSortedAndNotPathSeparatorsBetween = false;
                 } else {
-                    Integer possibleSeparator = this.variantPathSeparators.higher(first);
-                    if ( nonNull(possibleSeparator) ) {
+                    int possibleSeparator = this.variantPathSeparators.greaterThan(first);
+                    if ( Ints.nonNull(possibleSeparator) ) {
                         this.allPositionsPresentSortedAndNotPathSeparatorsBetween = last < possibleSeparator;
                     } else {
                         this.allPositionsPresentSortedAndNotPathSeparatorsBetween = true;
@@ -343,7 +321,7 @@ class AnalyzeUnit extends PooledReusable {
 
         this.weight.add(this.lengthDelta, LENGTH_DELTA);
             
-        float bonus = this.positionsAnalyze.positions.length * 5.1f;
+        float bonus = this.positionsAnalyze.positions.size() * 5.1f;
         this.weight.add(-bonus, NO_CLUSTERS_SEPARATED_POSITIONS_SORTED);
         
         int meanigfulPositions = this.positionsAnalyze.meaningful;
@@ -387,7 +365,8 @@ class AnalyzeUnit extends PooledReusable {
     void logState() {  
         logAnalyze(AnalyzeLogType.BASE, "  variant       : %s", this.variant);
         
-        String patternCharsString = Arrays.stream(this.positionsAnalyze.positions)
+        String patternCharsString = this.positionsAnalyze.positions
+                .stream()
                 .mapToObj(position -> {
                     if ( position < 0 ) {
                         return "*";
@@ -397,7 +376,8 @@ class AnalyzeUnit extends PooledReusable {
                 })
                 .map(s -> s.length() == 1 ? " " + s : s)
                 .collect(joining(" "));
-        String positionsString =  Arrays.stream(this.positionsAnalyze.positions)
+        String positionsString =  this.positionsAnalyze.positions
+                .stream()
                 .mapToObj(POSITION_INT_TO_STRING)
                 .map(s -> s.length() == 1 ? " " + s : s)
                 .collect(joining(" "));
@@ -537,10 +517,6 @@ class AnalyzeUnit extends PooledReusable {
             c = s.charAt(current);
             currentIsSeparator = false;
 
-            if ( i == 34 ) {
-                int a = 5;
-            }
-
             if ( isPathSeparator(c) ) {
                 this.variantPathSeparators.add(current);
                 currentIsSeparator = true;
@@ -616,19 +592,19 @@ class AnalyzeUnit extends PooledReusable {
 
         wordsInVariant.complete();
 
-        if ( isNotEmpty(this.variantPathSeparators) ) {
+        if ( this.variantPathSeparators.isNotEmpty() ) {
             this.variantSeparators.addAll(this.variantPathSeparators);
         }
 
-        if ( isNotEmpty(this.variantTextSeparators) ) {
+        if ( this.variantTextSeparators.isNotEmpty() ) {
             this.variantSeparators.addAll(this.variantTextSeparators);
         }
     }
 
     void setPatternCharsAndPositions() {
         this.patternChars.fillFrom(this.pattern);
-        this.positionsAnalyze.positions = new int[this.patternChars.size()];
-        fill(this.positionsAnalyze.positions, POS_UNINITIALIZED);
+        this.positionsAnalyze.positions.setSize(this.patternChars.size());
+        this.positionsAnalyze.positions.fill(POS_UNINITIALIZED);
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
@@ -655,7 +631,8 @@ class AnalyzeUnit extends PooledReusable {
     }
 
     private void logUnsortedPositionsOf(PositionsAnalyze data) {
-        String positionsS = Arrays.stream(data.positions)
+        String positionsS = data.positions
+                .stream()
                 .mapToObj(POSITION_INT_TO_STRING)
                 .collect(joining(" "));
         logAnalyze(AnalyzeLogType.BASE, "  positions before sorting: %s", positionsS);

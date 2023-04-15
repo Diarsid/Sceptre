@@ -1,6 +1,6 @@
 package diarsid.sceptre.impl.collections;
 
-public interface ListChar {
+public interface ListChar extends Chars {
 
     public static interface Elements {
 
@@ -10,16 +10,6 @@ public interface ListChar {
 
         char current();
     }
-
-    int size();
-
-    boolean isEmpty();
-
-    boolean isNotEmpty();
-
-    boolean contains(char value);
-
-    boolean notContains(char value);
 
     Elements elements();
 

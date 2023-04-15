@@ -257,6 +257,32 @@ public class SetIntImpl implements SetInt {
     }
 
     @Override
+    public void addAll(SetInt set) {
+        if ( set.isEmpty() ) {
+            return;
+        }
+
+        if ( set.size() == 1 ) {
+            this.add(set.elements().next().current());
+            return;
+        }
+
+        SetIntImpl other = (SetIntImpl) set;
+
+        int newSize = this.size + other.size;
+
+        while ( newSize > this.array.length ) {
+            extend();
+        }
+
+        System.arraycopy(other.array, 0, this.array, this.size, other.size);
+
+        this.size = newSize;
+
+        Arrays.sort(this.array, 0, this.size);
+    }
+
+    @Override
     public String join(String delimiter) {
         StringBuilder sb = new StringBuilder();
 

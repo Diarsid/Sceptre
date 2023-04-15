@@ -544,7 +544,7 @@ class ClusterStepTwo {
         }
 
         if ( isFilledInPattern ) {
-            int cPositionInVariant = this.analyze.positions[patternPosition];
+            int cPositionInVariant = this.analyze.positions.i(patternPosition);
             if ( cPositionInVariant != variantPosition ) {
                 WordInVariant wordOfFilledChar = this.analyze.data.wordsInVariant.wordOf(cPositionInVariant);
                 WordInVariant wordAnother = this.analyze.data.wordsInVariant.wordOf(variantPosition);

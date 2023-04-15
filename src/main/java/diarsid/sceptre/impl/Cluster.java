@@ -323,9 +323,6 @@ class Cluster
     private void tearDownOn(int positionsQty) {
         positionsQty = abs(positionsQty);
         this.teardown = positionsQty;
-        if ( positionsQty == 1) {
-            int a = 5;
-        }
         logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, "               [TEARDOWN] cluster is to be teardown by %s", positionsQty);
     }
 

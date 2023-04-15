@@ -11,7 +11,7 @@ class SinglePositions {
         UNINIT
     }
     
-    private final static Integer MISS = -3;
+    private final static int MISS = -3;
 
     private final ListInt filledPositions;
     private final ListInt allPositions;
