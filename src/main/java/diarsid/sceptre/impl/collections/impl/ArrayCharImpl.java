@@ -128,4 +128,9 @@ public class ArrayCharImpl implements ArrayChar {
         this.elements.i = -1;
         return this.elements;
     }
+
+    @Override
+    public String toString() {
+        return ArraysUtil.arrayToString(this.array, this.size);
+    }
 }

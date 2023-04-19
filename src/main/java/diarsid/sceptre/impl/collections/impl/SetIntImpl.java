@@ -295,4 +295,9 @@ public class SetIntImpl implements SetInt {
 
         return sb.toString();
     }
+
+    @Override
+    public String toString() {
+        return ArraysUtil.arrayToString(this.array, this.size);
+    }
 }

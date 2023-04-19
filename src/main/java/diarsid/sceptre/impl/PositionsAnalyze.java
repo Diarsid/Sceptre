@@ -245,6 +245,7 @@ class PositionsAnalyze {
     // --
 
     boolean currentClusterIsRejected;
+    boolean currentClusterWordStartFound;
     
     int previousClusterLastPosition = POS_UNINITIALIZED;
     int previousClusterFirstPosition = POS_UNINITIALIZED;
@@ -2032,7 +2033,8 @@ class PositionsAnalyze {
     void clusterEnds() {
         this.clustered++;
         this.currentClusterLength++;
-        this.clusterContinuation = false;  
+        this.clusterContinuation = false;
+        this.currentClusterWordStartFound = false;
         
         this.processClusterPositionOrderStats();
 
@@ -2045,11 +2047,29 @@ class PositionsAnalyze {
             }
             else {
                 if ( wordsInRange.hasStartIn(this.filledPositions) ) {
-
+                    this.currentClusterWordStartFound = true;
                 }
                 else {
-                    this.currentClusterIsRejected = true;
-                    logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, "    [cluster] word of cluster has not its start found, cluster is bad!");
+
+                    if ( wordsInRange.count() == 1 ) {
+                        WordInVariant word = wordsInRange.first();
+                        WordInVariant prevWord = this.data.wordsInVariant.wordBeforeOrNull(word);
+                        if ( Objects.nonNull(prevWord) ) {
+                            char lastCharOfPrevWord = this.data.variant.charAt(prevWord.endIndex);
+                            char firstCharOfClusterWord = this.data.variant.charAt(word.startIndex);
+                            if ( lastCharOfPrevWord == firstCharOfClusterWord ) {
+                                if ( this.filledPositions.contains(prevWord.endIndex) ) {
+                                    logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, "    [cluster] word of cluster has its start found in last char of previous word!");
+                                    this.currentClusterWordStartFound = true;
+                                }
+                            }
+                        }
+                    }
+
+                    if ( ! this.currentClusterWordStartFound ) {
+                        this.currentClusterIsRejected = true;
+                        logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, "    [cluster] word of cluster has not its start found, cluster is bad!");
+                    }
                 }
             }
         }
@@ -2286,7 +2306,6 @@ class PositionsAnalyze {
                 .wordsOfRange(this.currentClusterFirstPosition, this.currentClusterLength);
 
         if (wordsInRange.areEmpty()) {
-//                this.weight.add(CLUSTER_IS_SENSELESS);
             logAnalyze(POSITIONS_CLUSTERS,
                     "             [cluster] cluster is senseless");
             this.clustered = this.clustered - this.currentClusterLength;
@@ -2298,9 +2317,8 @@ class PositionsAnalyze {
                     (this.currentClusterLength == 3 && this.currentClusterLength > wordsInRange.length() / 2);
 
             if ( ! clusterIsLongEnough ) {
-                boolean wordHasFoundStart = wordsInRange.hasStartIn(this.filledPositions);
 
-                if ( ! wordHasFoundStart ) {
+                if ( ! this.currentClusterWordStartFound ) {
                     logAnalyze(POSITIONS_CLUSTERS,
                             "             [cluster] cluster word has not found start");
                     this.clustered = this.clustered - this.currentClusterLength;
@@ -2328,53 +2346,7 @@ class PositionsAnalyze {
     }
 
     private void checkWordsCoverageByAllClusters() {
-//        int wordsTotalCount = data.wordsInVariant.all.size();
-//        if ( wordsTotalCount == 1 ) {
-//            WordInVariant word = data.wordsInVariant.all.get(0);
-//
-//            int wordQuality = 0;
-//
-//            int singlePositionsInWordCount = word.intersections(this.singlePositions.filled());
-//
-//            if ( this.clusters.quantity() == 0 ) {
-//
-//            }
-//            else if ( this.clusters.quantity() == 1 ) {
-//                Cluster cluster = this.clusters.firstCluster();
-//                if ( cluster.contains(word.startIndex) ) {
-//                    if ( cluster.contains(word.endIndex) ) {
-//
-//                    }
-//                    else {
-//
-//                    }
-//                }
-//                else if ( cluster.contains(word.endIndex) ) {
-//                    if ( this.singlePositions.contains(word.startIndex) ) {
-//
-//                    }
-//                    else {
-//
-//                    }
-//                }
-//                else {
-//                    if ( this.singlePositions.contains(word.startIndex) ) {
-//                        if ( this.singlePositions.contains(word.endIndex) ) {
-//
-//                        }
-//                        else {
-//
-//                        }
-//                    }
-//                    else {
-//
-//                    }
-//                }
-//            }
-//            else {
-//
-//            }
-//        }
+        logAnalyze(POSITIONS_CLUSTERS, "    [Words]");
 
         WordsInVariant.WordsInRange foundWords = this.data.wordsInVariant.wordsOfRange(this.positions);
 
@@ -2384,10 +2356,6 @@ class PositionsAnalyze {
         }
 
         if ( foundWords.count() == 1 ) {
-//            if ( this.weight.contains(CLUSTER_IS_WORD) ) {
-//                return;
-//            }
-
             WordInVariant word = foundWords.get(0);
 
             if ( this.notFoundPatternCharsCount() == 0 ) {
@@ -2815,7 +2783,7 @@ class PositionsAnalyze {
                 }
             }
 
-            logAnalyze(POSITIONS_CLUSTERS, "word [%s] quality:%s", word.charsString(), wordQuality);
+            logAnalyze(POSITIONS_CLUSTERS, "       [Word quality] %s : %s", word.charsString(), wordQuality);
             if ( wordQuality > 0 ) {
                 this.weight.add(-square(wordQuality), WORD_QUALITY);
             }
@@ -3268,6 +3236,7 @@ class PositionsAnalyze {
         this.extractedMissedRepeatedPositionsIndexes.clear();
         this.garbagePatternPositions.clear();
         this.currentClusterIsRejected = false;
+        this.currentClusterWordStartFound = false;
     }
     
     boolean previousCharInVariantInClusterWithCurrentChar(int currentPatternCharIndex) {

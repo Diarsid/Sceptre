@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import diarsid.sceptre.api.model.Variant;
 import diarsid.sceptre.api.model.Variants;
+import diarsid.sceptre.impl.logs.Log;
 import diarsid.support.objects.GuardedPool;
 
 import static java.lang.String.format;
@@ -2358,7 +2359,6 @@ public class AnalyzeTest {
         weightVariantsAndCheckMatching();
     }
 
-    @Disabled
     @Test
     public void test_tools_1() {
         pattern = "tolos";
@@ -2373,6 +2373,27 @@ public class AnalyzeTest {
                 "Losers: The Road to Everyplace But the White House by Michael Lewis",
                 "A Calendar of Wisdom: Daily Thoughts to Nourish the Soul by Peter Sekirin and Leo Tolstoy",
                 "The Book of Lost Tales Part One (The History of Middle-Earth #1) by J.R.R. Tolkien and Christopher Tolkien"
+        );
+
+        expected = asList(
+                "D:/DEV/3__Tools",
+                "D:/DEV/3__Tools/Servers/Message_Servers",
+                "Eating for Life: Your Guide to Great Health Fat Loss and Increased Energy! by Bill Phillips",
+                "Losers: The Road to Everyplace But the White House by Michael Lewis",
+                "The Hunger Games Companion: The Unauthorized Guide to the Series by Lois H. Gresh",
+                "Star Trek: Logs One and Two (Star Trek: Log #1-2) by Alan Dean Foster",
+                "The Dictionary of Corporate Bullshit: An A to Z Lexicon of Empty Enraging and Just Plain Stupid Office Talk by Lois Beckwith"
+        );
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_tolservrs() {
+        pattern = "tolservrs";
+
+        variants = asList(
+                "D:/DEV/3__Tools/Servers"
         );
 
         expectedSameOrderAsVariants();
@@ -2492,6 +2513,22 @@ public class AnalyzeTest {
 
         weightVariantsAndCheckMatching();
     }
+
+    @Test
+    public void test_proupsth() {
+        pattern = "proupsth";
+
+        variants = asList(
+                "D:/DEV/1__Projects/UkrPoshta",
+                "D:/DEV/1__Projects/UkrPoshta/StatusNotificationService"
+        );
+
+        expectedSameOrderAsVariants();
+
+        weightVariantsAndCheckMatching();
+    }
+
+
 
     @Test
     public void test_passnjss() {

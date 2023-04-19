@@ -204,4 +204,9 @@ public class ArrayIntImpl implements ArrayInt {
         result = 31 * result + Arrays.hashCode(array);
         return result;
     }
+
+    @Override
+    public String toString() {
+        return ArraysUtil.arrayToString(this.array, this.size);
+    }
 }

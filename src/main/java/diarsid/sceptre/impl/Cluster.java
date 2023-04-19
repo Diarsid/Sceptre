@@ -450,7 +450,6 @@ class Cluster
             default:
                 return format("Cluster[%s...%s]", this.firstPosition, this.lastPosition());
         }
-        
     }
     
 }

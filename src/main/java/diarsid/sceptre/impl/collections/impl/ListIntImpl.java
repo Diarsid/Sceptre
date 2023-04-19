@@ -290,10 +290,6 @@ public class ListIntImpl implements ListInt {
 
     @Override
     public String toString() {
-        return "[" +
-                "size=" + size +
-                " " +
-                Arrays.toString(array) +
-                ']';
+        return ArraysUtil.arrayToString(this.array, this.size);
     }
 }
