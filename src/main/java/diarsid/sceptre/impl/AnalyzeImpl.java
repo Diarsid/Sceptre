@@ -33,7 +33,7 @@ import static diarsid.support.strings.StringUtils.lower;
 
 public class AnalyzeImpl implements Sceptre.Analyze.LimitedBySize {
 
-    public static final Version VERSION = new Version("1.3.0");
+    public static final Version VERSION = new Version("1.3.1");
 
     private final GuardedPool<AnalyzeUnit> analyzeUnitsPool;
     
