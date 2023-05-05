@@ -33,11 +33,11 @@ public interface Ints {
 
     String join(String delimiter);
 
-    public static boolean isNull(int i) {
+    public static boolean doesNotExist(int i) {
         return i == Integer.MIN_VALUE;
     }
 
-    public static boolean nonNull(int i) {
+    public static boolean doesExist(int i) {
         return i != Integer.MIN_VALUE;
     }
 

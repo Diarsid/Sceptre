@@ -2642,6 +2642,56 @@ public class AnalyzeTest {
 
         weightVariantsAndCheckMatching();
     }
+
+    @Test
+    public void test_hofmaninctant() {
+        pattern = "hofmaninctant";
+
+        variants = asList(
+                "Incantation by Alice Hoffman");
+
+        expectedSameOrderAsVariants();
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_godmanwar() {
+        pattern = "godmanwar";
+
+        variants = asList(
+                "The Wars of Gods and Men: Book III of the Earth Chronicles (The Earth Chronicles) by Zecharia Sitchin",
+                "On Killing: The Psychological Cost of Learning to Kill in War and Society by Dave Grossman");
+
+        expectedSameOrderAsVariants();
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_godmenwar() {
+        pattern = "godmenwar";
+
+        variants = asList(
+                "The Wars of Gods and Men: Book III of the Earth Chronicles (The Earth Chronicles) by Zecharia Sitchin",
+                "On Killing: The Psychological Cost of Learning to Kill in War and Society by Dave Grossman");
+
+        expectedSameOrderAsVariants();
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_pirctstokn() {
+        pattern = "pirctstokn";
+
+        variants = asList(
+                "Pictures by J.R.R. Tolkien by J.R.R. Tolkien and Christopher Tolkien");
+
+        expectedSameOrderAsVariants();
+
+        weightVariantsAndCheckMatching();
+    }
     
     @Test
     public void test_synthetic_1() {

@@ -232,6 +232,23 @@ class ClusterStepOne {
     int skip() {
         return this.skip;
     }
+
+    int mainOfVariant() {
+        return this.mainVariantPosition;
+    }
+
+    int nextOfVariant() {
+        return this.nextVariantPosition;
+    }
+
+    int firstOfVariant() {
+        if ( this.hasPrevs ) {
+            return this.prevsVariantPositions.min();
+        }
+        else {
+            return this.prevVariantPosition;
+        }
+    }
     
     PositionIterableView positionIterableView() {
         this.finishIfNot();

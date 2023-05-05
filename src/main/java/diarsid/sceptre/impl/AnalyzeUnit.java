@@ -240,7 +240,7 @@ class AnalyzeUnit extends PooledReusable {
                     this.allPositionsPresentSortedAndNotPathSeparatorsBetween = false;
                 } else {
                     int possibleSeparator = this.variantPathSeparators.greaterThan(first);
-                    if ( Ints.nonNull(possibleSeparator) ) {
+                    if ( Ints.doesExist(possibleSeparator) ) {
                         this.allPositionsPresentSortedAndNotPathSeparatorsBetween = last < possibleSeparator;
                     } else {
                         this.allPositionsPresentSortedAndNotPathSeparatorsBetween = true;

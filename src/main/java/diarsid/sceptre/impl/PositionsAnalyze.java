@@ -61,7 +61,7 @@ import static diarsid.sceptre.impl.Step.STEP_4;
 import static diarsid.sceptre.impl.WordInVariant.Placing.DEPENDENT;
 import static diarsid.sceptre.impl.collections.Ints.getNearestToValueFromSetExcluding;
 import static diarsid.sceptre.impl.collections.Ints.meanSmartIgnoringZeros;
-import static diarsid.sceptre.impl.collections.Ints.nonNull;
+import static diarsid.sceptre.impl.collections.Ints.doesExist;
 import static diarsid.sceptre.impl.collections.impl.Sort.REVERSE;
 import static diarsid.sceptre.impl.collections.impl.Sort.STRAIGHT;
 import static diarsid.sceptre.impl.logs.AnalyzeLogType.POSITIONS_CLUSTERS;
@@ -108,7 +108,6 @@ import static diarsid.support.misc.MathFunctions.absDiff;
 import static diarsid.support.misc.MathFunctions.cube;
 import static diarsid.support.misc.MathFunctions.onePointRatio;
 import static diarsid.support.misc.MathFunctions.square;
-import static diarsid.support.objects.collections.CollectionUtils.first;
 import static diarsid.support.objects.collections.CollectionUtils.last;
 import static diarsid.support.objects.references.References.simplePossibleButEmpty;
 import static diarsid.support.strings.StringUtils.countWordSeparatorsInBetween;
@@ -557,9 +556,9 @@ class PositionsAnalyze {
             int lastPosition = uninterruptedPositions.last();
             int firstSeparatorAfterFirstPosition = this.data.variantSeparators.greaterThan(firstPosition);
             int lastSeparatorBeforeFirstPosition = this.data.variantSeparators.lesserThan(firstPosition);
-            if ( Ints.nonNull(firstSeparatorAfterFirstPosition) ) {
+            if ( Ints.doesExist(firstSeparatorAfterFirstPosition) ) {
                 if ( firstSeparatorAfterFirstPosition == lastPosition + 1 ) {
-                    if ( Ints.nonNull(lastSeparatorBeforeFirstPosition) ) {
+                    if ( Ints.doesExist(lastSeparatorBeforeFirstPosition) ) {
                         if ( lastSeparatorBeforeFirstPosition == firstPosition - 1 ) {
                             logAnalyze(
                                     POSITIONS_CLUSTERS,
@@ -934,7 +933,10 @@ class PositionsAnalyze {
 
         characterSearching : while ( currentPatternCharPositionInVariant >= 0 && continueSearching ) {
             logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "        [assess] '%s'(%s in variant)", currentChar, currentPatternCharPositionInVariant);
-            currStepTwoCluster.setAssessed(currentChar, currentPatternCharIndex, currentPatternCharPositionInVariant);
+
+            if ( findPositionsStep.is(STEP_2) ) {
+                currStepTwoCluster.setAssessed(currentChar, currentPatternCharIndex, currentPatternCharPositionInVariant);
+            }
         
             nearestPositionInVariant = POS_UNINITIALIZED;
 
@@ -1410,7 +1412,7 @@ class PositionsAnalyze {
                         int distanceToNearestFilledPosition = MIN_VALUE;
                         if ( filledPositions.isNotEmpty() ) {
                             int nearestFilledPosition = getNearestToValueFromSetExcluding(currentPatternCharPositionInVariant, filledPositions);
-                            if ( nonNull(nearestFilledPosition) ) {
+                            if ( doesExist(nearestFilledPosition) ) {
                                 distanceToNearestFilledPosition = absDiff(nearestFilledPosition, currentPatternCharPositionInVariant);
                             }
                         }                        
@@ -1431,28 +1433,54 @@ class PositionsAnalyze {
             
             if ( findPositionsStep.equals(STEP_1) ) {
                 if ( currStepOneCluster.isSet() ) {
-                    currStepOneCluster.finish(data.variant, data.pattern);
-                    if ( prevStepOneCluster.isSet() ) {
-                        if ( currStepOneCluster.isBetterThan(prevStepOneCluster, data.wordsInVariant) ) {
-                            acceptCurrentCluster();
+
+                    boolean ignoreStepOneCluster = false;
+                    WordInVariant word;
+                    WordInVariant clusterWord = data.wordsInVariant.wordOf(currentPatternCharPositionInVariant);
+                    if ( clusterWord.startIndex == currStepOneCluster.firstOfVariant() ) {
+
+                    }
+                    else {
+                        conflictSearch : for ( int i = 0; i < data.wordsInVariant.all.size(); i++ ) {
+                            if ( i == clusterWord.index ) {
+                                continue conflictSearch;
+                            }
+                            word = data.wordsInVariant.all.get(i);
+                            if ( word.length > 1 && hasPossibleConflict(word, currStepOneCluster) ) {
+                                ignoreStepOneCluster = true;
+                                logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "          [info] reject cluster - conflicts with word %s", word.charsString());
+                                break conflictSearch;
+                            }
                         }
-                        else if ( prevStepOneCluster.isBetterThan(currStepOneCluster, data.wordsInVariant) ) {
-                            acceptPreviousCluster();
-                        }
-                        else {
-                            ClusterPreference comparison = compare(prevStepOneCluster, currStepOneCluster);
-                            if ( comparison.equals(PREFER_LEFT) ) {
+                    }
+
+                    if ( ignoreStepOneCluster ) {
+                        currStepOneCluster.clear();
+                    }
+                    else {
+                        currStepOneCluster.finish(data.variant, data.pattern);
+                        if ( prevStepOneCluster.isSet() ) {
+                            if ( currStepOneCluster.isBetterThan(prevStepOneCluster, data.wordsInVariant) ) {
+                                acceptCurrentCluster();
+                            }
+                            else if ( prevStepOneCluster.isBetterThan(currStepOneCluster, data.wordsInVariant) ) {
                                 acceptPreviousCluster();
                             }
                             else {
-                                acceptCurrentCluster();
-                            } 
+                                ClusterPreference comparison = compare(prevStepOneCluster, currStepOneCluster);
+                                if ( comparison.equals(PREFER_LEFT) ) {
+                                    acceptPreviousCluster();
+                                }
+                                else {
+                                    acceptCurrentCluster();
+                                }
+                            }
+
+                            improveWeightOnFoundDuplicateClusters(prevStepOneCluster, currStepOneCluster);
+                        } else {
+                            acceptCurrentAndSwapStepOneClusters();
                         }
-                                                
-                        /* [EXP] */ improveWeightOnFoundDuplicateClusters(prevStepOneCluster, currStepOneCluster);
-                    } else {
-                        acceptCurrentAndSwapStepOneClusters();
-                    }                    
+                    }
                 }                
             }
             
@@ -1626,6 +1654,22 @@ class PositionsAnalyze {
         prevStepTwoCluster.clear();
         currStepTwoCluster.clear();
         swapStepTwoCluster.clear();
+    }
+
+    private boolean hasPossibleConflict(WordInVariant word, ClusterStepOne cluster) {
+        int clusterPosition1 = cluster.mainOfVariant();
+        int clusterPosition2 = cluster.nextOfVariant();
+
+        int wordPosition0 = word.startIndex;
+        int wordPosition1 = wordPosition0 + 1;
+
+        char wordChar0 = data.variant.charAt(wordPosition0);
+        char wordChar1 = data.variant.charAt(wordPosition1);
+
+        char clusterChar1 = data.variant.charAt(clusterPosition1);
+        char clusterChar2 = data.variant.charAt(clusterPosition2);
+
+        return ( wordChar0 == clusterChar1 && wordChar1 == clusterChar2 );
     }
 
     private void acceptPreviousCluster() {
@@ -2450,6 +2494,13 @@ class PositionsAnalyze {
                                     }
                                     else if ( word.length == 3 ) {
 
+                                    }
+                                    else {
+                                        if ( singlePositionsInWordCount == 2 ) {
+                                            if ( word.length > 5 ) {
+                                                wordQuality = wordQuality - (word.length-5);
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -3325,14 +3376,6 @@ class PositionsAnalyze {
         int diffSumAbs = absDiff(firstOrder, mean);
         int diffSumReal = firstOrder;
         int diffCount = 0;
-        
-        if ( firstOrder != mean ) {
-            diffCount++;
-            WordsInVariant.WordsInRange words = this.data.wordsInVariant.wordsOfRange(clusterFirstPosition, clusterLength);
-            if ( words.first().startIndex == clusterFirstPosition ) {
-                isBad = true;
-            }
-        }
 
         for (int i = 0; i < limit; i++) {
             isLastPair = ( i + 1 == limit );
@@ -3505,6 +3548,34 @@ class PositionsAnalyze {
 //                }
 //            }
 //        }
+
+        if ( firstOrder != mean ) {
+            diffCount++;
+
+            boolean ignore = false;
+
+            int repeatsCount = cluster.repeats().size();
+            if ( repeatsCount == 2 ) {
+                int repeatsDiff = absDiff(
+                        cluster.repeats().get(0),
+                        cluster.repeats().get(1));
+
+                if ( repeatsDiff == 1 ) {
+                    int repeat0Count = cluster.repeatQties().get(0);
+                    int repeat1Count = cluster.repeatQties().get(1);
+                    ignore =
+                            repeat0Count > 1 &&
+                            repeat1Count > 1;
+                }
+            }
+
+            if ( ! ignore ) {
+                WordsInVariant.WordsInRange words = this.data.wordsInVariant.wordsOfRange(clusterFirstPosition, clusterLength);
+                if ( words.first().startIndex == clusterFirstPosition ) {
+                    isBad = true;
+                }
+            }
+        }
 
         if ( AnalyzeLogType.POSITIONS_CLUSTERS.isEnabled() ) {
             logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, "            [cluster stats] order repeats       %s", cluster

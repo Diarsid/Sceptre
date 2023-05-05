@@ -10,7 +10,7 @@ import diarsid.sceptre.impl.logs.AnalyzeLogType;
 import static java.lang.String.format;
 
 import static diarsid.sceptre.impl.AnalyzeImpl.logAnalyze;
-import static diarsid.sceptre.impl.collections.Ints.isNull;
+import static diarsid.sceptre.impl.collections.Ints.doesNotExist;
 import static diarsid.support.misc.MathFunctions.absDiff;
 
 /**
@@ -68,7 +68,7 @@ class PositionCandidate {
             logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "             variant order diff     %s", orderDiffInVariant == UNINITIALIZED ? "_" : orderDiffInVariant);
 //            logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "             approx. placement diff %s%%", otherPlacementDiff);
             logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "             is near separator      %s", isNearSeparator);
-            logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "             to nearest position    %s", isNull(distanceToNearestFilledPosition) ? "_" : distanceToNearestFilledPosition);
+            logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "             to nearest position    %s", doesNotExist(distanceToNearestFilledPosition) ? "_" : distanceToNearestFilledPosition);
             logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "             clustered positions    %s", clusteredAround);
             logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "             chars remained         %s", charsRemained);
         }
@@ -133,7 +133,7 @@ class PositionCandidate {
             }
         }
         
-        if ( isNull(this.distanceToNearestFilledPosition) || this.distanceToNearestFilledPosition < 0 ) {
+        if ( doesNotExist(this.distanceToNearestFilledPosition) || this.distanceToNearestFilledPosition < 0 ) {
             if ( this.isNearSeparator != otherIsNearSeparator ) {
                 int thisSum = zeroIfNotInit(this.orderDiffInPattern) - this.clusteredAround;
                 int otherSum = zeroIfNotInit(otherOrderDiffInPattern) - otherClusteredAround;

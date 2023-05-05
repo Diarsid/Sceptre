@@ -3,7 +3,6 @@ package diarsid.sceptre.impl;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.TreeSet;
 
 import diarsid.sceptre.impl.collections.Ints;
 import diarsid.sceptre.impl.collections.SetInt;
@@ -13,7 +12,6 @@ import diarsid.support.objects.StatefulClearable;
 import diarsid.support.objects.references.Possible;
 
 import static java.lang.Math.negateExact;
-import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static java.util.stream.Collectors.joining;
 
@@ -712,7 +710,7 @@ class Clusters implements StatefulClearable {
             
             if ( clustersSeparated ) {
                 nextSeparatorPosition = pathSeparators.greaterThan(nextSeparatorPosition);
-                if ( Ints.isNull(nextSeparatorPosition) ) {
+                if ( Ints.doesNotExist(nextSeparatorPosition) ) {
                     return this.lastCluster().equals(clusterNext);
                 } 
             } else {
