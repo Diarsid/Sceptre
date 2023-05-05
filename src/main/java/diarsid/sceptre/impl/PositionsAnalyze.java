@@ -227,7 +227,7 @@ class PositionsAnalyze {
     
     // v.3
     final MapIntInt positionUnsortedOrders = new MapIntIntImpl();
-    final MapIntInt positionPatternIndexes = new MapIntIntImpl();
+    final MapIntInt patternIndexesByVariantPosition = new MapIntIntImpl();
     final MapInt<Step> positionFoundSteps = new MapIntImpl<>();
     final MapInt.Keys filledPositions = positionFoundSteps.keys();
     private final PositionCandidate positionCandidate;
@@ -334,7 +334,7 @@ class PositionsAnalyze {
             positions.i(i, position);
             matchTypesByVariantPosition.put(i, "STEP_1_PATTERN-IN-VARIANT");
             positionFoundSteps.put(position, STEP_1);
-            positionPatternIndexes.put(i, position);
+            patternIndexesByVariantPosition.put(i, position);
             logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "    [SAVE] %s : %s", data.patternChars.i(i), position);
             position++;        
         }
@@ -1121,8 +1121,8 @@ class PositionsAnalyze {
                                         char nextNextCharInPattern = data.patternChars.i(nextNextPatternCharIndex);
 
                                         if ( nextNextCharInPattern == nextCharInVariant ) {
-                                            if ( positionPatternIndexes.containsKey(currentPatternCharPositionInVariant + 1) && 
-                                                 positionPatternIndexes.containsValue(nextNextPatternCharIndex) ) {
+                                            if ( patternIndexesByVariantPosition.containsKey(currentPatternCharPositionInVariant + 1) &&
+                                                 patternIndexesByVariantPosition.containsValue(nextNextPatternCharIndex) ) {
                                                 breakpoint();
                                                 
                                                 positionsInCluster.add(currentPatternCharPositionInVariant);
@@ -1367,11 +1367,11 @@ class PositionsAnalyze {
                     if ( findPositionsStep.canAddToPositions(positionsInCluster.size()) ) {
                         
                         int orderDiffInPattern;
-                        if ( nearestPositionInVariant == POS_UNINITIALIZED && positionPatternIndexes.isNotEmpty() ) {
-                            nearestPositionInVariant = getNearestToValueFromSetExcluding(currentPatternCharPositionInVariant, positionPatternIndexes.keys());
+                        if ( nearestPositionInVariant == POS_UNINITIALIZED && patternIndexesByVariantPosition.isNotEmpty() ) {
+                            nearestPositionInVariant = getNearestToValueFromSetExcluding(currentPatternCharPositionInVariant, patternIndexesByVariantPosition.keys());
                         }
                         if ( nearestPositionInVariant > POS_NOT_FOUND ) {
-                            int nearestPatternCharIndex = positionPatternIndexes.get(nearestPositionInVariant);
+                            int nearestPatternCharIndex = patternIndexesByVariantPosition.get(nearestPositionInVariant);
                             if ( nearestPatternCharIndex == MIN_VALUE ) {
                                 // nearest char can be null only when current char is clastered with next pattern position
                                 nearestPatternCharIndex = currentPatternCharIndex + 1;
@@ -1804,7 +1804,7 @@ class PositionsAnalyze {
                                     currStepTwoCluster.setAssessed(
                                             word,
                                             lastFoundVariantCh,
-                                            positionPatternIndexes.get(lastFoundVariantPosition),
+                                            patternIndexesByVariantPosition.get(lastFoundVariantPosition),
                                             lastFoundVariantPosition);
                                 }
 
@@ -1953,7 +1953,7 @@ class PositionsAnalyze {
         if ( positionInVariant == POS_NOT_FOUND ) {
             positions.i(patternIndex, POS_NOT_FOUND);
             matchTypesByVariantPosition.remove(positionInVariant);
-            positionPatternIndexes.remove(positionInVariant);
+            patternIndexesByVariantPosition.remove(positionInVariant);
             positionFoundSteps.remove(positionInVariant);
             localUnclusteredPatternCharIndexes.add(patternIndex);
             char c = data.patternChars.i(patternIndex);
@@ -1965,7 +1965,7 @@ class PositionsAnalyze {
 
         positions.i(patternIndex, positionInVariant);
         matchTypesByVariantPosition.put(positionInVariant, match);
-        positionPatternIndexes.put(positionInVariant, patternIndex);
+        patternIndexesByVariantPosition.put(positionInVariant, patternIndex);
         positionFoundSteps.put(positionInVariant, findPositionsStep);
         localUnclusteredPatternCharIndexes.remove(patternIndex);
         char c = data.patternChars.i(patternIndex);
@@ -2310,8 +2310,8 @@ class PositionsAnalyze {
             if ( this.data.pattern.length() < 6 ) {
                 if ( this.currentClusterLength == 2 ) {
                     Cluster cluster = this.clusters.lastAddedCluster();
-                    int pattern0 = this.positionPatternIndexes.get(cluster.position(0));
-                    int pattern1 = this.positionPatternIndexes.get(cluster.position(1));
+                    int pattern0 = this.patternIndexesByVariantPosition.get(cluster.position(0));
+                    int pattern1 = this.patternIndexesByVariantPosition.get(cluster.position(1));
                     int patternDiff = absDiff(pattern0, pattern1);
                     if ( patternDiff > 1 ) {
                         logAnalyze(POSITIONS_CLUSTERS,
@@ -3269,7 +3269,7 @@ class PositionsAnalyze {
         this.currentChar = ' ';
         this.nextPatternCharsToSkip = 0;
         this.positionUnsortedOrders.clear();
-        this.positionPatternIndexes.clear();
+        this.patternIndexesByVariantPosition.clear();
         this.positionFoundSteps.clear();
         this.positionCandidate.clear();
         this.nearestPositionInVariant = POS_UNINITIALIZED;
