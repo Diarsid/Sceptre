@@ -106,6 +106,19 @@ public class WordInVariant extends PooledReusable {
         return Arrays.equals(this.chars, other.chars);
     }
 
+    public int charPositionOf(char c) {
+        char wc;
+        int wcPosition;
+        for ( int i = 0; i < this.length; i++ ) {
+            wc = this.chars[i];
+            if ( c == wc ) {
+                wcPosition = this.startIndex + i;
+                return wcPosition;
+            }
+        }
+        return Integer.MIN_VALUE;
+    }
+
     public boolean hasIndex(int index) {
         return index >= startIndex && index <= endIndex;
     }

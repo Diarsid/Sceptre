@@ -307,4 +307,17 @@ public class WordsInVariant implements StatefulClearable {
 
         return words;
     }
+
+    public WordsInRange wordsOfRange(Ints positions) {
+        WordsInRange words = this.wordsInRangePool.give();
+        this.usedWordsInRanges.add(words);
+
+        for ( WordInVariant word : all ) {
+            if ( word.intersections(positions) > 0 ) {
+                words.add(word);
+            }
+        }
+
+        return words;
+    }
 }

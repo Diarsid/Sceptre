@@ -32,7 +32,6 @@ import diarsid.support.objects.references.Possible;
 import static java.lang.Integer.MIN_VALUE;
 import static java.lang.Math.abs;
 import static java.lang.String.format;
-import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.IntStream.range;
 
@@ -59,9 +58,9 @@ import static diarsid.sceptre.impl.Step.STEP_2;
 import static diarsid.sceptre.impl.Step.STEP_3;
 import static diarsid.sceptre.impl.Step.STEP_4;
 import static diarsid.sceptre.impl.WordInVariant.Placing.DEPENDENT;
+import static diarsid.sceptre.impl.collections.Ints.doesExist;
 import static diarsid.sceptre.impl.collections.Ints.getNearestToValueFromSetExcluding;
 import static diarsid.sceptre.impl.collections.Ints.meanSmartIgnoringZeros;
-import static diarsid.sceptre.impl.collections.Ints.doesExist;
 import static diarsid.sceptre.impl.collections.impl.Sort.REVERSE;
 import static diarsid.sceptre.impl.collections.impl.Sort.STRAIGHT;
 import static diarsid.sceptre.impl.logs.AnalyzeLogType.POSITIONS_CLUSTERS;
@@ -108,7 +107,6 @@ import static diarsid.support.misc.MathFunctions.absDiff;
 import static diarsid.support.misc.MathFunctions.cube;
 import static diarsid.support.misc.MathFunctions.onePointRatio;
 import static diarsid.support.misc.MathFunctions.square;
-import static diarsid.support.objects.collections.CollectionUtils.last;
 import static diarsid.support.objects.references.References.simplePossibleButEmpty;
 import static diarsid.support.strings.StringUtils.countWordSeparatorsInBetween;
 import static diarsid.support.strings.StringUtils.isWordsSeparator;
@@ -900,14 +898,35 @@ class PositionsAnalyze {
             logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "          [info] '%s'(%s in pattern) is marked as garbage!", this.currentChar, currentPatternCharIndex);
             return;
         }
-        
-        //if ( prevClusterCandidate.skipIfPossible() ) {
-        //    logAnalyze(POSITIONS_SEARCH, "          [info] '%s'(%s in pattern) is skipped!", this.currentChar, currentPatternCharIndex);
-        //    return;
-        //}
-        
-        if ( positions.i(currentPatternCharIndex) != POS_UNINITIALIZED ) {
-            logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "          [info] '%s' in pattern is already found - %s", this.currentChar, positions.i(currentPatternCharIndex));
+
+        int savedPosition = positions.i(currentPatternCharIndex);
+        if ( savedPosition != POS_UNINITIALIZED && savedPosition != POS_NOT_FOUND ) {
+            logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "          [info] '%s' in pattern is already found - %s", this.currentChar, savedPosition);
+            if ( false ) {
+                // Experimental thing, don't know if it worth further development, gives too much false positives
+                if ( findPositionsStep.isAfter(STEP_1) ) {
+                    Step foundStep = positionFoundSteps.get(savedPosition);
+                    if ( foundStep.isAfter(STEP_1) ) {
+                        WordInVariant savedPositionWord = data.wordsInVariant.wordOf(savedPosition);
+                        WordInVariant word;
+                        WordsInVariant.WordsInRange foundWords = data.wordsInVariant.wordsOfRange(filledPositions);
+                        int charInWordPosition;
+                        for ( int i = 0 ; i < foundWords.all().size(); i++ ) {
+                            word = foundWords.all().get(i);
+                            if ( word.index == savedPositionWord.index ) {
+                                continue;
+                            }
+                            charInWordPosition = word.charPositionOf(currentChar);
+                            if ( doesExist(charInWordPosition) ) {
+                                if ( ! filledPositions.contains(charInWordPosition) ) {
+                                    logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "             [word possible change] %s -> %s", savedPositionWord.charsString(), word.charsString());
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             return;
         }
 
