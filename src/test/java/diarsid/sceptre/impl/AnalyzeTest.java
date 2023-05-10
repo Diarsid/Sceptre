@@ -2180,8 +2180,7 @@ public class AnalyzeTest {
                 "Projects/UkrPoshta/UkrPostAPI");
         
         expected = asList(
-                "Projects/UkrPoshta/UkrPostAPI",
-                "Projects/UkrPoshta/CainiaoAPI");
+                "Projects/UkrPoshta/UkrPostAPI");
         
         weightVariantsAndCheckMatching();
     }
@@ -2676,6 +2675,44 @@ public class AnalyzeTest {
         variants = asList(
                 "The Wars of Gods and Men: Book III of the Earth Chronicles (The Earth Chronicles) by Zecharia Sitchin",
                 "On Killing: The Psychological Cost of Learning to Kill in War and Society by Dave Grossman");
+
+        expectedSameOrderAsVariants();
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_godmnwar() {
+        pattern = "godmnwar";
+
+        variants = asList(
+                "The Wars of Gods and Men: Book III of the Earth Chronicles (The Earth Chronicles) by Zecharia Sitchin",
+                "On Killing: The Psychological Cost of Learning to Kill in War and Society by Dave Grossman");
+
+        expectedSameOrderAsVariants();
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_gdmenwar() {
+        pattern = "gdmenwar";
+
+        variants = asList(
+                "The Wars of Gods and Men: Book III of the Earth Chronicles (The Earth Chronicles) by Zecharia Sitchin",
+                "On Killing: The Psychological Cost of Learning to Kill in War and Society by Dave Grossman");
+
+        expectedSameOrderAsVariants();
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_godmenwr() {
+        pattern = "godmenwr";
+
+        variants = asList(
+                "The Wars of Gods and Men: Book III of the Earth Chronicles (The Earth Chronicles) by Zecharia Sitchin");
 
         expectedSameOrderAsVariants();
 

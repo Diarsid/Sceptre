@@ -32,6 +32,7 @@ import diarsid.support.objects.references.Possible;
 import static java.lang.Integer.MIN_VALUE;
 import static java.lang.Math.abs;
 import static java.lang.String.format;
+import static java.util.Objects.nonNull;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.IntStream.range;
 
@@ -847,7 +848,7 @@ class PositionsAnalyze {
     }
 
     private void clearPositionsSearchingState() {
-        if ( Objects.nonNull(this.unclusteredPatternCharIndexes) ) {
+        if ( nonNull(this.unclusteredPatternCharIndexes) ) {
             this.unclusteredPatternCharIndexes.clear();
         }
         this.notFoundPatternChars.clear();
@@ -2117,7 +2118,7 @@ class PositionsAnalyze {
                     if ( wordsInRange.count() == 1 ) {
                         WordInVariant word = wordsInRange.first();
                         WordInVariant prevWord = this.data.wordsInVariant.wordBeforeOrNull(word);
-                        if ( Objects.nonNull(prevWord) ) {
+                        if ( nonNull(prevWord) ) {
                             char lastCharOfPrevWord = this.data.variant.charAt(prevWord.endIndex);
                             char firstCharOfClusterWord = this.data.variant.charAt(word.startIndex);
                             if ( lastCharOfPrevWord == firstCharOfClusterWord ) {
@@ -2433,14 +2434,21 @@ class PositionsAnalyze {
             }
         }
 
-        boolean isSpecialCase = false;
-        int wordQuality = 0;
-        iterateFoundWords: for ( WordInVariant word : foundWords.all() ) {
+        boolean isSpecialCase;
+        int wordQuality;
+
+        WordInVariant word;
+        List<WordInVariant> all = foundWords.all();
+        iterateFoundWords: for ( int iWord = 0; iWord < all.size(); iWord++ ) {
+            word = all.get(iWord);
             wordQuality = 0;
             isSpecialCase = false;
 
+            logAnalyze(POSITIONS_CLUSTERS, "       [Word quality] %s", word.charsString());
+
             if ( word.length == 1 ) {
                 wordQuality = 1;
+                logAnalyze(POSITIONS_CLUSTERS, "          1 single-char-word");
             }
             else {
                 this.clusters.chooseAllOf(word);
@@ -2452,43 +2460,90 @@ class PositionsAnalyze {
                     int singlePositionsInWordCount = word.intersections(this.singlePositions.filled());
 
                     if ( singlePositionsInWordCount == 0 ) {
-                        wordQuality = -10;
+                        if ( iWord == 0 ) {
+                            wordQuality = -12;
+                            logAnalyze(POSITIONS_CLUSTERS, "          -10 first word, no cluster, no positions");
+                        }
+                        else {
+                            wordQuality = -10;
+                            logAnalyze(POSITIONS_CLUSTERS, "          -10 no cluster, no positions");
+                        }
                     }
                     else {
                         if ( singlePositionsInWordCount == 1 ) {
+                            boolean importantWord = false;
                             if ( this.singlePositions.contains(word.startIndex) ) {
-                                if ( word.length < 6 ) {
+
+                                String matchType = matchTypesByVariantPosition.get(word.startIndex);
+                                if ( nonNull(matchType) && matchType.equals("UNIQUE") ) {
+                                    importantWord = true;
                                     wordQuality = wordQuality + 1;
+                                    logAnalyze(POSITIONS_CLUSTERS, "          +1 no cluster, word start is unique position");
                                 }
 
-                                if ( this.singlePositions.filled().size() == 1 ) {
-                                    wordQuality = wordQuality + 4;
+                                if ( this.keyChars.contains(word.startIndex) ) {
+                                    importantWord = true;
+                                    wordQuality = wordQuality + 1;
+                                    logAnalyze(POSITIONS_CLUSTERS, "          +1 no cluster, word start is key char");
+                                }
+
+                                if ( word.length < 4 ) {
+                                    if ( importantWord ) {
+                                        wordQuality = wordQuality + 1;
+                                        logAnalyze(POSITIONS_CLUSTERS, "          +1 no cluster, single position 1 at start, important word length < 4");
+                                    }
+
+                                    if ( this.singlePositions.filled().size() == 1 ) {
+                                        importantWord = true;
+                                        wordQuality = wordQuality + 2;
+                                        logAnalyze(POSITIONS_CLUSTERS, "          +2 no cluster, single positions count == 1");
+                                    }
+                                    else {
+                                        if ( this.keyChars.contains(word.startIndex) ) {
+                                            importantWord = true;
+                                            wordQuality = wordQuality + 1;
+                                            logAnalyze(POSITIONS_CLUSTERS, "          +1 no cluster, key chars contains word start");
+                                        }
+                                    }
                                 }
                                 else {
-                                    if ( this.keyChars.contains(word.startIndex) ) {
-                                        wordQuality = wordQuality + 1;
+                                    if ( ! importantWord ) {
+                                        wordQuality = wordQuality - 4;
+                                        logAnalyze(POSITIONS_CLUSTERS, "          -4 no cluster, single position 1 at start, word length > 3");
                                     }
                                 }
                             }
                             else {
-                                if ( this.data.wordsInVariant.all.size() > 3 ) {
-                                    wordQuality = wordQuality - 2;
-                                }
-                                else {
-                                    wordQuality = wordQuality - 4;
-                                }
+//                                if ( this.data.wordsInVariant.all.size() > 3 ) {
+//                                    wordQuality = wordQuality - 2;
+//                                    logAnalyze(POSITIONS_CLUSTERS, "          -2 no cluster, word start not in single positions, words qty > 3");
+//                                }
+//                                else {
+//                                    wordQuality = wordQuality - 4;
+//                                    logAnalyze(POSITIONS_CLUSTERS, "          -4 no cluster, word start not in single positions, words qty <= 3");
+//                                }
                             }
 
                             if ( wordQuality > 0 ) {
                                 if ( foundWords.count() == this.data.wordsInVariant.all.size() ) {
                                     wordQuality = wordQuality + 1;
+                                    logAnalyze(POSITIONS_CLUSTERS, "          +1 all words are found");
                                 }
                                 else if ( foundWords.count() > this.data.wordsInVariant.all.size() / 2 ) {
 
                                 }
                                 else {
-                                    wordQuality = wordQuality - 2;
+                                    if ( ! importantWord ) {
+                                        wordQuality = wordQuality - 1;
+                                        logAnalyze(POSITIONS_CLUSTERS, "          -1 majority of words are not found");
+                                    }
                                 }
+                            }
+                            else {
+//                                if ( ! importantWord ) {
+//                                    wordQuality = wordQuality - 1;
+//                                    logAnalyze(POSITIONS_CLUSTERS, "          -1 senseless word match");
+//                                }
                             }
                         }
                         else {
@@ -2496,15 +2551,20 @@ class PositionsAnalyze {
                                 if ( this.singlePositions.contains(word.endIndex) ) {
                                     if ( word.length == 3 ) {
                                         wordQuality = wordQuality + 3;
+                                        logAnalyze(POSITIONS_CLUSTERS, "          +3 single positions contains word start and end, word length == 3");
                                     }
                                     else if ( word.length == 4 ) {
                                         wordQuality = wordQuality + 1;
+                                        logAnalyze(POSITIONS_CLUSTERS, "          +1 single positions contains word start and end, word length == 4");
                                     }
-                                    else if ( singlePositionsInWordCount > 2 ){
-                                        wordQuality = wordQuality + singlePositionsInWordCount-2;
+                                    else if ( singlePositionsInWordCount > 2 ) {
+                                        int bonus = singlePositionsInWordCount-2;
+                                        wordQuality = wordQuality + bonus;
+                                        logAnalyze(POSITIONS_CLUSTERS, "          +%s single positions contains word start and end, word length > 4, extra positions inside word", bonus);
                                     }
                                     else {
                                         wordQuality--;
+                                        logAnalyze(POSITIONS_CLUSTERS, "          -1 single positions contains word start and end, no extra conditions");
                                     }
                                 }
                                 else {
@@ -2516,8 +2576,33 @@ class PositionsAnalyze {
                                     }
                                     else {
                                         if ( singlePositionsInWordCount == 2 ) {
-                                            if ( word.length > 5 ) {
-                                                wordQuality = wordQuality - (word.length-5);
+                                            if ( this.clusters.quantity() == 0 ) {
+                                                wordQuality = wordQuality + 1;
+                                                logAnalyze(POSITIONS_CLUSTERS, "          +1 single positions contains word start and end, no clusters at all found");
+                                            }
+                                            else {
+                                                boolean bad = true;
+
+                                                String matchType = matchTypesByVariantPosition.get(word.startIndex);
+                                                if ( nonNull(matchType) && matchType.equals("UNIQUE") ) {
+                                                    bad = false;
+                                                    wordQuality = wordQuality + 1;
+                                                    logAnalyze(POSITIONS_CLUSTERS, "          +1 single positions contains only start and middle, word start is unique position");
+                                                }
+
+                                                if ( this.keyChars.contains(word.startIndex) ) {
+                                                    bad = false;
+                                                    wordQuality = wordQuality + 1;
+                                                    logAnalyze(POSITIONS_CLUSTERS, "          +1 single positions contains only start and middle, word start is key char");
+                                                }
+
+                                                if ( bad ) {
+                                                    if ( word.length > 5 ) {
+                                                        int penalty = word.length - 5;
+                                                        wordQuality = wordQuality - penalty;
+                                                        logAnalyze(POSITIONS_CLUSTERS, "          -%s single positions contains only start and middle", penalty);
+                                                    }
+                                                }
                                             }
                                         }
                                     }
@@ -2531,135 +2616,159 @@ class PositionsAnalyze {
 
                     if ( cluster.isRejected() || cluster.hasTeardown() ) {
                         wordQuality =  wordQuality - cluster.teardown();
+                        logAnalyze(POSITIONS_CLUSTERS, "          -%s teardown", cluster.teardown());
                     }
-                    else {
-                        if ( this.data.patternInVariantIndex > -1 ) {
-                            isSpecialCase = true;
-                            wordQuality = 6;
-                        }
 
-                        if ( ! isSpecialCase ) {
+                    if ( this.data.patternInVariantIndex > -1 ) {
+                        isSpecialCase = true;
+                        wordQuality = 6;
+                        logAnalyze(POSITIONS_CLUSTERS, "          6 special case");
+                    }
 
-                            int singlePositionsInWordCount = word.intersections(this.singlePositions.filled());
+                    if ( ! isSpecialCase ) {
 
-                            if ( word.startIndex == cluster.firstPosition() || cluster.contains(word.startIndex) ) {
-                                if ( word.endIndex == cluster.lastPosition() || cluster.contains(word.endIndex) ) {
-                                    // word: abdcdxyz
-                                    wordQuality = wordQuality + 3;
+                        int singlePositionsInWordCount = word.intersections(this.singlePositions.filled());
 
-                                    if ( word.length > 2 ) {
-                                        wordQuality = wordQuality + word.length-2;
-                                    }
-                                    spanInWord = word.length;
+                        if ( word.startIndex == cluster.firstPosition() || cluster.contains(word.startIndex) ) {
+                            if ( word.endIndex == cluster.lastPosition() || cluster.contains(word.endIndex) ) {
+                                // word: abdcdxyz
+                                wordQuality = wordQuality + 3;
+                                logAnalyze(POSITIONS_CLUSTERS, "          +3 word: abdcdxyz");
+
+                                if ( word.length > 2 ) {
+                                    int bonus = word.length-2;
+                                    wordQuality = wordQuality + bonus;
+                                    logAnalyze(POSITIONS_CLUSTERS, "          +%s word length > 2", bonus);
                                 }
-                                else if ( this.singlePositions.contains(word.endIndex) ) {
-                                    if ( singlePositionsInWordCount > 1 ) {
-                                        // word: abd_c_z
-                                        wordQuality = wordQuality + 3;
-                                    }
-                                    else {
-                                        wordQuality = wordQuality + 2;
-                                        // word: abd___z
-                                    }
-                                    spanInWord = word.length;
+                                spanInWord = word.length;
+                            }
+                            else if ( this.singlePositions.contains(word.endIndex) ) {
+                                if ( singlePositionsInWordCount > 1 ) {
+                                    // word: abd_c_z
+                                    wordQuality = wordQuality + 3;
+                                    logAnalyze(POSITIONS_CLUSTERS, "          +3 word: abd_c_z");
                                 }
                                 else {
-                                    if ( singlePositionsInWordCount > 0 ) {
-                                        // word: abd_c__
-                                        wordQuality = wordQuality + 1;
+                                    wordQuality = wordQuality + 2;
+                                    logAnalyze(POSITIONS_CLUSTERS, "          +2 word: abd___z");
+                                    // word: abd___z
+                                }
+                                spanInWord = word.length;
+                            }
+                            else {
+                                if ( singlePositionsInWordCount > 0 ) {
+                                    // word: abd_c__
+                                    wordQuality = wordQuality + 1;
+                                    logAnalyze(POSITIONS_CLUSTERS, "          +1 word: abd_c__");
+                                    spanInWord =
+                                            this.singlePositions.lastBetween(cluster.lastPosition(), word.endIndex)
+                                                    - word.startIndex
+                                                    + 1;
+                                }
+                                else {
+                                    // word: abd____
+                                    wordQuality = wordQuality + 1;
+                                    logAnalyze(POSITIONS_CLUSTERS, "          +1 word: abd____");
+                                    spanInWord = cluster.length();
+                                }
+                            }
+                        }
+                        else if ( word.endIndex == cluster.lastPosition() || cluster.contains(word.endIndex) ) {
+                            if ( this.singlePositions.contains(word.startIndex) ) {
+                                if ( singlePositionsInWordCount > 1 ) {
+                                    // word: a_c_xyz
+                                    wordQuality = wordQuality + 3;
+                                    logAnalyze(POSITIONS_CLUSTERS, "          +3 word: a_c_xyz");
+                                }
+                                else {
+                                    // word: a___xyz
+                                    wordQuality = wordQuality + 2;
+                                    logAnalyze(POSITIONS_CLUSTERS, "          +2 word: a___xyz");
+                                }
+                                spanInWord = word.length;
+                            }
+                            else {
+                                if ( singlePositionsInWordCount > 0 ) {
+                                    // word: _c_xyz
+                                }
+                                else {
+                                    // word: ___xyz
+                                    logAnalyze(POSITIONS_CLUSTERS, "          -1 word: ___xyz");
+                                    wordQuality--;
+                                }
+                            }
+                        }
+                        else if ( this.singlePositions.contains(word.startIndex) ) {
+                            if ( this.singlePositions.contains(word.endIndex) ) {
+                                if ( singlePositionsInWordCount > 2 ) {
+                                    // word: a_bcd_e_f
+                                    wordQuality = wordQuality + 4;
+                                    logAnalyze(POSITIONS_CLUSTERS, "          +4 word: a_bcd_e_f");
+                                }
+                                else {
+                                    // word: a_bcd___f
+                                    logAnalyze(POSITIONS_CLUSTERS, "          +3 word: a_bcd___f");
+                                    wordQuality = wordQuality + 3;
+                                }
+                                spanInWord = word.length;
+                            }
+                            else {
+                                if ( singlePositionsInWordCount > 1 ) {
+                                    wordQuality = wordQuality + 2;
+                                    logAnalyze(POSITIONS_CLUSTERS, "          +2 word: a_bcd_e__ or a_e_bcd__");
+
+                                    int lastSinglePosition = this.singlePositions.lastBetween(cluster.lastPosition(), word.endIndex);
+
+                                    if ( lastSinglePosition > -1 ) {
+                                        // word: a_bcd_e__
                                         spanInWord =
-                                                this.singlePositions.lastBetween(cluster.lastPosition(), word.endIndex)
+                                                lastSinglePosition
                                                         - word.startIndex
                                                         + 1;
                                     }
                                     else {
-                                        // word: abd____
-                                        wordQuality = wordQuality + 1;
-                                        spanInWord = cluster.length();
-                                    }
-                                }
-                            }
-                            else if ( word.endIndex == cluster.lastPosition() || cluster.contains(word.endIndex) ) {
-                                if ( this.singlePositions.contains(word.startIndex) ) {
-                                    if ( singlePositionsInWordCount > 1 ) {
-                                        // word: a_c_xyz
-                                        wordQuality = wordQuality + 3;
-                                    }
-                                    else {
-                                        // word: a___xyz
-                                        wordQuality = wordQuality + 2;
-                                    }
-                                    spanInWord = word.length;
-                                }
-                                else {
-                                    if ( singlePositionsInWordCount > 0 ) {
-                                        // word: _c_xyz
-                                    }
-                                    else {
-                                        // word: ___xyz
-                                        wordQuality--;
-                                    }
-                                }
-                            }
-                            else if ( this.singlePositions.contains(word.startIndex) ) {
-                                if ( this.singlePositions.contains(word.endIndex) ) {
-                                    if ( singlePositionsInWordCount > 2 ) {
-                                        // word: a_bcd_e_f
-                                        wordQuality = wordQuality + 4;
-                                    }
-                                    else {
-                                        // word: a_bcd___f
-                                        wordQuality = wordQuality + 3;
-                                    }
-                                    spanInWord = word.length;
-                                }
-                                else {
-                                    if ( singlePositionsInWordCount > 1 ) {
-                                        wordQuality = wordQuality + 2;
-                                        int lastSinglePosition = this.singlePositions.lastBetween(cluster.lastPosition(), word.endIndex);
-
-                                        if ( lastSinglePosition > -1 ) {
-                                            // word: a_bcd_e__
-                                            spanInWord =
-                                                    lastSinglePosition
-                                                            - word.startIndex
-                                                            + 1;
-                                        }
-                                        else {
-                                            // word: a_e_bcd__
-                                            spanInWord = cluster.lastPosition() - word.startIndex + 1;
-                                        }
-                                    }
-                                    else {
-                                        // word: a_bcd____
-                                        wordQuality = wordQuality + 1;
+                                        // word: a_e_bcd__
                                         spanInWord = cluster.lastPosition() - word.startIndex + 1;
                                     }
                                 }
-                            }
-                            else if ( this.singlePositions.contains(word.endIndex) ) {
-                                if ( singlePositionsInWordCount > 1 ) {
-                                    // word: __bcd_e_f
-                                    wordQuality = wordQuality - 2;
-                                }
                                 else {
-                                    // word: __bcd___f
-                                    wordQuality = wordQuality - 3;
+                                    // word: a_bcd____
+                                    wordQuality = wordQuality + 1;
+                                    spanInWord = cluster.lastPosition() - word.startIndex + 1;
+                                    logAnalyze(POSITIONS_CLUSTERS, "          +1 word: a_bcd____");
                                 }
+                            }
+                        }
+                        else if ( this.singlePositions.contains(word.endIndex) ) {
+                            if ( singlePositionsInWordCount > 1 ) {
+                                // word: __bcd_e_f
+                                logAnalyze(POSITIONS_CLUSTERS, "          -2 word: __bcd_e_f");
+                                wordQuality = wordQuality - 2;
                             }
                             else {
-                                // word: __bcd____
-                                wordQuality = wordQuality - 7;
+                                // word: __bcd___f
+                                logAnalyze(POSITIONS_CLUSTERS, "          -3 word: __bcd___f");
+                                wordQuality = wordQuality - 3;
                             }
+                        }
+                        else {
+                            // word: __bcd____
+                            logAnalyze(POSITIONS_CLUSTERS, "          -7 word: __bcd____");
+                            wordQuality = wordQuality - 7;
+                        }
+
+                        if ( cluster.firstPosition() == word.startIndex ) {
 
                             if ( wordQuality > 0 ) {
                                 int clusterLengthOver2 = cluster.length() - 2;
                                 if ( clusterLengthOver2 > 0 ) {
                                     wordQuality = wordQuality + clusterLengthOver2;
+                                    logAnalyze(POSITIONS_CLUSTERS, "          +%s cluster length over 2", clusterLengthOver2);
                                 }
 
                                 if ( cluster.length() + singlePositionsInWordCount > 3 ) {
                                     wordQuality = wordQuality + 1;
+                                    logAnalyze(POSITIONS_CLUSTERS, "          +1 cluster length and single positions in word > 3");
                                 }
                             }
 
@@ -2670,15 +2779,23 @@ class PositionsAnalyze {
                                 int spanPercent = MathFunctions.percentAsInt(spanInWord, word.length);
                                 if ( filled > notFilled ) {
                                     wordQuality = wordQuality + 1;
+                                    logAnalyze(POSITIONS_CLUSTERS, "          +1 filled > notFilled");
                                     if ( spanPercent > 70 ) {
                                         wordQuality = wordQuality + 1;
+                                        logAnalyze(POSITIONS_CLUSTERS, "          +1 span in word > 70%");
+                                        if ( notFilled == 0 ) {
+                                            wordQuality = wordQuality + 1;
+                                            logAnalyze(POSITIONS_CLUSTERS, "          +1 cluster == word");
+                                        }
                                     }
                                 }
                                 else if ( filled > notFilled/2 ){
                                     if ( spanPercent > 60 ) {
                                         wordQuality = wordQuality + 1;
+                                        logAnalyze(POSITIONS_CLUSTERS, "          +1 filled > notFilled/2 and span in word > 60%");
                                         if ( spanPercent > 80 ) {
                                             wordQuality = wordQuality + 1;
+                                            logAnalyze(POSITIONS_CLUSTERS, "          +1 filled > notFilled/2 and span in word > 80%");
                                         }
                                     }
                                 }
@@ -2707,9 +2824,11 @@ class PositionsAnalyze {
 
                         if ( cluster.isRejected() || cluster.hasTeardown() ) {
                             wordQuality = wordQuality - cluster.teardown();
+                            logAnalyze(POSITIONS_CLUSTERS, "          -%s teardown", cluster.teardown());
 
                             if ( iCluster == 0 ) {
                                 wordQuality = wordQuality - 2;
+                                logAnalyze(POSITIONS_CLUSTERS, "          -2 first cluster is rejected");
                             }
 
                             continue iterateClustersInWord;
@@ -2717,8 +2836,10 @@ class PositionsAnalyze {
 
                         if ( cluster.length() > 2 ) {
                             wordQuality++;
+                            logAnalyze(POSITIONS_CLUSTERS, "          +1 cluster length > 2");
                             if ( cluster.length() > 3 ) {
                                 wordQuality++;
+                                logAnalyze(POSITIONS_CLUSTERS, "          +1 cluster length > 3");
                             }
                         }
 
@@ -2727,12 +2848,14 @@ class PositionsAnalyze {
                                 clusterAtWordStart = true;
                                 wordStartFound = true;
                                 wordQuality++;
+                                logAnalyze(POSITIONS_CLUSTERS, "          +1 first cluster, word starts and ends in single cluster");
                             }
                             else if ( this.singlePositions.contains(word.startIndex) ) {
                                 wordStartFound = true;
                             }
                             else {
                                 wordQuality = wordQuality - 3;
+                                logAnalyze(POSITIONS_CLUSTERS, "          -3 first cluster, word start and end not in cluster");
                             }
                         }
                         else if ( iCluster == lastCluster ) {
@@ -2740,6 +2863,7 @@ class PositionsAnalyze {
                                 clusterAtWordEnd = true;
                                 wordEndFound = true;
                                 wordQuality++;
+                                logAnalyze(POSITIONS_CLUSTERS, "          +1 last cluster, word starts and ends in single cluster");
                             }
                             else if ( this.singlePositions.contains(word.endIndex) ) {
                                 wordEndFound = true;
@@ -2755,17 +2879,21 @@ class PositionsAnalyze {
                             if ( clustersInMiddleCount > 0 ) {
                                 if ( singlePositionsInWordCount > 0 ) {
                                     wordQuality = wordQuality + 7;
+                                    logAnalyze(POSITIONS_CLUSTERS, "          +7 clusterAtWordStart, clusterAtWordEnd, clustersInMiddle, singlePositionsInWord");
                                 }
                                 else {
                                     wordQuality = wordQuality + 6;
+                                    logAnalyze(POSITIONS_CLUSTERS, "          +6 clusterAtWordStart, clusterAtWordEnd, clustersInMiddle");
                                 }
                             }
                             else {
                                 if ( singlePositionsInWordCount > 0 ) {
                                     wordQuality = wordQuality + 5;
+                                    logAnalyze(POSITIONS_CLUSTERS, "          +5 clusterAtWordStart, clusterAtWordEnd, singlePositionsInWord");
                                 }
                                 else {
                                     wordQuality = wordQuality + 4;
+                                    logAnalyze(POSITIONS_CLUSTERS, "          +5 clusterAtWordStart, clusterAtWordEnd");
                                 }
                             }
                         }
@@ -2773,14 +2901,17 @@ class PositionsAnalyze {
                             if ( clustersInMiddleCount > 0 ) {
                                 if ( singlePositionsInWordCount > 1 ) {
                                     wordQuality = wordQuality + 6;
+                                    logAnalyze(POSITIONS_CLUSTERS, "          +6 clusterAtWordStart, wordEndFound, clustersInMiddle, singlePositionsInWord");
                                 }
                                 else {
                                     wordQuality = wordQuality + 5;
+                                    logAnalyze(POSITIONS_CLUSTERS, "          +5 clusterAtWordStart, wordEndFound, clustersInMiddle");
                                 }
                             }
                             else {
                                 if ( singlePositionsInWordCount > 1 ) {
                                     wordQuality = wordQuality + 4;
+                                    logAnalyze(POSITIONS_CLUSTERS, "          +4 clusterAtWordStart, wordEndFound, singlePositionsInWord");
                                 }
                                 else {
                                     // no +
@@ -2791,18 +2922,22 @@ class PositionsAnalyze {
                             if ( clustersInMiddleCount > 0 ) {
                                 if ( singlePositionsInWordCount > 0 ) {
                                     wordQuality = wordQuality + 4;
+                                    logAnalyze(POSITIONS_CLUSTERS, "          +4 clusterAtWordStart, clustersInMiddle, singlePositionsInWord");
                                 }
                                 else {
                                     wordQuality = wordQuality + 3;
+                                    logAnalyze(POSITIONS_CLUSTERS, "          +3 clusterAtWordStart, clustersInMiddle");
                                 }
                             }
                             else {
                                 if ( singlePositionsInWordCount > 0 ) {
                                     if ( singlePositionsInWordCount > 1 ) {
                                         wordQuality = wordQuality + 2;
+                                        logAnalyze(POSITIONS_CLUSTERS, "          +2 clusterAtWordStart, singlePositionsInWord > 1");
                                     }
                                     else {
                                         wordQuality = wordQuality + 1;
+                                        logAnalyze(POSITIONS_CLUSTERS, "          +1 clusterAtWordStart, singlePositionsInWord > 0");
                                     }
                                 }
                                 else {
@@ -2853,13 +2988,31 @@ class PositionsAnalyze {
                 }
             }
 
-            logAnalyze(POSITIONS_CLUSTERS, "       [Word quality] %s : %s", word.charsString(), wordQuality);
-            if ( wordQuality > 0 ) {
-                this.weight.add(-square(wordQuality), WORD_QUALITY);
+            logAnalyze(POSITIONS_CLUSTERS, "          sum : %s", wordQuality);
+            int weightValue;
+            if ( wordQuality == 1 ) {
+                weightValue = -2;
+            }
+            else if ( wordQuality == -1 ) {
+                weightValue = 2;
+            }
+            else if ( wordQuality > 0 ) {
+                weightValue = -square(wordQuality);
             }
             else if ( wordQuality < 0 ) {
-                this.weight.add(square(wordQuality), WORD_QUALITY);
+                weightValue = square(wordQuality);
             }
+            else {
+                weightValue = 0;
+            }
+
+            if ( weightValue != 0 ) {
+                this.weight.add(weightValue, WORD_QUALITY);
+                if ( weightValue > 0 && weightValue < 50 ) {
+                    this.weight.add(50, WORD_QUALITY);
+                }
+            }
+
         }
     }
 
