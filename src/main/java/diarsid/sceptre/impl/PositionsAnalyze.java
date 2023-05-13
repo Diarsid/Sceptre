@@ -1,13 +1,7 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package diarsid.sceptre.impl;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import diarsid.sceptre.impl.collections.ArrayChar;
@@ -24,7 +18,6 @@ import diarsid.sceptre.impl.collections.impl.ListIntImpl;
 import diarsid.sceptre.impl.collections.impl.MapIntImpl;
 import diarsid.sceptre.impl.collections.impl.MapIntIntImpl;
 import diarsid.sceptre.impl.collections.impl.SetIntImpl;
-import diarsid.sceptre.impl.logs.AnalyzeLogType;
 import diarsid.sceptre.impl.weight.Weight;
 import diarsid.support.misc.MathFunctions;
 import diarsid.support.objects.references.Possible;
@@ -328,21 +321,21 @@ class PositionsAnalyze {
     void fillPositionsFromIndex(int patternInVariantIndex) {
         int length = positions.size();
         int position = patternInVariantIndex;
-        logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "  pattern found directly");
+        logAnalyze(POSITIONS_SEARCH, "  pattern found directly");
         for (int i = 0; i < length; i++) {
             positions.i(i, position);
             matchTypesByVariantPosition.put(i, "STEP_1_PATTERN-IN-VARIANT");
             positionFoundSteps.put(position, STEP_1);
             patternIndexesByVariantPosition.put(i, position);
-            logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "    [SAVE] %s : %s", data.patternChars.i(i), position);
+            logAnalyze(POSITIONS_SEARCH, "    [SAVE] %s : %s", data.patternChars.i(i), position);
             position++;        
         }
-        logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "         %s", displayPositions());
+        logAnalyze(POSITIONS_SEARCH, "         %s", displayPositions());
         clearPositionsSearchingState();
     }
     
     private String displayPositions() {
-        if ( AnalyzeLogType.POSITIONS_SEARCH.isDisabled() ) {
+        if ( POSITIONS_SEARCH.isDisabled() ) {
             return "";
         }
         
@@ -371,7 +364,7 @@ class PositionsAnalyze {
     }
 
     private String displayPositionsUpperCase(int iPattern, int iVariant) {
-        if ( AnalyzeLogType.POSITIONS_SEARCH.isDisabled() ) {
+        if ( POSITIONS_SEARCH.isDisabled() ) {
             return "";
         }
 
@@ -413,7 +406,7 @@ class PositionsAnalyze {
     }
     
     private String displayStepOneClusterLastAddedPosition() {
-        if ( AnalyzeLogType.POSITIONS_SEARCH.isDisabled() ) {
+        if ( POSITIONS_SEARCH.isDisabled() ) {
             return "";
         }
         
@@ -767,7 +760,7 @@ class PositionsAnalyze {
         traverseThroughPatternAndFillNotFoundPositions();
         
         proceedWith(STEP_1);
-        logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "    %s", findPositionsStep);
+        logAnalyze(POSITIONS_SEARCH, "    %s", findPositionsStep);
         
         for (int currentPatternCharIndex = 0, charsRemained = data.patternChars.size() - 1; currentPatternCharIndex < data.patternChars.size(); currentPatternCharIndex++, charsRemained--) {
             processCurrentPatternCharOf(currentPatternCharIndex, charsRemained);
@@ -820,14 +813,14 @@ class PositionsAnalyze {
     private boolean isAllowedToProceedOnCurrentStep() {
         boolean allowed = findPositionsStep.canProceedWith(data.pattern.length());
         if ( ! allowed ) {
-            logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "    %s is not allowed for pattern with length %s", findPositionsStep, data.pattern.length());
+            logAnalyze(POSITIONS_SEARCH, "    %s is not allowed for pattern with length %s", findPositionsStep, data.pattern.length());
         }
         return allowed;
     }
     
     private void processAccumulatedUnclusteredPatternCharIndexes() {
         if ( unclusteredPatternCharIndexes.isNotEmpty() ) {
-            logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "    %s", findPositionsStep);
+            logAnalyze(POSITIONS_SEARCH, "    %s", findPositionsStep);
             int charsRemained = unclusteredPatternCharIndexes.size();
 
             Ints.Elements elements = unclusteredPatternCharIndexes.elements();
@@ -877,15 +870,15 @@ class PositionsAnalyze {
     private void processCurrentPatternCharOf(int currentPatternCharIndex, int charsRemained) {
         currentChar = data.patternChars.i(currentPatternCharIndex);
         currentCharIsUniqueInPattern = data.patternCharsCount.countOf(currentChar) == 1;
-        logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "      [explore] '%s'(%s in pattern)", this.currentChar, currentPatternCharIndex);
+        logAnalyze(POSITIONS_SEARCH, "      [explore] '%s'(%s in pattern)", this.currentChar, currentPatternCharIndex);
 
         if ( isWordsSeparator(currentChar) ) {
-            logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "          [WARN] '%s'(%s in pattern) is separator, skip!", this.currentChar, currentPatternCharIndex);
+            logAnalyze(POSITIONS_SEARCH, "          [WARN] '%s'(%s in pattern) is separator, skip!", this.currentChar, currentPatternCharIndex);
             return;
         }
 
         if ( nextPatternCharsToSkip > 0 ) {
-            logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "          [info] '%s'(%s in pattern) is skipped!", this.currentChar, currentPatternCharIndex);
+            logAnalyze(POSITIONS_SEARCH, "          [info] '%s'(%s in pattern) is skipped!", this.currentChar, currentPatternCharIndex);
             nextPatternCharsToSkip--;
             return;
         }
@@ -896,13 +889,13 @@ class PositionsAnalyze {
         }
 
         if ( garbagePatternPositions.contains(currentPatternCharIndex) ) {
-            logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "          [info] '%s'(%s in pattern) is marked as garbage!", this.currentChar, currentPatternCharIndex);
+            logAnalyze(POSITIONS_SEARCH, "          [info] '%s'(%s in pattern) is marked as garbage!", this.currentChar, currentPatternCharIndex);
             return;
         }
 
         int savedPosition = positions.i(currentPatternCharIndex);
         if ( savedPosition != POS_UNINITIALIZED && savedPosition != POS_NOT_FOUND ) {
-            logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "          [info] '%s' in pattern is already found - %s", this.currentChar, savedPosition);
+            logAnalyze(POSITIONS_SEARCH, "          [info] '%s' in pattern is already found - %s", this.currentChar, savedPosition);
             if ( false ) {
                 // Experimental thing, don't know if it worth further development, gives too much false positives
                 if ( findPositionsStep.isAfter(STEP_1) ) {
@@ -920,7 +913,7 @@ class PositionsAnalyze {
                             charInWordPosition = word.charPositionOf(currentChar);
                             if ( doesExist(charInWordPosition) ) {
                                 if ( ! filledPositions.contains(charInWordPosition) ) {
-                                    logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "             [word possible change] %s -> %s", savedPositionWord.charsString(), word.charsString());
+                                    logAnalyze(POSITIONS_SEARCH, "             [word possible change] %s -> %s", savedPositionWord.charsString(), word.charsString());
                                 }
                             }
                         }
@@ -942,7 +935,7 @@ class PositionsAnalyze {
                     currentPatternCharIndex,
                     POS_NOT_FOUND,
                     null);
-            logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "          [info] '%s' not found in variant", this.currentChar);
+            logAnalyze(POSITIONS_SEARCH, "          [info] '%s' not found in variant", this.currentChar);
             return;
         }        
         
@@ -952,7 +945,7 @@ class PositionsAnalyze {
         boolean duplicateChar = false;
 
         characterSearching : while ( currentPatternCharPositionInVariant >= 0 && continueSearching ) {
-            logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "        [assess] '%s'(%s in variant)", currentChar, currentPatternCharPositionInVariant);
+            logAnalyze(POSITIONS_SEARCH, "        [assess] '%s'(%s in variant)", currentChar, currentPatternCharPositionInVariant);
 
             if ( findPositionsStep.is(STEP_2) ) {
                 currStepTwoCluster.setAssessed(currentChar, currentPatternCharIndex, currentPatternCharPositionInVariant);
@@ -972,7 +965,7 @@ class PositionsAnalyze {
                 duplicateChar = currentChar == previousCharInPattern;
 
                 if ( duplicateChar ) {
-                    logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "          [info] '%s' is duplicated!", this.currentChar);
+                    logAnalyze(POSITIONS_SEARCH, "          [info] '%s' is duplicated!", this.currentChar);
                 }
             }
 
@@ -988,7 +981,7 @@ class PositionsAnalyze {
                         if ( ! previousPositionInVariantFound && ! notFoundPatternChars.contains(this.previousCharInVariant) ) {
                             // omit this match
                         } else {
-                            logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "          [info] previous '%s'(%s in variant) is in cluster with current '%s'",
+                            logAnalyze(POSITIONS_SEARCH, "          [info] previous '%s'(%s in variant) is in cluster with current '%s'",
                                     previousCharInVariant, currentPatternCharPositionInVariant - 1, currentChar);
                             positionsInCluster.add(this.currentPatternCharPositionInVariant - 1);
                             int patternIndex = currentPatternCharIndex - 1;
@@ -1007,7 +1000,7 @@ class PositionsAnalyze {
                     boolean nextCharInVariantIncluded = filledPositions.contains(currentPatternCharPositionInVariant + 1);
                     /* OLD BREAKING */ // if ( nextCharInVariantInClusterWithCurrentChar(currentPatternCharIndex) || nextCharInVariantIncluded ) {
                     if ( nextCharInVariantInClusterWithCurrentChar(currentPatternCharIndex) ) {
-                        logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "          [info] next '%s'(%s in variant) is in cluster with current '%s'",
+                        logAnalyze(POSITIONS_SEARCH, "          [info] next '%s'(%s in variant) is in cluster with current '%s'",
                                 nextCharInVariant, currentPatternCharPositionInVariant + 1, currentChar);
                         positionsInCluster.add(this.currentPatternCharPositionInVariant + 1);                        
                         currStepTwoCluster.add(
@@ -1037,7 +1030,7 @@ class PositionsAnalyze {
                                 respectMatch = notFoundPatternChars.contains(previousCharInPattern);
                             } 
                             if ( respectMatch ) {
-                                logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "          [info] typo found '%s'(%s in variant) - '%s' is previous in pattern and next in variant",
+                                logAnalyze(POSITIONS_SEARCH, "          [info] typo found '%s'(%s in variant) - '%s' is previous in pattern and next in variant",
                                         currentChar, currentPatternCharPositionInVariant, nextCharInVariant);
                                 positionsInCluster.add(currentPatternCharPositionInVariant + 1);
                                 currStepTwoCluster.add(
@@ -1060,7 +1053,7 @@ class PositionsAnalyze {
 
                         if ( previousCharInVariant == nextCharInPattern ) {
                             if ( filledPositions.contains(currentPatternCharPositionInVariant - 1) || notFoundPatternChars.contains(nextCharInPattern) ) {
-                                logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "          [info] typo found '%s'(%s in variant) - '%s' is next in pattern and previous in variant",
+                                logAnalyze(POSITIONS_SEARCH, "          [info] typo found '%s'(%s in variant) - '%s' is next in pattern and previous in variant",
                                         currentChar, currentPatternCharPositionInVariant, nextCharInPattern);
                                 positionsInCluster.add(currentPatternCharPositionInVariant - 1);
                                 currStepTwoCluster.add(
@@ -1087,7 +1080,7 @@ class PositionsAnalyze {
                                 if ( nextCharInPattern == nextNextCharInVariant ) { // TODO here something about _x..ab.. word-cluster logic
                                     boolean nextNextPositionIncluded = filledPositions.contains(nextNextPosition);
                                     if ( nextNextPositionIncluded || notFoundPatternChars.contains(nextCharInPattern) ) {
-                                        logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "          [info] typo found '%s'(%s in variant) - '%s' is next in pattern and next*2 in variant",
+                                        logAnalyze(POSITIONS_SEARCH, "          [info] typo found '%s'(%s in variant) - '%s' is next in pattern and next*2 in variant",
                                                 currentChar, currentPatternCharPositionInVariant, nextCharInPattern);
                                         positionsInCluster.add(nextNextPosition);
                                         currStepTwoCluster.add(
@@ -1183,7 +1176,7 @@ class PositionsAnalyze {
                                 int endOfAssessedWord = currentWord.endIndex;
                                 if ( limitVariant > endOfAssessedWord ) {
                                     limitVariant = endOfAssessedWord;
-                                    logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "          [info] loop limited by end of current word '%s' - %s",
+                                    logAnalyze(POSITIONS_SEARCH, "          [info] loop limited by end of current word '%s' - %s",
                                             currentWord.charsString(), limitVariant);
                                 }
 
@@ -1195,7 +1188,7 @@ class PositionsAnalyze {
                                     variantLookup: for (int jVariant = iVariant; jVariant <= limitVariant; jVariant++) {
                                         variantCh = data.variant.charAt(jVariant);
                                         if ( patternCh == variantCh ) {
-                                            logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "          [info] loop-typo found '%s' (variant:%s pattern:%s)",
+                                            logAnalyze(POSITIONS_SEARCH, "          [info] loop-typo found '%s' (variant:%s pattern:%s)",
                                                     patternCh, jVariant, iPattern);
                                             matches++;
                                             currStepTwoCluster.addAsCandidate(
@@ -1221,7 +1214,7 @@ class PositionsAnalyze {
                                         this.data.variantSeparators.contains(currentPatternCharPositionInVariant + 1) ||
                                         currentPatternCharPositionInVariant == this.data.variant.length() - 1;
                                 if ( currentCharIsVariantWordEnd ) {
-                                    logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "          [info] '%s' is word end (variant:%s pattern:%s)",
+                                    logAnalyze(POSITIONS_SEARCH, "          [info] '%s' is word end (variant:%s pattern:%s)",
                                             currentChar, currentPatternCharPositionInVariant, currentPatternCharIndex);
                                     WordInVariant word = data.wordsInVariant.wordOf(currentPatternCharPositionInVariant);
                                     if ( word.hasStartIn(filledPositions) ) {
@@ -1240,7 +1233,7 @@ class PositionsAnalyze {
 //                                char next2CharInPattern = data.patternChars[currentPatternCharIndex + 2];
 //                                if ( nextCharInVariant == next2CharInPattern ) {
 //                                    if ( notFoundPatternChars.contains(next2CharInPattern) ) {
-//                                        logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "          [info] typo found '%s'(%s in variant) - '%s' is next*2 in pattern and next in variant",
+//                                        logAnalyze(POSITIONS_SEARCH, "          [info] typo found '%s'(%s in variant) - '%s' is next*2 in pattern and next in variant",
 //                                                currentChar, currentPatternCharPositionInVariant, nextCharInVariant);
 //                                        if ( nonEmpty(positionsInCluster) ) {
 //                                            positionsInCluster.add(currentPatternCharPositionInVariant + 1);
@@ -1260,7 +1253,7 @@ class PositionsAnalyze {
 //                                                if ( next3CharInPattern == next3CharInVariant ) {
 //                                                    boolean next3PositionIncluded = filledPositions.contains(next3Position);
 //                                                    if ( next3PositionIncluded || notFoundPatternChars.contains(next3CharInVariant) ) {
-//                                                        logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "          [info] cluster continuation '%s'(%s in variant) found",
+//                                                        logAnalyze(POSITIONS_SEARCH, "          [info] cluster continuation '%s'(%s in variant) found",
 //                                                                next3CharInVariant, currentPatternCharPositionInVariant + 3);
 //                                                        positionsInCluster.add(currentPatternCharPositionInVariant + 3);
 //                                                        currStepTwoCluster.add(
@@ -1282,7 +1275,7 @@ class PositionsAnalyze {
                     else if ( ! hasNextInVariant ) {
                         boolean currentCharIsVariantWordEnd = currentPatternCharPositionInVariant == this.data.variant.length() - 1;
                         if ( currentCharIsVariantWordEnd ) {
-                            logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "          [info] '%s' is word end (variant:%s pattern:%s)",
+                            logAnalyze(POSITIONS_SEARCH, "          [info] '%s' is word end (variant:%s pattern:%s)",
                                     currentChar, currentPatternCharPositionInVariant, currentPatternCharIndex);
                             WordInVariant word = data.wordsInVariant.wordOf(currentPatternCharPositionInVariant);
                             if ( word.hasStartIn(filledPositions) ) {
@@ -1307,7 +1300,7 @@ class PositionsAnalyze {
                                 if ( previousCharInPattern == data.variant.charAt(prevPrevPosition) ) {
                                     boolean prevPrevPositionIncluded = filledPositions.contains(prevPrevPosition);
                                     if ( prevPrevPositionIncluded || notFoundPatternChars.contains(previousCharInPattern) ) {
-                                        logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "          [info] typo found '%s'(%s in variant) - '%s' is previous in pattern and previous*2 in variant",
+                                        logAnalyze(POSITIONS_SEARCH, "          [info] typo found '%s'(%s in variant) - '%s' is previous in pattern and previous*2 in variant",
                                                 currentChar, currentPatternCharPositionInVariant, previousCharInPattern);
                                         positionsInCluster.add(prevPrevPosition);
                                         currStepTwoCluster.add(
@@ -1330,15 +1323,15 @@ class PositionsAnalyze {
                         currStepOneCluster.setMain(currentPatternCharIndex, currentPatternCharPositionInVariant);
                         isCurrentCharPositionAddedToPositions = true;
                         
-                        logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "          [candidate] '%s'(%s in variant)", currentChar, currentPatternCharPositionInVariant);
-                        logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "               %s", displayStepOneClusterLastAddedPosition());
-                        logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "               %s : %s", data.pattern, data.variant);
+                        logAnalyze(POSITIONS_SEARCH, "          [candidate] '%s'(%s in variant)", currentChar, currentPatternCharPositionInVariant);
+                        logAnalyze(POSITIONS_SEARCH, "               %s", displayStepOneClusterLastAddedPosition());
+                        logAnalyze(POSITIONS_SEARCH, "               %s : %s", data.pattern, data.variant);
                         
                         if ( canFillPosition(currentPatternCharIndex - 1, currentPatternCharPositionInVariant - 1) ) {     
                             currStepOneCluster.setPrev(currentPatternCharPositionInVariant - 1);
-                            logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "          [candidate] '%s'(%s in variant) is previous both in pattern and variant", previousCharInVariant, currentPatternCharPositionInVariant - 1);
-                            logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "               %s", displayStepOneClusterLastAddedPosition());
-                            logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "               %s : %s", data.pattern, data.variant);
+                            logAnalyze(POSITIONS_SEARCH, "          [candidate] '%s'(%s in variant) is previous both in pattern and variant", previousCharInVariant, currentPatternCharPositionInVariant - 1);
+                            logAnalyze(POSITIONS_SEARCH, "               %s", displayStepOneClusterLastAddedPosition());
+                            logAnalyze(POSITIONS_SEARCH, "               %s : %s", data.pattern, data.variant);
                             
                             int i = 2;
                             step1BackwardLoop: while ( positionsExistAndCanFillPosition(currentPatternCharIndex - i, currentPatternCharPositionInVariant - i) ) {                                
@@ -1346,9 +1339,9 @@ class PositionsAnalyze {
                                 char varChar = data.variant.charAt(currentPatternCharPositionInVariant - i);
                                 if ( patChar == varChar ) {
                                     currStepOneCluster.addPrev(currentPatternCharPositionInVariant - i);    
-                                    logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "          [candidate] '%s'(%s in variant) preciding <<<", varChar, currentPatternCharPositionInVariant - i);
-                                    logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "               %s", displayStepOneClusterLastAddedPosition());
-                                    logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "               %s : %s", data.pattern, data.variant);
+                                    logAnalyze(POSITIONS_SEARCH, "          [candidate] '%s'(%s in variant) preciding <<<", varChar, currentPatternCharPositionInVariant - i);
+                                    logAnalyze(POSITIONS_SEARCH, "               %s", displayStepOneClusterLastAddedPosition());
+                                    logAnalyze(POSITIONS_SEARCH, "               %s : %s", data.pattern, data.variant);
                                 } else {
                                     break step1BackwardLoop;    
                                 }
@@ -1358,9 +1351,9 @@ class PositionsAnalyze {
                         
                         if ( canFillPosition(currentPatternCharIndex + 1, currentPatternCharPositionInVariant + 1) ) {       
                             currStepOneCluster.setNext(currentPatternCharPositionInVariant + 1);
-                            logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "          [candidate] '%s'(%s in variant) is next both in pattern and variant", nextCharInVariant, currentPatternCharPositionInVariant + 1);
-                            logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "               %s", displayStepOneClusterLastAddedPosition());
-                            logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "               %s : %s", data.pattern, data.variant);
+                            logAnalyze(POSITIONS_SEARCH, "          [candidate] '%s'(%s in variant) is next both in pattern and variant", nextCharInVariant, currentPatternCharPositionInVariant + 1);
+                            logAnalyze(POSITIONS_SEARCH, "               %s", displayStepOneClusterLastAddedPosition());
+                            logAnalyze(POSITIONS_SEARCH, "               %s : %s", data.pattern, data.variant);
                             currStepOneCluster.incrementSkip();
                             
                             int i = 2;
@@ -1370,9 +1363,9 @@ class PositionsAnalyze {
                                 if ( patChar == varChar ) {
                                     currStepOneCluster.incrementSkip();
                                     currStepOneCluster.addNext(currentPatternCharPositionInVariant + i);      
-                                    logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "          [candidate] '%s'(%s in variant) following >>>", varChar, currentPatternCharPositionInVariant + i);
-                                    logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "               %s", displayStepOneClusterLastAddedPosition());
-                                    logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "               %s : %s", data.pattern, data.variant);
+                                    logAnalyze(POSITIONS_SEARCH, "          [candidate] '%s'(%s in variant) following >>>", varChar, currentPatternCharPositionInVariant + i);
+                                    logAnalyze(POSITIONS_SEARCH, "               %s", displayStepOneClusterLastAddedPosition());
+                                    logAnalyze(POSITIONS_SEARCH, "               %s : %s", data.pattern, data.variant);
                                 } else {
                                         break step1ForwardLoop;    
                                     }
@@ -1448,7 +1441,7 @@ class PositionsAnalyze {
                     }
                 }                
             } else {
-                logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "          [info] already filled, skip");
+                logAnalyze(POSITIONS_SEARCH, "          [info] already filled, skip");
             } 
             
             if ( findPositionsStep.equals(STEP_1) ) {
@@ -1468,7 +1461,7 @@ class PositionsAnalyze {
                             word = data.wordsInVariant.all.get(i);
                             if ( word.length > 1 && hasPossibleConflict(word, currStepOneCluster) ) {
                                 ignoreStepOneCluster = true;
-                                logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "          [info] reject cluster - conflicts with word %s", word.charsString());
+                                logAnalyze(POSITIONS_SEARCH, "          [info] reject cluster - conflicts with word %s", word.charsString());
                                 break conflictSearch;
                             }
                         }
@@ -1521,7 +1514,7 @@ class PositionsAnalyze {
                                     if ( this.currentCharIsPresentInPatternBefore(currentPatternCharIndex, firstPatternPosition) ) {
                                         WordInVariant word = data.wordsInVariant.wordOf(currStepTwoCluster.assessedCharVariantPosition());
                                         if ( word.length > 1 ) { // exclude single-char-words
-                                            logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "          [info] '%s' has closer position to new cluster, ignore new cluster", currentChar);
+                                            logAnalyze(POSITIONS_SEARCH, "          [info] '%s' has closer position to new cluster, ignore new cluster", currentChar);
                                             compareClusters = false;
                                         }
                                     }
@@ -1530,48 +1523,55 @@ class PositionsAnalyze {
 
 
                             if ( compareClusters ) {
-                                logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "        [COMPARE POSITION]");
+                                logAnalyze(POSITIONS_SEARCH, "        [COMPARE POSITION]");
                                 if ( currStepTwoCluster.isBetterThan(prevStepTwoCluster) ) {
-                                    logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "             [old]          %s", prevStepTwoCluster);
-                                    logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "             [new]  better  %s", currStepTwoCluster);
+                                    log(prevStepTwoCluster, "old");
+                                    log(currStepTwoCluster, "new");
+                                    logAnalyze(POSITIONS_SEARCH, "          [choice]  ->  new");
                                     clearPreviousAndSwapStepTwoSubclusters();
                                 } else {
-                                    logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "             [old]  better  %s", prevStepTwoCluster);
-                                    logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "             [new]          %s", currStepTwoCluster);
+                                    log(prevStepTwoCluster, "old");
+                                    log(currStepTwoCluster, "new");
+                                    logAnalyze(POSITIONS_SEARCH, "          [choice]  ->  old");
                                     currStepTwoCluster.clear();
                                 }
                             }
                             else {
-                                logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "        [POSITIONS - NEW IS IGNORED]");
-                                logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "             [old]  better  %s", prevStepTwoCluster);
-                                logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "             [new]          %s", currStepTwoCluster);
+                                logAnalyze(POSITIONS_SEARCH, "        [POSITIONS - NEW IS IGNORED]");
+                                log(prevStepTwoCluster, "old");
+                                log(currStepTwoCluster, "new");
+                                logAnalyze(POSITIONS_SEARCH, "          [choice]  ->  old");
                                 currStepTwoCluster.clear();
                             }
                         }
                         else {
-                            logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "        [POSITIONS - BOT CHLUSTERS HAS NO UNFILLED POSITIONS, IGNORE NEW]");
-                            logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "             [old]  better  %s", prevStepTwoCluster);
-                            logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "             [new]          %s", currStepTwoCluster);
+                            logAnalyze(POSITIONS_SEARCH, "        [POSITIONS - BOT CHLUSTERS HAS NO UNFILLED POSITIONS, IGNORE NEW]");
+                            log(prevStepTwoCluster, "old");
+                            log(currStepTwoCluster, "new");
+                            logAnalyze(POSITIONS_SEARCH, "          [choice]  ->  old");
                             currStepTwoCluster.clear();
                         }
                     }
                     else {
-                        logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "        [POSITIONS - NOTHING TO COMPARE]");
-                        logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "             %s", currStepTwoCluster);
+                        logAnalyze(POSITIONS_SEARCH, "        [POSITIONS - NOTHING TO COMPARE]");
+                        log(currStepTwoCluster, "new");
+                        logAnalyze(POSITIONS_SEARCH, "          [choice]  ->  new");
                         clearPreviousAndSwapStepTwoSubclusters();
                         boolean attemptHasResults = tryToSearchBetterPositionsInWords();
                         if ( attemptHasResults ) {
                             if ( currStepTwoCluster.hasChars() ) {
                                 if ( currStepTwoCluster.isBetterThan(prevStepTwoCluster) ) {
-                                    logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "        [COMPARE POSITION IN WORDS]");
-                                    logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "             [old]                  %s", prevStepTwoCluster);
-                                    logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "             [new-in-word]  better  %s", currStepTwoCluster);
+                                    logAnalyze(POSITIONS_SEARCH, "        [COMPARE POSITION IN WORDS]");
+                                    log(prevStepTwoCluster, "old");
+                                    log(currStepTwoCluster, "new-in-word");
+                                    logAnalyze(POSITIONS_SEARCH, "          [choice]  ->  new-in-word");
                                     clearPreviousAndSwapStepTwoSubclusters();
                                 }
                                 else {
-                                    logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "        [COMPARE POSITION IN WORDS]");
-                                    logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "             [old]          better  %s", prevStepTwoCluster);
-                                    logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "             [new-in-word]          %s", currStepTwoCluster);
+                                    logAnalyze(POSITIONS_SEARCH, "        [COMPARE POSITION IN WORDS]");
+                                    log(prevStepTwoCluster, "old");
+                                    log(currStepTwoCluster, "new-in-word");
+                                    logAnalyze(POSITIONS_SEARCH, "          [choice]  ->  old");
                                     currStepTwoCluster.clear();
                                 }
                             }
@@ -1597,28 +1597,28 @@ class PositionsAnalyze {
         
         if ( findPositionsStep.equals(STEP_1)) {
             if ( prevStepOneCluster.isSet() ) {
-                logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "        [SAVE CLUSTER] %s", prevStepOneCluster);
+                logAnalyze(POSITIONS_SEARCH, "        [SAVE CLUSTER] %s", prevStepOneCluster);
                 fillPositionsFrom(prevStepOneCluster);
             }
             else if ( currentCharIsUniqueInPattern && currentCharInVariantQty == 1 ) {
-                logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "        [SAVE UNIQUE POSITION] '%s'(%s in variant)", currentChar, currentPatternCharPositionInVariantToSave);
+                logAnalyze(POSITIONS_SEARCH, "        [SAVE UNIQUE POSITION] '%s'(%s in variant)", currentChar, currentPatternCharPositionInVariantToSave);
                 isCurrentCharPositionAddedToPositions = true;
                 fillPosition(
                         currentPatternCharIndex,
                         currentPatternCharPositionInVariantToSave,
                         "UNIQUE");
-                logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "               %s", displayPositions());
-                logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "               %s : %s", data.pattern, data.variant);
+                logAnalyze(POSITIONS_SEARCH, "               %s", displayPositions());
+                logAnalyze(POSITIONS_SEARCH, "               %s : %s", data.pattern, data.variant);
             }
         }
         else if ( findPositionsStep.typoSearchingAllowed() ) {
             if ( prevStepTwoCluster.hasChars() ) {
                 if ( prevStepTwoCluster.hasCharsNotFoundInVariant() ) {
-                    logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "        [SAVE POSITIONS] %s", prevStepTwoCluster);
+                    logAnalyze(POSITIONS_SEARCH, "        [SAVE POSITIONS] %s", prevStepTwoCluster);
                     fillPositionsFrom(prevStepTwoCluster);
                 }
                 else {
-                    logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "        [NOTHING TO SAVE - ALL POSITIONS ARE FOUND ALREADY] %s", prevStepTwoCluster);
+                    logAnalyze(POSITIONS_SEARCH, "        [NOTHING TO SAVE - ALL POSITIONS ARE FOUND ALREADY] %s", prevStepTwoCluster);
                 }
             }
         }
@@ -1630,9 +1630,9 @@ class PositionsAnalyze {
                     currentPatternCharIndex,
                     position,
                     "CANDIDATE");
-            logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "        [SAVE] '%s'(%s in variant), %s", currentChar, position, positionCandidate);
-            logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "               %s", displayPositions());
-            logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "               %s : %s", data.pattern, data.variant);
+            logAnalyze(POSITIONS_SEARCH, "        [SAVE] '%s'(%s in variant), %s", currentChar, position, positionCandidate);
+            logAnalyze(POSITIONS_SEARCH, "               %s", displayPositions());
+            logAnalyze(POSITIONS_SEARCH, "               %s : %s", data.pattern, data.variant);
         }
         positionCandidate.clear();
 
@@ -1643,7 +1643,7 @@ class PositionsAnalyze {
             // it from subsequent iterations
             if ( findPositionsStep.canAddSingleUnclusteredPosition() && currentCharInVariantQty == 1 ) {
                 if ( positionAlreadyFilled ) {
-                    logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "          [info] '%s'(%s in variant) is single char in variant and already saved", currentChar, currentPatternCharPositionInVariantToSave);
+                    logAnalyze(POSITIONS_SEARCH, "          [info] '%s'(%s in variant) is single char in variant and already saved", currentChar, currentPatternCharPositionInVariantToSave);
 //                    positions[currentPatternCharIndex] = POS_NOT_FOUND;
                     fillPosition(
                             currentPatternCharIndex,
@@ -1654,12 +1654,12 @@ class PositionsAnalyze {
                             currentPatternCharIndex,
                             currentPatternCharPositionInVariantToSave,
                             "SINGLE_CHAR");
-                    logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "        [SAVE] '%s'(%s in variant) is single char in variant", currentChar, currentPatternCharPositionInVariantToSave);
-                    logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "               %s", displayPositions());
-                    logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "               %s : %s", data.pattern, data.variant);
+                    logAnalyze(POSITIONS_SEARCH, "        [SAVE] '%s'(%s in variant) is single char in variant", currentChar, currentPatternCharPositionInVariantToSave);
+                    logAnalyze(POSITIONS_SEARCH, "               %s", displayPositions());
+                    logAnalyze(POSITIONS_SEARCH, "               %s : %s", data.pattern, data.variant);
                 }                
             } else {
-                logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "        [info] position of '%s' is not defined", currentChar);
+                logAnalyze(POSITIONS_SEARCH, "        [info] position of '%s' is not defined", currentChar);
                 localUnclusteredPatternCharIndexes.add(currentPatternCharIndex);
             }                
         }
@@ -1693,17 +1693,17 @@ class PositionsAnalyze {
     }
 
     private void acceptPreviousCluster() {
-        logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "        [COMPARE CLUSTERS]");
-        logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "             [old]  better  %s", prevStepOneCluster);
-        logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "             [new]          %s", currStepOneCluster);
+        logAnalyze(POSITIONS_SEARCH, "        [COMPARE CLUSTERS]");
+        logAnalyze(POSITIONS_SEARCH, "             [old]  better  %s", prevStepOneCluster);
+        logAnalyze(POSITIONS_SEARCH, "             [new]          %s", currStepOneCluster);
         
         currStepOneCluster.clear();
     }
 
     private void acceptCurrentCluster() {        
-        logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "        [COMPARE CLUSTERS]");
-        logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "             [old]          %s", prevStepOneCluster);
-        logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "             [new]  better  %s", currStepOneCluster);
+        logAnalyze(POSITIONS_SEARCH, "        [COMPARE CLUSTERS]");
+        logAnalyze(POSITIONS_SEARCH, "             [old]          %s", prevStepOneCluster);
+        logAnalyze(POSITIONS_SEARCH, "             [new]  better  %s", currStepOneCluster);
         
         acceptCurrentAndSwapStepOneClusters();
     }
@@ -1783,7 +1783,7 @@ class PositionsAnalyze {
 
         int lastFoundCharPositionInWord = UNINITIALIZED;
 
-        logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "             [word-review] '%s'", word);
+        logAnalyze(POSITIONS_SEARCH, "             [word-review] '%s'", word);
         int iWord = 0;
         variantLookup: for (int iVariant = word.startIndex; iVariant <= word.endIndex; iVariant++) {
             variantCh = data.variant.charAt(iVariant);
@@ -1797,13 +1797,13 @@ class PositionsAnalyze {
                 lastFoundCharPositionInWord = iWord;
             }
             else {
-                logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "                [word-char] '%s'[variant:%s word:%s] of word '%s'", variantCh, iVariant, iWord, word.charsString());
+                logAnalyze(POSITIONS_SEARCH, "                [word-char] '%s'[variant:%s word:%s] of word '%s'", variantCh, iVariant, iWord, word.charsString());
                 patternLookup: for (int iPattern = prevStepTwoCluster.assessedCharPatternPosition(); iPattern < data.patternChars.size(); iPattern++) {
                     patternCh = data.patternChars.i(iPattern);
                     if ( this.isPositionSetAt(iPattern) ) {
                         continue patternLookup;
                     }
-                    logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "                  [pattern-char] :'%s'[%s]", patternCh, iPattern);
+                    logAnalyze(POSITIONS_SEARCH, "                  [pattern-char] :'%s'[%s]", patternCh, iPattern);
 
                     if ( patternCh == variantCh ) {
                         if ( prevStepTwoCluster.hasChar(patternCh) ) {
@@ -1820,7 +1820,7 @@ class PositionsAnalyze {
                                 }
 
                                 if ( ! currStepTwoCluster.hasChars() ) {
-                                    logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "             [word-review] '%s'[variant:%s word:%s] is last filled in word", lastFoundVariantCh, lastFoundVariantPosition, lastFoundCharPositionInWord);
+                                    logAnalyze(POSITIONS_SEARCH, "             [word-review] '%s'[variant:%s word:%s] is last filled in word", lastFoundVariantCh, lastFoundVariantPosition, lastFoundCharPositionInWord);
                                     currStepTwoCluster.setAssessed(
                                             word,
                                             lastFoundVariantCh,
@@ -1846,24 +1846,27 @@ class PositionsAnalyze {
         if ( currStepTwoCluster.hasChars() ) {
             if ( swapStepTwoCluster.hasChars() ) {
                 if ( currStepTwoCluster.isBetterThan(swapStepTwoCluster) ) {
-                    logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "           [COMPARE POSITIONS IN WORD]");
-                    logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "                [old]          %s", swapStepTwoCluster);
-                    logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "                [new]  better  %s", currStepTwoCluster);
+                    logAnalyze(POSITIONS_SEARCH, "        [COMPARE POSITIONS IN WORD]");
+                    log(swapStepTwoCluster, "old");
+                    log(currStepTwoCluster, "new");
+                    logAnalyze(POSITIONS_SEARCH, "          [choice]  ->  new");
                     swapStepTwoCluster.clear();
                     var swap = swapStepTwoCluster;
                     swapStepTwoCluster = currStepTwoCluster;
                     currStepTwoCluster = swap;
                 }
                 else {
-                    logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "           [COMPARE POSITIONS IN WORD]");
-                    logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "                [old]  better  %s", swapStepTwoCluster);
-                    logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "                [new]          %s", currStepTwoCluster);
+                    logAnalyze(POSITIONS_SEARCH, "        [COMPARE POSITIONS IN WORD]");
+                    log(swapStepTwoCluster, "old");
+                    log(currStepTwoCluster, "new");
+                    logAnalyze(POSITIONS_SEARCH, "          [choice]  ->  old");
                     currStepTwoCluster.clear();
                 }
             }
             else {
-                logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "           [COMPARE POSITIONS IN WORD - NOTHING TO COMPARE]");
-                logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "                [new]          %s", currStepTwoCluster);
+                logAnalyze(POSITIONS_SEARCH, "        [COMPARE POSITIONS IN WORD - NOTHING TO COMPARE]");
+                log(currStepTwoCluster, "new");
+                logAnalyze(POSITIONS_SEARCH, "          [choice]  ->  new");
                 swapStepTwoCluster.clear();
                 var swap = swapStepTwoCluster;
                 swapStepTwoCluster = currStepTwoCluster;
@@ -1879,7 +1882,7 @@ class PositionsAnalyze {
             ClusterStepOne one,
             ClusterStepOne two) {
         float bonus = calculateSimilarity(one, two);
-        logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "        [clusters are similar] -%s", bonus);
+        logAnalyze(POSITIONS_SEARCH, "        [clusters are similar] -%s", bonus);
         weight.add(-bonus, CLUSTER_CANDIDATES_SIMILARITY);
     }
     
@@ -1930,9 +1933,9 @@ class PositionsAnalyze {
                     position.patternPosition(),
                     position.variantPosition(),
                     position.match());
-            logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "               %s", displayPositions());
+            logAnalyze(POSITIONS_SEARCH, "               %s", displayPositions());
         }        
-        logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "               %s : %s", data.pattern, data.variant);
+        logAnalyze(POSITIONS_SEARCH, "               %s : %s", data.pattern, data.variant);
         stepOneClusterSavedRightNow = true;
         lastSavedStepOneCluster.copyFrom(subcluster);
     }
@@ -1944,7 +1947,7 @@ class PositionsAnalyze {
                     subcluster.assessedCharPatternPosition(),
                     subcluster.assessedCharVariantPosition(),
                     subcluster.assessedCharBestMatch());
-            logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "               %s", displayPositionsUpperCase(subcluster.assessedCharPatternPosition(), subcluster.assessedCharVariantPosition()));
+            logAnalyze(POSITIONS_SEARCH, "               %s", displayPositionsUpperCase(subcluster.assessedCharPatternPosition(), subcluster.assessedCharVariantPosition()));
         }
         else {
             logAnalyze(POSITIONS_SEARCH, "               '%s'[variant:%s] is already filled", subcluster.assessedChar(), subcluster.assessedCharVariantPosition());
@@ -1957,7 +1960,7 @@ class PositionsAnalyze {
                         position.patternPosition(),
                         position.variantPosition(),
                         position.match());
-                logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "               %s", displayPositionsUpperCase(position.patternPosition(), position.variantPosition()));
+                logAnalyze(POSITIONS_SEARCH, "               %s", displayPositionsUpperCase(position.patternPosition(), position.variantPosition()));
             }
             else {
                 logAnalyze(POSITIONS_SEARCH, "               '%s'[variant:%s] cannot be written - filled in %s",
@@ -1966,7 +1969,7 @@ class PositionsAnalyze {
                         position.isFilledInPattern() ? "pattern" : "variant");
             }
         }  
-        logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "               %s : %s", data.pattern, data.variant);
+        logAnalyze(POSITIONS_SEARCH, "               %s : %s", data.pattern, data.variant);
     }
 
     private void fillPosition(int patternIndex, int positionInVariant, String match) {
@@ -2107,7 +2110,7 @@ class PositionsAnalyze {
 
             if ( wordsInRange.areEmpty() ) {
                 this.currentClusterIsRejected = true;
-                logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, "    [cluster] there are no words for cluster!");
+                logAnalyze(POSITIONS_CLUSTERS, "    [cluster] there are no words for cluster!");
             }
             else {
                 if ( wordsInRange.hasStartIn(this.filledPositions) ) {
@@ -2123,7 +2126,7 @@ class PositionsAnalyze {
                             char firstCharOfClusterWord = this.data.variant.charAt(word.startIndex);
                             if ( lastCharOfPrevWord == firstCharOfClusterWord ) {
                                 if ( this.filledPositions.contains(prevWord.endIndex) ) {
-                                    logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, "    [cluster] word of cluster has its start found in last char of previous word!");
+                                    logAnalyze(POSITIONS_CLUSTERS, "    [cluster] word of cluster has its start found in last char of previous word!");
                                     this.currentClusterWordStartFound = true;
                                 }
                             }
@@ -2132,7 +2135,7 @@ class PositionsAnalyze {
 
                     if ( ! this.currentClusterWordStartFound ) {
                         this.currentClusterIsRejected = true;
-                        logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, "    [cluster] word of cluster has not its start found, cluster is bad!");
+                        logAnalyze(POSITIONS_CLUSTERS, "    [cluster] word of cluster has not its start found, cluster is bad!");
                     }
                 }
             }
@@ -2147,7 +2150,7 @@ class PositionsAnalyze {
             logAnalyze(POSITIONS_CLUSTERS, "    [cluster] cluster is rejected by order diff analysis");
 
             if ( this.clustersQty == 0 ) {
-                logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, "    [cluster] first cluster in variant is rejected");
+                logAnalyze(POSITIONS_CLUSTERS, "    [cluster] first cluster in variant is rejected");
                 this.weight.add(FIRST_CLUSTER_IS_REJECTED);
             }
 
@@ -3516,10 +3519,10 @@ class PositionsAnalyze {
             int clusterFirstPosition,
             int clusterLength) {
         int mean = meanSmartIgnoringZeros(orders);
-        if ( AnalyzeLogType.POSITIONS_CLUSTERS.isEnabled() ) {
-            logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, "            [cluster stats] order diffs         %s",
+        if ( POSITIONS_CLUSTERS.isEnabled() ) {
+            logAnalyze(POSITIONS_CLUSTERS, "            [cluster stats] order diffs         %s",
                     orders.join(" "));
-            logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, "            [cluster stats] order diffs mean    %s", mean);
+            logAnalyze(POSITIONS_CLUSTERS, "            [cluster stats] order diffs mean    %s", mean);
         }
 
         int limit = orders.size() - 1;
@@ -3592,7 +3595,7 @@ class PositionsAnalyze {
 
                 if ( absDiff(current, next) == 2 ) {
                     if ( absDiff(current, mean) == 1 ) {
-                        logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, "              [order-diff] mutual +1-1 compensation for %s_vs_%s", current, next);
+                        logAnalyze(POSITIONS_CLUSTERS, "              [order-diff] mutual +1-1 compensation for %s_vs_%s", current, next);
                         haveCompensation = true;
                         compensationSum = compensationSum + 2;
                         haveCompensationInCurrentStep = true;
@@ -3607,7 +3610,7 @@ class PositionsAnalyze {
                                     haveCompensation = false;
                                     haveCompensationInCurrentStep = false;
                                     isBad = true;
-                                    logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, "              [order-diff] starts with shift, reject compensation!");
+                                    logAnalyze(POSITIONS_CLUSTERS, "              [order-diff] starts with shift, reject compensation!");
                                 }
                                 else {
                                     int intersections = wordsInRange.intersections(this.positions, this.currentClusterFirstPosition, this.currentClusterLength);
@@ -3617,7 +3620,7 @@ class PositionsAnalyze {
                                                 haveCompensation = false;
                                                 haveCompensationInCurrentStep = false;
                                                 isBad = true;
-                                                logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, "              [order-diff] starts with shift, reject compensation!");
+                                                logAnalyze(POSITIONS_CLUSTERS, "              [order-diff] starts with shift, reject compensation!");
                                             }
                                         }
                                         else {
@@ -3629,7 +3632,7 @@ class PositionsAnalyze {
                                             haveCompensation = false;
                                             haveCompensationInCurrentStep = false;
                                             isBad = true;
-                                            logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, "              [order-diff] starts with shift, reject compensation!");
+                                            logAnalyze(POSITIONS_CLUSTERS, "              [order-diff] starts with shift, reject compensation!");
                                         }
                                     }
                                 }
@@ -3638,12 +3641,12 @@ class PositionsAnalyze {
                     } else if ( absDiff(previous, next) == 4 &&
                             absDiff(previous, current) == 2 &&
                             absDiff(current, mean) == 0 ) {
-                        logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, "              [order-diff] mutual +2 0 -2 compensation for %s_vs_%s", previous, next);
+                        logAnalyze(POSITIONS_CLUSTERS, "              [order-diff] mutual +2 0 -2 compensation for %s_vs_%s", previous, next);
                         if ( firstOrder != mean ) {
                             haveCompensation = false;
                             haveCompensationInCurrentStep = false;
                             isBad = true;
-                            logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, "              [order-diff] starts with shift, reject compensation!");
+                            logAnalyze(POSITIONS_CLUSTERS, "              [order-diff] starts with shift, reject compensation!");
                         }
                         else {
                             haveCompensation = true;
@@ -3667,13 +3670,13 @@ class PositionsAnalyze {
 
                         if ( repeatAbsDiffSum > 0 ) {
                             if ( lastBeforeRepeat != UNINITIALIZED && absDiff(lastBeforeRepeat, mean) == repeatAbsDiffSum ) {
-                                logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, "              [order-diff] compensation for %s_vs_(%s * %s)", lastBeforeRepeat, repeat, repeatQty);
+                                logAnalyze(POSITIONS_CLUSTERS, "              [order-diff] compensation for %s_vs_(%s * %s)", lastBeforeRepeat, repeat, repeatQty);
                                 diffSumAbs = diffSumAbs - (repeatAbsDiffSum * 2);
                                 shifts = shifts + repeatQty;
                                 haveCompensation = true;
                                 lastBeforeRepeat = UNINITIALIZED;
                             } else if ( absDiff(next, mean) == repeatAbsDiffSum ) {
-                                logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, "              [order-diff] compensation for (%s * %s)_vs_%s", repeat, repeatQty, next);
+                                logAnalyze(POSITIONS_CLUSTERS, "              [order-diff] compensation for (%s * %s)_vs_%s", repeat, repeatQty, next);
                                 diffSumAbs = diffSumAbs - (repeatAbsDiffSum * 2);
                                 shifts = shifts + repeatQty;
                                 haveCompensation = true;
@@ -3705,7 +3708,7 @@ class PositionsAnalyze {
 //                    haveCompensation = false;
 //                    haveCompensationInCurrentStep = false;
 //                    isBad = true;
-//                    logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, "              [order-diff] there are no words for cluster!");
+//                    logAnalyze(POSITIONS_CLUSTERS, "              [order-diff] there are no words for cluster!");
 //                }
 //                else {
 //                    if ( wordsInRange.hasStartIn(this.filledPositions) ) {
@@ -3715,7 +3718,7 @@ class PositionsAnalyze {
 //                        haveCompensation = false;
 //                        haveCompensationInCurrentStep = false;
 //                        isBad = true;
-//                        logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, "              [order-diff] word of cluster has not its start found, cluster is bad!");
+//                        logAnalyze(POSITIONS_CLUSTERS, "              [order-diff] word of cluster has not its start found, cluster is bad!");
 //                    }
 //                }
 //            }
@@ -3749,25 +3752,25 @@ class PositionsAnalyze {
             }
         }
 
-        if ( AnalyzeLogType.POSITIONS_CLUSTERS.isEnabled() ) {
-            logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, "            [cluster stats] order repeats       %s", cluster
+        if ( POSITIONS_CLUSTERS.isEnabled() ) {
+            logAnalyze(POSITIONS_CLUSTERS, "            [cluster stats] order repeats       %s", cluster
                     .repeats()
                     .stream()
                     .mapToObj(repeating -> String.valueOf(repeating))
                     .collect(joining(",", "<", ">")));
-            logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, "            [cluster stats] order repeats qties %s", cluster
+            logAnalyze(POSITIONS_CLUSTERS, "            [cluster stats] order repeats qties %s", cluster
                     .repeatQties()
                     .stream()
                     .mapToObj(repeating -> String.valueOf(repeating))
                     .collect(joining(",", "<", ">")));
-            logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, "            [cluster stats] order diff sum real %s", diffSumReal);
-            logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, "            [cluster stats] order diff sum abs  %s", diffSumAbs);
-            logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, "            [cluster stats] order diff count    %s", diffCount);
-            logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, "            [cluster stats] order diff compensation  %s", compensationSum);
+            logAnalyze(POSITIONS_CLUSTERS, "            [cluster stats] order diff sum real %s", diffSumReal);
+            logAnalyze(POSITIONS_CLUSTERS, "            [cluster stats] order diff sum abs  %s", diffSumAbs);
+            logAnalyze(POSITIONS_CLUSTERS, "            [cluster stats] order diff count    %s", diffCount);
+            logAnalyze(POSITIONS_CLUSTERS, "            [cluster stats] order diff compensation  %s", compensationSum);
         }
         if ( diffSumAbs == 0 && haveCompensation && clusterLength == 2 ) {
             diffSumAbs = 1;
-            logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, "            [cluster stats] order diff sum fix  %s", diffSumAbs);
+            logAnalyze(POSITIONS_CLUSTERS, "            [cluster stats] order diff sum fix  %s", diffSumAbs);
         }
 
         if ( ! isBad && this.currentClusterIsRejected ) {
@@ -3787,6 +3790,27 @@ class PositionsAnalyze {
                 isBad);
 
         cluster.finish();
+    }
+
+    private void log(ClusterStepTwo cluster, String header) {
+        if ( POSITIONS_SEARCH.isEnabled() ) {
+            logAnalyze(POSITIONS_SEARCH, "          [%s]", header);
+            WordInVariant word = cluster.word();
+            logAnalyze(POSITIONS_SEARCH, "             [main] '%s' variant:%s, pattern:%s, included:%s", cluster.assessedChar(), cluster.assessedCharVariantPosition(), cluster.assessedCharPatternPosition(), cluster.isAssessedCharFilledInVariant());
+            var view = cluster.positionView();
+            while ( view.hasNext() ) {
+                view.goToNext();
+                logAnalyze(POSITIONS_SEARCH, "             [clustered] '%s' variant:%s, pattern:%s, included(variant:%s, pattern:%s), match:%s",
+                        view.character(),
+                        view.variantPosition(),
+                        view.patternPosition(),
+                        view.isFilled(),
+                        view.isFilledInPattern(),
+                        view.match());
+            }
+            logAnalyze(POSITIONS_SEARCH, "             [word] %s [%s...%s]", word.charsString(), word.startIndex, word.endIndex);
+            logAnalyze(POSITIONS_SEARCH, "             [type] %s", cluster.positionsInWordType());
+        }
     }
     
 }

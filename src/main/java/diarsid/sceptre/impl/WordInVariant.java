@@ -103,7 +103,16 @@ public class WordInVariant extends PooledReusable {
     }
 
     public boolean hasSameWord(WordInVariant other) {
-        return Arrays.equals(this.chars, other.chars);
+        if ( this.length == other.length ) {
+            for ( int i = 0; i < this.length; i++ ) {
+                if ( this.chars[i] != other.chars[i] ) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        return false;
     }
 
     public int charPositionOf(char c) {

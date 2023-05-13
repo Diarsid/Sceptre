@@ -41,8 +41,8 @@ import static diarsid.sceptre.impl.ClusterStepTwo.PositionsInWordType.PRIORITY_D
 import static diarsid.sceptre.impl.ClusterStepTwo.PositionsPlacing.END;
 import static diarsid.sceptre.impl.ClusterStepTwo.PositionsPlacing.MIDDLE;
 import static diarsid.sceptre.impl.ClusterStepTwo.PositionsPlacing.START;
-import static diarsid.sceptre.impl.ClusterStepTwo.WordType.CHOSEN_WORD;
-import static diarsid.sceptre.impl.ClusterStepTwo.WordType.NEW_WORD;
+import static diarsid.sceptre.impl.ClusterStepTwo.FoundType.CHOSEN_WORD;
+import static diarsid.sceptre.impl.ClusterStepTwo.FoundType.NEW_WORD;
 import static diarsid.sceptre.impl.MatchType.MATCH_DIRECTLY;
 import static diarsid.sceptre.impl.MatchType.MATCH_TYPO_LOOP;
 import static diarsid.sceptre.impl.MatchType.MATCH_TYPO_NEXT_IN_PATTERN_PREVIOUS_IN_VARIANT;
@@ -318,6 +318,7 @@ class ClusterStepTwo {
     private int matchStrength;
     private int mergedDuplicates;
     private final Possible<WordInVariant> word;
+    private final Possible<PositionsInWordType> positionsInWordType;
     private int directMatchesCount;
 
     public ClusterStepTwo(PositionsAnalyze analyze) {
@@ -336,6 +337,7 @@ class ClusterStepTwo {
         this.assessedCharPatternPosition = UNINITIALIZED;
         this.assessedCharVariantPosition = UNINITIALIZED;
         this.word = References.simplePossibleButEmpty();
+        this.positionsInWordType = References.simplePossibleButEmpty();
         this.directMatchesCount = 0;
         
         this.existingPositionView = new StepTwoClusterPositionView(this);
@@ -372,6 +374,10 @@ class ClusterStepTwo {
 
     WordInVariant word() {
         return this.word.orThrow();
+    }
+
+    PositionsInWordType positionsInWordType() {
+        return this.positionsInWordType.orThrow();
     }
     
     int assessedCharPatternPosition() {
@@ -441,7 +447,13 @@ class ClusterStepTwo {
             return false;
         }
 
-        return this.chars.size() > 0 || this.word.orThrow().length == 1;
+        boolean hasChars = this.chars.size() > 0 || this.word.orThrow().length == 1;
+
+        if ( hasChars ) {
+            this.positionsInWordType.resetTo(this.definePositionsInWordType());
+        }
+
+        return hasChars;
     }
 
     boolean containsOnlyInClustered(int variantPosition) {
@@ -725,7 +737,7 @@ class ClusterStepTwo {
         return this.patternPositions.get(0);
     }
 
-    public static enum WordType implements CommonEnum<WordType> {
+    public static enum FoundType implements CommonEnum<FoundType> {
         NEW_WORD, CHOSEN_WORD
     }
 
@@ -770,12 +782,12 @@ class ClusterStepTwo {
 
         public static final int PRIORITY_DIFF = 5;
 
-        public final WordType wordType;
+        public final FoundType foundType;
         public final List<PositionsPlacing> positionsPlacings;
         public final int priority;
 
-        PositionsInWordType(int priority, WordType wordType, PositionsPlacing... positionsPlacings) {
-            this.wordType = wordType;
+        PositionsInWordType(int priority, FoundType foundType, PositionsPlacing... positionsPlacings) {
+            this.foundType = foundType;
             this.positionsPlacings = asList(positionsPlacings);
             this.priority = priority;
         }
@@ -977,20 +989,12 @@ class ClusterStepTwo {
 //            else if ( thisMatchDirectly < otherMatchDirectly ) {
 //                return false;
 //            }
-            PositionsInWordType thisType = this.definePositionsInWordType();
-            PositionsInWordType otherType = other.definePositionsInWordType();
 
-            logAnalyze(
-                    AnalyzeLogType.POSITIONS_SEARCH,
-                    "             [this  type] %s : %s",
-                    this.word.get().charsString(), thisType);
-            logAnalyze(
-                    AnalyzeLogType.POSITIONS_SEARCH,
-                    "             [other type] %s : %s",
-                    other.word.get().charsString(), otherType);
+            PositionsInWordType thisType = this.positionsInWordType.orThrow();
+            PositionsInWordType otherType = other.positionsInWordType.orThrow();
 
             if ( thisWord.length == 1 && otherWord.length == 1 ) {
-                if ( thisType.wordType.is(NEW_WORD) && thisType.wordType.is(NEW_WORD) ) {
+                if ( thisType.foundType.is(NEW_WORD) && thisType.foundType.is(NEW_WORD) ) {
                     if ( this.chars.size() > other.chars.size() ) {
                         return true;
                     }
@@ -999,13 +1003,13 @@ class ClusterStepTwo {
                     }
                     else {
                         if ( thisWord.hasSameWord(otherWord) ) {
-                            if ( thisType.wordType.is(NEW_WORD) && otherType.wordType.is(NEW_WORD) ) {
+                            if ( thisType.foundType.is(NEW_WORD) && otherType.foundType.is(NEW_WORD) ) {
                                 return false;
                             }
-                            else if ( thisType.wordType.is(CHOSEN_WORD) && otherType.wordType.is(NEW_WORD) ) {
+                            else if ( thisType.foundType.is(CHOSEN_WORD) && otherType.foundType.is(NEW_WORD) ) {
                                 return false;
                             }
-                            else if ( thisType.wordType.is(NEW_WORD) && otherType.wordType.is(CHOSEN_WORD) ) {
+                            else if ( thisType.foundType.is(NEW_WORD) && otherType.foundType.is(CHOSEN_WORD) ) {
                                 return true;
                             }
                         }
@@ -1035,10 +1039,10 @@ class ClusterStepTwo {
                         }
                     }
                 }
-                else if ( thisType.wordType.is(CHOSEN_WORD) && otherType.wordType.is(NEW_WORD) ) {
+                else if ( thisType.foundType.is(CHOSEN_WORD) && otherType.foundType.is(NEW_WORD) ) {
                     return false;
                 }
-                else if ( thisType.wordType.is(NEW_WORD) && otherType.wordType.is(CHOSEN_WORD) ) {
+                else if ( thisType.foundType.is(NEW_WORD) && otherType.foundType.is(CHOSEN_WORD) ) {
                     return true;
                 }
                 else { // both are CHOSEN_WORD
@@ -1054,11 +1058,11 @@ class ClusterStepTwo {
                 }
             }
             else if ( thisWord.length == 1 ) {
-                if ( thisType.wordType.is(CHOSEN_WORD) ) {
+                if ( thisType.foundType.is(CHOSEN_WORD) ) {
                     return false;
                 }
                 else { // this is NEW_WORD
-                    if ( otherType.wordType.is(NEW_WORD) ) {
+                    if ( otherType.foundType.is(NEW_WORD) ) {
                         int otherClustered = other.countVariantPositionsWithoutSpaces();
                         if ( otherClustered > 0 ) {
                             return false;
@@ -1070,11 +1074,11 @@ class ClusterStepTwo {
                 }
             }
             else if ( otherWord.length == 1 ) {
-                if ( otherType.wordType.is(CHOSEN_WORD) ) {
+                if ( otherType.foundType.is(CHOSEN_WORD) ) {
                     return true;
                 }
                 else { // other is NEW_WORD
-                    if ( thisType.wordType.is(NEW_WORD) ) {
+                    if ( thisType.foundType.is(NEW_WORD) ) {
                         int thisClustered = this.countVariantPositionsWithoutSpaces();
                         if ( thisClustered > 0 ) {
                             return true;
@@ -1086,7 +1090,7 @@ class ClusterStepTwo {
                 }
             }
 
-            if ( thisType.wordType.is(otherType.wordType) ) {
+            if ( thisType.foundType.is(otherType.foundType) ) {
                 if ( thisType.priority < otherType.priority ) {
                     return true;
                 }
@@ -1100,95 +1104,117 @@ class ClusterStepTwo {
                 int thisPriority = thisType.priority;
                 int otherPriority = otherType.priority;
 
-                int thisPriorityAdj = 0;
-                int otherPriorityAdj = 0;
-
-                int thisWordLength = thisWord.length;
-                int otherWordLength = otherWord.length;
-
-                if ( thisType.wordType.is(NEW_WORD) ) {
-                    int otherWordHypothNewLength =
-                            otherWord.intersections(this.analyze.filledPositions)
-                            + other.variantPositions.size();
-                    otherPriorityAdj = otherPriorityAdj - otherWordHypothNewLength;
-
-                    if ( otherWordLength - otherWordHypothNewLength < otherWordLength / 2 ) {
-                        otherPriorityAdj = otherPriorityAdj - 1;
+                if ( thisWord.hasSameWord(otherWord) ) {
+                    int thisWordFoundChars;
+                    int otherWordFoundChars;
+                    if ( thisType.foundType.is(NEW_WORD) ) {
+                        thisWordFoundChars = this.variantPositions.size();
+                        otherWordFoundChars = otherWord.intersections(this.analyze.filledPositions)
+                                + other.variantPositions.size();
+                    }
+                    else {
+                        thisWordFoundChars = thisWord.intersections(this.analyze.filledPositions)
+                                + this.variantPositions.size();
+                        otherWordFoundChars = other.variantPositions.size();
                     }
 
-                    thisPriorityAdj = thisPriorityAdj
-                            - (this.variantPositions.size() + 1);
-
-                    if ( thisType.positionsPlacings.contains(START) ) {
-                        int charsAtStart = this.countCharsAtStartWithoutSpaces();
-                        if ( charsAtStart == 1 ) {
-                            if ( this.variantPositions.size() + 1 == 2 ) {
-                                thisPriorityAdj = thisPriorityAdj + 1;
-                            }
-                        }
-                        else if ( charsAtStart > 1 ) {
-                            thisPriorityAdj = thisPriorityAdj - charsAtStart;
-                        }
+                    if ( thisWordFoundChars > otherWordFoundChars ) {
+                        return true;
                     }
-
-                    if ( this.matches.contains(MATCH_TYPO_NEXT_IN_PATTERN_PREVIOUS_IN_VARIANT) || this.matches.contains(MATCH_TYPO_PREVIOUS_IN_PATTERN_PREVIOUSx2_IN_VARIANT) ) {
-                        thisPriorityAdj = thisPriorityAdj + 1;
+                    else if ( thisWordFoundChars < otherWordFoundChars ) {
+                        return false;
                     }
                 }
                 else {
-                    int thisWordHypothNewLength =
-                            thisWord.intersections(this.analyze.filledPositions)
-                            + this.variantPositions.size();
+                    int thisPriorityAdj = 0;
+                    int otherPriorityAdj = 0;
 
-                    thisPriorityAdj = thisPriorityAdj - thisWordHypothNewLength;
+                    int thisWordLength = thisWord.length;
+                    int otherWordLength = otherWord.length;
 
-                    if ( thisWordLength - thisWordHypothNewLength < thisWordLength / 2 ) {
-                        thisPriorityAdj = thisPriorityAdj - 1;
-                    }
+                    if ( thisType.foundType.is(NEW_WORD) ) {
+                        int otherWordHypothNewLength =
+                                otherWord.intersections(this.analyze.filledPositions)
+                                        + other.variantPositions.size();
+                        otherPriorityAdj = otherPriorityAdj - otherWordHypothNewLength;
 
-                    otherPriorityAdj = otherPriorityAdj
-                            - (other.variantPositions.size() + 1);
+                        if ( otherWordLength - otherWordHypothNewLength < otherWordLength / 2 ) {
+                            otherPriorityAdj = otherPriorityAdj - 1;
+                        }
 
-                    if ( otherType.positionsPlacings.contains(START) ) {
-                        int charsAtStart = other.countCharsAtStartWithoutSpaces();
-                        if ( charsAtStart == 1 ) {
-                            if ( other.variantPositions.size() + 1 == 2 ) {
-                                otherPriorityAdj = otherPriorityAdj + 1;
+                        thisPriorityAdj = thisPriorityAdj
+                                - (this.variantPositions.size() + 1);
+
+                        if ( thisType.positionsPlacings.contains(START) ) {
+                            int charsAtStart = this.countCharsAtStartWithoutSpaces();
+                            if ( charsAtStart == 1 ) {
+                                if ( this.variantPositions.size() + 1 == 2 ) {
+                                    thisPriorityAdj = thisPriorityAdj + 1;
+                                }
+                            }
+                            else if ( charsAtStart > 1 ) {
+                                thisPriorityAdj = thisPriorityAdj - charsAtStart;
                             }
                         }
-                        else if ( charsAtStart > 1 ) {
-                            otherPriorityAdj = otherPriorityAdj - charsAtStart;
+
+                        if ( this.matches.contains(MATCH_TYPO_NEXT_IN_PATTERN_PREVIOUS_IN_VARIANT) || this.matches.contains(MATCH_TYPO_PREVIOUS_IN_PATTERN_PREVIOUSx2_IN_VARIANT) ) {
+                            thisPriorityAdj = thisPriorityAdj + 1;
+                        }
+                    }
+                    else {
+                        int thisWordHypothNewLength =
+                                thisWord.intersections(this.analyze.filledPositions)
+                                        + this.variantPositions.size();
+
+                        thisPriorityAdj = thisPriorityAdj - thisWordHypothNewLength;
+
+                        if ( thisWordLength - thisWordHypothNewLength < thisWordLength / 2 ) {
+                            thisPriorityAdj = thisPriorityAdj - 1;
+                        }
+
+                        otherPriorityAdj = otherPriorityAdj
+                                - (other.variantPositions.size() + 1);
+
+                        if ( otherType.positionsPlacings.contains(START) ) {
+                            int charsAtStart = other.countCharsAtStartWithoutSpaces();
+                            if ( charsAtStart == 1 ) {
+                                if ( other.variantPositions.size() + 1 == 2 ) {
+                                    otherPriorityAdj = otherPriorityAdj + 1;
+                                }
+                            }
+                            else if ( charsAtStart > 1 ) {
+                                otherPriorityAdj = otherPriorityAdj - charsAtStart;
+                            }
+                        }
+
+                        if ( other.matches.contains(MATCH_TYPO_NEXT_IN_PATTERN_PREVIOUS_IN_VARIANT) || other.matches.contains(MATCH_TYPO_PREVIOUS_IN_PATTERN_PREVIOUSx2_IN_VARIANT) ) {
+                            otherPriorityAdj = otherPriorityAdj + 1;
                         }
                     }
 
-                    if ( other.matches.contains(MATCH_TYPO_NEXT_IN_PATTERN_PREVIOUS_IN_VARIANT) || other.matches.contains(MATCH_TYPO_PREVIOUS_IN_PATTERN_PREVIOUSx2_IN_VARIANT) ) {
-                        otherPriorityAdj = otherPriorityAdj + 1;
-                    }
-                }
+                    thisPriority = thisPriority + thisPriorityAdj;
+                    otherPriority = otherPriority + otherPriorityAdj;
 
-
-                thisPriority = thisPriority + thisPriorityAdj;
-                otherPriority = otherPriority + otherPriorityAdj;
-
-                if ( thisType.priority < otherType.priority ) {
-                    priorityDiff = otherType.priority - thisType.priority;
-                    if ( priorityDiff <= PRIORITY_DIFF ) {
-                        if ( thisPriority < otherPriority ) {
-                            return true;
-                        }
-                        else {
-                            return false;
+                    if ( thisType.priority < otherType.priority ) {
+                        priorityDiff = otherType.priority - thisType.priority;
+                        if ( priorityDiff <= PRIORITY_DIFF ) {
+                            if ( thisPriority < otherPriority ) {
+                                return true;
+                            }
+                            else {
+                                return false;
+                            }
                         }
                     }
-                }
-                else if ( thisType.priority > otherType.priority ) {
-                    priorityDiff = thisType.priority - otherType.priority;
-                    if ( priorityDiff <= PRIORITY_DIFF ) {
-                        if ( thisPriority > otherPriority ) {
-                            return false;
-                        }
-                        else {
-                            return true;
+                    else if ( thisType.priority > otherType.priority ) {
+                        priorityDiff = thisType.priority - otherType.priority;
+                        if ( priorityDiff <= PRIORITY_DIFF ) {
+                            if ( thisPriority > otherPriority ) {
+                                return false;
+                            }
+                            else {
+                                return true;
+                            }
                         }
                     }
                 }
@@ -1397,6 +1423,7 @@ class ClusterStepTwo {
         this.existingPositionView.i = BEFORE_START;
         this.possiblePositionView.i = BEFORE_START;
         this.word.nullify();
+        this.positionsInWordType.nullify();
         this.directMatchesCount = 0;
     }
     
