@@ -2518,11 +2518,15 @@ public class AnalyzeTest {
         pattern = "proupsth";
 
         variants = asList(
+                "D:/DEV/1__Projects/UkrPoshta/UkrposhtaStatusNotificationService",
                 "D:/DEV/1__Projects/UkrPoshta",
                 "D:/DEV/1__Projects/UkrPoshta/StatusNotificationService"
         );
 
-        expectedSameOrderAsVariants();
+        expected = asList(
+                "D:/DEV/1__Projects/UkrPoshta",
+                "D:/DEV/1__Projects/UkrPoshta/StatusNotificationService",
+                "D:/DEV/1__Projects/UkrPoshta/UkrposhtaStatusNotificationService");
 
         weightVariantsAndCheckMatching();
     }
@@ -2725,6 +2729,33 @@ public class AnalyzeTest {
 
         variants = asList(
                 "Pictures by J.R.R. Tolkien by J.R.R. Tolkien and Christopher Tolkien");
+
+        expectedSameOrderAsVariants();
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_brontstreflc() {
+        pattern = "brontstreflc";
+
+        variants = asList(
+                "Bully for Brontosaurus: Reflections in Natural History by Stephen Jay Gould",
+                "When the Siren Wailed by Judith Gwyn Brown and Noel Streatfeild");
+
+        expectedSameOrderAsVariants();
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_projukrpostats() {
+        pattern = "projukrpostats";
+
+        variants = asList(
+                "D:/DEV/1__Projects/UkrPoshta/UkrposhtaStatusTracking",
+                "D:/DEV/1__Projects/UkrPoshta/UkrposhtaStatusNotificationService",
+                "D:/DEV/1__Projects/UkrPoshta/UkrposhtaCommons");
 
         expectedSameOrderAsVariants();
 

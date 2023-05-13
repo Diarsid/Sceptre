@@ -2,8 +2,10 @@ package diarsid.sceptre.impl;
 
 import diarsid.sceptre.api.model.Variant;
 
+import static diarsid.support.misc.MathFunctions.cube;
 import static diarsid.support.misc.MathFunctions.percentAsInt;
 import static diarsid.support.misc.MathFunctions.ratio;
+import static diarsid.support.misc.MathFunctions.square;
 
 class AnalyzeUtil {     
     
@@ -167,5 +169,26 @@ class AnalyzeUtil {
 //        } else {
 //            return baseMissedImportance;
 //        }
+    }
+
+    static int cubeUpTo5AddSquareIfOver(int x) {
+        if ( x < 5 ) {
+            return cube(x) + square(x-2);
+        }
+        else if ( x == 5 ) {
+            return cube(4) + square(x);
+        }
+
+        return cube(4) + square(x+1);
+    }
+
+    public static void main(String[] args) {
+        System.out.println("2 : " + cubeUpTo5AddSquareIfOver(2));
+        System.out.println("3 : " + cubeUpTo5AddSquareIfOver(3));
+        System.out.println("4 : " + cubeUpTo5AddSquareIfOver(4));
+        System.out.println("5 : " + cubeUpTo5AddSquareIfOver(5));
+        System.out.println("6 : " + cubeUpTo5AddSquareIfOver(6));
+        System.out.println("7 : " + cubeUpTo5AddSquareIfOver(7));
+        System.out.println("8 : " + cubeUpTo5AddSquareIfOver(8));
     }
 }

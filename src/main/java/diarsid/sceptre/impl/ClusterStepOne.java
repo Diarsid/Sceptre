@@ -707,6 +707,40 @@ class ClusterStepOne {
         this.nextsVariantPositions.add(this.lastAddedVariantPosition);
         this.nextsPatternPositions.add(this.lastAddedPatternPosition);
     }
+
+    void removeLastNext() {
+        if ( this.nextVariantPosition < 0 ) {
+            throw new IllegalStateException();
+        }
+
+        if ( nextsVariantPositions.size() == 1 ) {
+            this.hasNexts = false;
+
+            this.nextsVariantPositions.remove(0);
+            this.nextsPatternPositions.remove(0);
+
+            if ( this.nextVariantPosition != UNINITIALIZED ) {
+                this.lastAddedVariantPosition = this.nextVariantPosition;
+                this.lastAddedPatternPosition = this.nextPatternPosition;
+            }
+            else {
+                this.lastAddedVariantPosition = this.mainVariantPosition;
+                this.lastAddedPatternPosition = this.mainPatternPosition;
+            }
+        }
+        else {
+            this.hasNexts = true;
+
+            int iLast =  this.nextsVariantPositions.size() - 1;
+            int iLastPrev = iLast - 1;
+
+            this.lastAddedVariantPosition = this.nextsVariantPositions.get(iLastPrev);
+            this.lastAddedPatternPosition = this.nextsPatternPositions.get(iLastPrev);
+
+            this.nextsVariantPositions.remove(iLast);
+            this.nextsPatternPositions.remove(iLast);
+        }
+    }
     
     void addPrev(int prevOne) {
         if ( this.prevVariantPosition < 0 ) {

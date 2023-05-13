@@ -33,6 +33,7 @@ import static diarsid.sceptre.api.Sceptre.Weight.Estimate.BAD;
 import static diarsid.sceptre.api.Sceptre.Weight.Estimate.of;
 import static diarsid.sceptre.impl.AnalyzeImpl.logAnalyze;
 import static diarsid.sceptre.impl.AnalyzeUtil.clustersImportanceDependingOn;
+import static diarsid.sceptre.impl.AnalyzeUtil.cubeUpTo5AddSquareIfOver;
 import static diarsid.sceptre.impl.AnalyzeUtil.inconsistencyOf;
 import static diarsid.sceptre.impl.AnalyzeUtil.nonClusteredImportanceDependingOn;
 import static diarsid.sceptre.impl.ClusterPreference.PREFER_LEFT;
@@ -1357,20 +1358,61 @@ class PositionsAnalyze {
                             currStepOneCluster.incrementSkip();
                             
                             int i = 2;
+                            int iPattern;
+                            int iVariant;
+                            char patternChar;
+                            char variantChar;
+                            boolean hasAdded = false;
+
+                            char lastAddedChar = '_';
+                            int lastAddedCharVariantPosition = -1;
+                            int lastAddedCharPatternPosition = -1;
+
                             step1ForwardLoop: while ( positionsExistAndCanFillPosition(currentPatternCharIndex + i, currentPatternCharPositionInVariant + i) ) {  
-                                char patChar = data.pattern.charAt(currentPatternCharIndex + i);
-                                char varChar = data.variant.charAt(currentPatternCharPositionInVariant + i);
-                                if ( patChar == varChar ) {
+                                iPattern = currentPatternCharIndex + i;
+                                iVariant = currentPatternCharPositionInVariant + i;
+                                patternChar = data.pattern.charAt(iPattern);
+                                variantChar = data.variant.charAt(iVariant);
+                                if ( patternChar == variantChar ) {
+                                    hasAdded = true;
+                                    lastAddedChar = variantChar;
+                                    lastAddedCharVariantPosition = iVariant;
+                                    lastAddedCharPatternPosition = iPattern;
                                     currStepOneCluster.incrementSkip();
-                                    currStepOneCluster.addNext(currentPatternCharPositionInVariant + i);      
-                                    logAnalyze(POSITIONS_SEARCH, "          [candidate] '%s'(%s in variant) following >>>", varChar, currentPatternCharPositionInVariant + i);
+                                    currStepOneCluster.addNext(currentPatternCharPositionInVariant + i);
+                                    logAnalyze(POSITIONS_SEARCH, "          [candidate] '%s'(%s in variant) following >>>", variantChar, currentPatternCharPositionInVariant + i);
                                     logAnalyze(POSITIONS_SEARCH, "               %s", displayStepOneClusterLastAddedPosition());
                                     logAnalyze(POSITIONS_SEARCH, "               %s : %s", data.pattern, data.variant);
-                                } else {
-                                        break step1ForwardLoop;    
-                                    }
-                                    i++;
                                 }
+                                else {
+                                    break step1ForwardLoop;
+                                }
+                                i++;
+                            }
+
+                            if ( hasAdded ) {
+                                WordInVariant word;
+                                char wordFirstChar;
+                                wordsConflictsLoop: for ( int iWord = 0; iWord < data.wordsInVariant.all.size(); iWord++ ) {
+                                    word = data.wordsInVariant.all.get(iWord);
+                                    if ( word.length > 2 ) {
+                                        wordFirstChar = data.variant.charAt(word.startIndex);
+                                        if ( wordFirstChar == lastAddedChar ) {
+                                            if ( lastAddedCharPatternPosition < data.pattern.length() - 1 ) {
+                                                char nextWordChar = data.variant.charAt(word.startIndex + 1);
+                                                char nextPatternChar = data.pattern.charAt(lastAddedCharPatternPosition + 1);
+                                                if ( nextWordChar == nextPatternChar ) {
+                                                    currStepOneCluster.removeLastNext();
+                                                    logAnalyze(POSITIONS_SEARCH, "          [candidate] '%s'(%s in variant) reject - conflicts with word %s", lastAddedChar, lastAddedCharVariantPosition, word.charsString());
+                                                    logAnalyze(POSITIONS_SEARCH, "               %s", displayStepOneClusterLastAddedPosition());
+                                                    logAnalyze(POSITIONS_SEARCH, "               %s : %s", data.pattern, data.variant);
+                                                    break wordsConflictsLoop;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 } else if ( findPositionsStep.typoSearchingAllowed()) {
@@ -2316,10 +2358,10 @@ class PositionsAnalyze {
                 if ( this.patternContainsClusterFoundInVariant() ) {
                     int containingReward;
                     if ( isClusterLongWord ) {
-                        containingReward = cube(this.currentClusterLength) + square(this.currentClusterLength);
+                        containingReward = cubeUpTo5AddSquareIfOver(this.currentClusterLength) + square(this.currentClusterLength);
                         this.weight.add(-containingReward, PATTERN_CONTAINS_CLUSTER_LONG_WORD);
                     } else {           
-                        containingReward = cube(this.currentClusterLength);
+                        containingReward = cubeUpTo5AddSquareIfOver(this.currentClusterLength);
                         this.weight.add(-containingReward, PATTERN_CONTAINS_CLUSTER);
                     }                  
                 } else {
@@ -2896,7 +2938,7 @@ class PositionsAnalyze {
                                 }
                                 else {
                                     wordQuality = wordQuality + 4;
-                                    logAnalyze(POSITIONS_CLUSTERS, "          +5 clusterAtWordStart, clusterAtWordEnd");
+                                    logAnalyze(POSITIONS_CLUSTERS, "          +4 clusterAtWordStart, clusterAtWordEnd");
                                 }
                             }
                         }
