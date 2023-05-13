@@ -2159,7 +2159,6 @@ class PositionsAnalyze {
                     this.currentClusterWordStartFound = true;
                 }
                 else {
-
                     if ( wordsInRange.count() == 1 ) {
                         WordInVariant word = wordsInRange.first();
                         WordInVariant prevWord = this.data.wordsInVariant.wordBeforeOrNull(word);
@@ -2196,7 +2195,22 @@ class PositionsAnalyze {
                 this.weight.add(FIRST_CLUSTER_IS_REJECTED);
             }
 
-            this.weight.add(CLUSTER_IS_REJECTED_BY_ORDER_DIFFS);
+            boolean ignoreClusterPenalty = false;
+            if ( this.currentClusterLength == 2 ) {
+                if ( this.currentClusterWordStartFound ) {
+                    ignoreClusterPenalty = true;
+                    // partially compensate clustering importance
+                    if ( data.wordsInVariant.all.size() > 2 && this.filledPositions.size() > 7 ) {
+                        this.clustered++;
+                        this.nonClustered--;
+                    }
+                }
+            }
+
+            if ( ! ignoreClusterPenalty ) {
+                this.weight.add(CLUSTER_IS_REJECTED_BY_ORDER_DIFFS);
+            }
+
             return;
         }
         
@@ -2811,6 +2825,12 @@ class PositionsAnalyze {
                                     logAnalyze(POSITIONS_CLUSTERS, "          +%s cluster length over 2", clusterLengthOver2);
                                 }
 
+                                if ( cluster.length() > 4 ) {
+                                    int clusterLengthOver4 = cluster.length() - 4;
+                                    wordQuality = wordQuality + clusterLengthOver4;
+                                    logAnalyze(POSITIONS_CLUSTERS, "          +%s cluster length over 4", clusterLengthOver4);
+                                }
+
                                 if ( cluster.length() + singlePositionsInWordCount > 3 ) {
                                     wordQuality = wordQuality + 1;
                                     logAnalyze(POSITIONS_CLUSTERS, "          +1 cluster length and single positions in word > 3");
@@ -3275,7 +3295,6 @@ class PositionsAnalyze {
             this.currentClusterIsRejected = true;
         }
         else {
-            this.currentClusterIsRejected = false;
             this.currentClusterOrdersIsConsistent = ! cluster.hasOrdersDiff();
             this.currentClusterOrdersHaveDiffCompensations = cluster.haveOrdersDiffCompensations();
 
@@ -3791,6 +3810,12 @@ class PositionsAnalyze {
                 if ( words.first().startIndex == clusterFirstPosition ) {
                     isBad = true;
                 }
+            }
+        }
+
+        if ( clusterLength == 2 ) {
+            if ( diffCount == 2 && diffSumAbs > 2 ) {
+                isBad = true;
             }
         }
 
