@@ -238,13 +238,42 @@ public class WordsInVariant implements StatefulClearable {
         return this.all.get(word.index + 1);
     }
 
+    public WordsInRange allDependentAfterOrNull(WordInVariant independentWord) {
+        if ( independentWord.placing.is(DEPENDENT) ) {
+            throw new IllegalArgumentException();
+        }
+
+        WordsInRange words = this.wordsInRangePool.give();
+        this.usedWordsInRanges.add(words);
+
+        WordInVariant word;
+        for ( int i = independentWord.index + 1; i < this.all.size(); i++ ) {
+            word = this.all.get(i);
+            if ( word.placing.is(DEPENDENT) ) {
+                words.add(word);
+            }
+        }
+
+        if ( words.areEmpty() ) {
+            this.usedWordsInRanges.remove(this.usedWordsInRanges.size() - 1);
+            this.wordsInRangePool.takeBack(words);
+
+            return null;
+        }
+        else {
+            words.rangeStartIndex = words.all().get(0).startIndex;
+
+            return words;
+        }
+    }
+
     public WordsInRange wordsOfRange(int afterPosition, ArrayInt positions) {
         WordsInRange words = this.wordsInRangePool.give();
         this.usedWordsInRanges.add(words);
 
         WordInVariant wordExcluded = this.wordOf(afterPosition);
 
-        if ( wordExcluded.index == all.size() - 1 ) {
+        if ( wordExcluded.index == this.all.size() - 1 ) {
             words.rangeStartIndex = wordExcluded.endIndex;
 
             return words;
