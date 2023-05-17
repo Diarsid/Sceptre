@@ -81,6 +81,7 @@ import static diarsid.sceptre.impl.weight.WeightElement.CLUSTER_STARTS_PREVIOUS_
 import static diarsid.sceptre.impl.weight.WeightElement.CLUSTER_STARTS_WITH_VARIANT;
 import static diarsid.sceptre.impl.weight.WeightElement.FIRST_CLUSTER_HAS_MISSED_WORD_START;
 import static diarsid.sceptre.impl.weight.WeightElement.FIRST_CLUSTER_IS_REJECTED;
+import static diarsid.sceptre.impl.weight.WeightElement.FIRST_PATTERN_CHAR_IS_MISSED_IN_VARIANT_AT_ALL;
 import static diarsid.sceptre.impl.weight.WeightElement.FOUND_POSITIONS_BELONG_TO_ONE_WORD;
 import static diarsid.sceptre.impl.weight.WeightElement.FOUND_POSITIONS_DENOTES_ALL_WORDS;
 import static diarsid.sceptre.impl.weight.WeightElement.NEXT_CHAR_IS_SEPARATOR;
@@ -822,6 +823,12 @@ class PositionsAnalyze {
             }
         }
     }
+
+    private void applyPenaltyIfPatternFirstCharIsNotFound() {
+        if ( this.positions.i(0) == POS_NOT_FOUND ) {
+            this.weight.add(FIRST_PATTERN_CHAR_IS_MISSED_IN_VARIANT_AT_ALL);
+        }
+    }
     
     private void analyzeAllClustersPlacing() {
         this.weight.excludeIfAllPresent(
@@ -883,6 +890,7 @@ class PositionsAnalyze {
         
         clearPositionsSearchingState();
         checkWordsInRangeOfFoundPositions();
+        applyPenaltyIfPatternFirstCharIsNotFound();;
     }
     
     private void traverseThroughPatternAndFillNotFoundPositions() {

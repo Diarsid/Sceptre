@@ -22,6 +22,7 @@ import diarsid.support.objects.GuardedPool;
 import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Objects.isNull;
 import static java.util.stream.Collectors.joining;
 
@@ -250,25 +251,42 @@ public class AnalyzeTest {
         
         weightVariantsAndCheckMatching();
     }
-    
+
     @Test
     public void test_JavaTechCase_jtec() {
         pattern = "jtec";
-        
+
         variants = asList(
                 "Books/tech",
                 "Tech",
                 "Books/Tech/Design",
                 "Tech/langs",
                 "Books/Tech/Java");
-        
-        expected = asList( 
-                "Books/Tech/Java",
+
+        expected = asList(
+                "Books/Tech/Java");
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_JavaTechCase_tec() {
+        pattern = "tec";
+
+        variants = asList(
+                "Books/tech",
+                "Tech",
+                "Books/Tech/Design",
+                "Tech/langs",
+                "Books/Tech/Java");
+
+        expected = asList(
                 "Tech",
                 "Books/tech",
-                "Tech/langs",
-                "Books/Tech/Design");
-        
+                "Books/Tech/Java",
+                "Books/Tech/Design",
+                "Tech/langs");
+
         weightVariantsAndCheckMatching();
     }
     
@@ -280,13 +298,26 @@ public class AnalyzeTest {
                 "Tech",
                 "Tech/langs");
         
+        expected = emptyList();
+        
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_techAnotherCase_tec() {
+        pattern = "tec";
+
+        variants = asList(
+                "Tech",
+                "Tech/langs");
+
         expected = asList(
                 "Tech",
                 "Tech/langs");
-        
+
         weightVariantsAndCheckMatching();
-    }    
-    
+    }
+
     @Test
     public void test_techAnotherCase2_jtec() {
         pattern = "jtec";
@@ -296,8 +327,22 @@ public class AnalyzeTest {
                 "langs/Tech",
                 "Tech/langs");
         
-        expectedSameOrderAsVariants();
+        expected = emptyList();
         
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_techAnotherCase2_tec() {
+        pattern = "tec";
+
+        variants = asList(
+                "Tech",
+                "langs/Tech",
+                "Tech/langs");
+
+        expectedSameOrderAsVariants();
+
         weightVariantsAndCheckMatching();
     }
     
@@ -545,8 +590,27 @@ public class AnalyzeTest {
         );
         
         weightVariantsAndCheckMatching();
-    }    
-    
+    }
+
+    @Test
+    public void test_messageServers_msser_2() {
+        pattern = "msser";
+
+        variants = asList(
+                "Tools/Servers",
+                "Tools/Servers/Messaging_Servers",
+                "Tools/Servers/Web_Servers",
+                "Dev/Start_MySQL_server"
+        );
+
+        expected = asList(
+                "Tools/Servers/Messaging_Servers",
+                "Dev/Start_MySQL_server"
+        );
+
+        weightVariantsAndCheckMatching();
+    }
+
     @Test
     public void test_webServers_wsr() {
         pattern = "wsr";

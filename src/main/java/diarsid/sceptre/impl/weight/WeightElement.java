@@ -41,6 +41,8 @@ public enum WeightElement implements CommonEnum<WeightElement> {
             +17.61f, "word of first found cluster has not found start"),
     FIRST_CLUSTER_IS_REJECTED(
             +28.07f, "word of first found cluster has not found start"),
+    FIRST_PATTERN_CHAR_IS_MISSED_IN_VARIANT_AT_ALL(
+            +111.71f, "first pattern char is missed in variant at all"),
     
     VARIANT_EQUAL_PATTERN(
             "variant is equal to pattern"),
