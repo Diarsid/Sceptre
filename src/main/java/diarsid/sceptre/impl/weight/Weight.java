@@ -5,11 +5,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
+import diarsid.sceptre.impl.logs.Logging;
+
 import static java.lang.Float.MIN_VALUE;
 import static java.util.Arrays.fill;
 
-import static diarsid.sceptre.impl.logs.AnalyzeLogType.POSITIONS_CLUSTERS;
-import static diarsid.sceptre.impl.AnalyzeImpl.logAnalyze;
+import static diarsid.sceptre.api.LogType.POSITIONS_CLUSTERS;
 import static diarsid.sceptre.impl.weight.WeightElement.WeightCalculationType.ADD_VALUE_TO_SUM;
 import static diarsid.sceptre.impl.weight.WeightElement.WeightCalculationType.APPLY_PERCENT_TO_SUM;
 import static diarsid.sceptre.impl.weight.WeightElement.WeightType.CALCULATED;
@@ -20,12 +21,14 @@ public class Weight {
     private final static int SIZE = 128;
     final static float WEIGHT_UNINITIALIZED = MIN_VALUE;
     
+    private final Logging log;
     private final List<WeightElement> elements;
     private final float[] weights;
     private float weightSum;
     private int nextFreeWeightIndex;
 
-    public Weight() {
+    public Weight(Logging log) {
+        this.log = log;
         this.elements = new ArrayList<>();
         this.weights = new float[SIZE];
         this.nextFreeWeightIndex = 0;
@@ -35,7 +38,7 @@ public class Weight {
         weightElement.weightTypeMustBe(PREDEFINED);
         weightElement.weightCalculationTypeMustBe(ADD_VALUE_TO_SUM);
         this.addWeightAndElement(weightElement.predefinedWeight, weightElement);
-        logAnalyze(
+        this.log.add(
                 POSITIONS_CLUSTERS, 
                 "               [weight] %1$+.2f : %2$s", 
                 weightElement.predefinedWeight, weightElement.description);
@@ -48,7 +51,7 @@ public class Weight {
         element.weightTypeMustBe(CALCULATED);
         element.weightCalculationTypeMustBe(ADD_VALUE_TO_SUM);
         this.addWeightAndElement(calculatedWeight, element);
-        logAnalyze(
+        this.log.add(
                 POSITIONS_CLUSTERS, 
                 "               [weight] %1$+.2f : %2$s", calculatedWeight, element.description);
     }

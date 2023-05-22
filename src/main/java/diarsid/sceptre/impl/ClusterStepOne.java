@@ -2,15 +2,16 @@ package diarsid.sceptre.impl;
 
 import java.util.Objects;
 
+import diarsid.sceptre.api.LogType;
 import diarsid.sceptre.impl.collections.ListInt;
 import diarsid.sceptre.impl.collections.impl.ListIntImpl;
-import diarsid.sceptre.impl.logs.AnalyzeLogType;
+import diarsid.sceptre.impl.logs.Logging;
 import diarsid.support.exceptions.UnsupportedLogicException;
 import diarsid.support.objects.references.Possible;
 
 import static java.lang.Integer.min;
 
-import static diarsid.sceptre.impl.AnalyzeImpl.logAnalyze;
+import static diarsid.sceptre.api.LogType.POSITIONS_SEARCH;
 import static diarsid.sceptre.impl.ClusterPreference.PREFER_LEFT;
 import static diarsid.sceptre.impl.ClusterPreference.PREFER_RIGHT;
 import static diarsid.sceptre.impl.Typos.Placing.AFTER;
@@ -156,6 +157,8 @@ class ClusterStepOne {
         }
         
     }
+
+    private final Logging log;
     
     private final Possible<String> variant;
     private final Possible<String> pattern;
@@ -194,7 +197,8 @@ class ClusterStepOne {
     
     private int skip;
 
-    public ClusterStepOne() {
+    public ClusterStepOne(Logging log) {
+        this.log = log;
         this.variant = simplePossibleButEmpty();
         this.pattern = simplePossibleButEmpty();
         this.positionIterableView = new StepOneClusterPositionIterableView(this);
@@ -222,7 +226,7 @@ class ClusterStepOne {
         this.startsAfterSeparator = null;
         this.variantPositionsAtEnd = null;
         this.endsBeforeSeparator = null;
-        this.typos = new Typos();
+        this.typos = new Typos(this.log);
     }
     
     void incrementSkip() {
@@ -321,13 +325,13 @@ class ClusterStepOne {
     }
 
     void tryToMergeTyposBeforeIntoPositions(WordInVariant word) {
-        logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "          [info] typo merging attempt... ", "");
+        this.log.add(POSITIONS_SEARCH, "          [info] typo merging attempt... ", "");
         Typo typo;
         int pointer = this.firstVariantPosition() - 1; // place pointer on a char in word before added in cluster
         for ( int i = this.typos.qtyBefore()-1 ; i >=0 && pointer >= word.startIndex; i-- ) {
             typo = this.typos.getBefore(i);
             if ( typo.variantIndex() == pointer ) {
-                logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "             [typo merge] %s (%s in variant) merged to positions", typo.patternIndex(), typo.variantIndex());
+                this.log.add(POSITIONS_SEARCH, "             [typo merge] %s (%s in variant) merged to positions", typo.patternIndex(), typo.variantIndex());
                 this.mergeInPositions(typo);
                 this.typos.removeFromBefore(i);
                 if ( pointer == word.startIndex ) {

@@ -6,7 +6,6 @@ import java.util.List;
 
 import diarsid.sceptre.impl.collections.Ints;
 import diarsid.sceptre.impl.collections.SetInt;
-import diarsid.sceptre.impl.logs.AnalyzeLogType;
 import diarsid.support.objects.GuardedPool;
 import diarsid.support.objects.StatefulClearable;
 import diarsid.support.objects.references.Possible;
@@ -15,7 +14,7 @@ import static java.lang.Math.negateExact;
 import static java.util.Objects.nonNull;
 import static java.util.stream.Collectors.joining;
 
-import static diarsid.sceptre.impl.AnalyzeImpl.logAnalyze;
+import static diarsid.sceptre.api.LogType.POSITIONS_CLUSTERS;
 import static diarsid.sceptre.impl.collections.Ints.containsAnyCommonElement;
 import static diarsid.support.misc.MathFunctions.absDiff;
 import static diarsid.support.misc.MathFunctions.mean;
@@ -296,7 +295,7 @@ class Clusters implements StatefulClearable {
             if ( nonNull(exchangeCluster) ) {
                 this.clustersMarkedTeardownRejected.add(cluster);
                 this.clustersMarkedTeardownRejected.add(exchangeCluster);
-                logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, "               [TEARDOWN REJECTION] clusters %s <---> %s has mutualy compensated subclusters", cluster, exchangeCluster);
+                data.log.add(POSITIONS_CLUSTERS, "               [TEARDOWN REJECTION] clusters %s <---> %s has mutualy compensated subclusters", cluster, exchangeCluster);
             }                    
         }
         
@@ -576,7 +575,7 @@ class Clusters implements StatefulClearable {
     private void applyBonusHigherLimitationIfSpecified() {
         if ( this.placingBonusLimit != UNKNOWN_VALUE ) {
             if ( this.placingBonus > this.placingBonusLimit ) {
-                logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, "    [cluster placing] WARN!!! placing bonus limit applied : placing bonus is %s but limit is %s", this.placingBonus, this.placingBonusLimit);
+                data.log.add(POSITIONS_CLUSTERS, "    [cluster placing] WARN!!! placing bonus limit applied : placing bonus is %s but limit is %s", this.placingBonus, this.placingBonusLimit);
                 this.placingBonus = this.placingBonusLimit;
             }
         }
@@ -590,7 +589,7 @@ class Clusters implements StatefulClearable {
         
         float presentPercent = percentAsFloat(this.data.patternChars.size() - positionsData.missed, this.data.patternChars.size());
         
-        logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, "    [cluster placing] missed position placing penalty : *%s%%", presentPercent);
+        data.log.add(POSITIONS_CLUSTERS, "    [cluster placing] missed position placing penalty : *%s%%", presentPercent);
         this.placingBonus = percentAsFloatOf(this.placingBonus, presentPercent);
         
         if ( this.placingBonus < 0 ) {
@@ -613,7 +612,7 @@ class Clusters implements StatefulClearable {
             return;
         }
         
-        logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, "    [cluster placing] placing bonus separators penalty : -%s", separatorsBetweenClustersPenalty);
+        data.log.add(POSITIONS_CLUSTERS, "    [cluster placing] placing bonus separators penalty : -%s", separatorsBetweenClustersPenalty);
         this.placingBonus = this.placingBonus - separatorsBetweenClustersPenalty;
         
         if ( this.placingBonus < 0 ) {
@@ -623,7 +622,7 @@ class Clusters implements StatefulClearable {
     
     private void placingBonusNoMoreThanPercent(int percent) {
         this.placingBonusLimit = (MAX_PLACING_BONUS * (float) percent) / 100;
-        logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, "    [cluster placing] placing bonus limit : %s (%s%%)", this.placingBonusLimit, percent);
+        data.log.add(POSITIONS_CLUSTERS, "    [cluster placing] placing bonus limit : %s (%s%%)", this.placingBonusLimit, percent);
     }
 
     private void placingPercentNoHigherThan(int limit) {
@@ -1022,7 +1021,7 @@ class Clusters implements StatefulClearable {
             return;
         }
         
-        logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, "    [cluster placing] path complexity bonus penalty : -%s%%", pathComplexity * 10);
+        data.log.add(POSITIONS_CLUSTERS, "    [cluster placing] path complexity bonus penalty : -%s%%", pathComplexity * 10);
         this.placingBonus = percentAsFloatOf(this.placingBonus, 100 - (pathComplexity * 10));
         this.placingBonus = placingBonus - pathComplexity;
         
@@ -1038,7 +1037,7 @@ class Clusters implements StatefulClearable {
             return;
         }
         
-        logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, "    [cluster placing] path complexity placing penalty : -%s%%", pathComplexity * 10);
+        data.log.add(POSITIONS_CLUSTERS, "    [cluster placing] path complexity placing penalty : -%s%%", pathComplexity * 10);
         
         this.placingPercent = this.placingPercent - (pathComplexity * 10);
         if ( this.placingPercent <= 0 ) {
@@ -1054,7 +1053,7 @@ class Clusters implements StatefulClearable {
     
     private void applyCasePenaltyToBonus(int penaltyPercent) {
         this.placingBonus = percentAsFloatOf(this.placingBonus, penaltyPercent);
-        logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, "    [cluster placing] case-dependent bonus penalty : *%s%%", penaltyPercent);
+        data.log.add(POSITIONS_CLUSTERS, "    [cluster placing] case-dependent bonus penalty : *%s%%", penaltyPercent);
     }
     
     private void adjustMeanPositionAfterLastPathSeparator() {
@@ -1182,7 +1181,7 @@ class Clusters implements StatefulClearable {
     
     private void applyKeyCharsBonusToPlacingPercent() {
         if ( this.data.positions().keyChars.size() > 0 ) {
-            logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, "    [cluster placing] key chars bonus to placing : +20% ");
+            data.log.add(POSITIONS_CLUSTERS, "    [cluster placing] key chars bonus to placing : +20% ");
             this.placingPercent = this.placingPercent + 20;
             
             if ( this.placingPercent > 100 ) {
@@ -1197,7 +1196,7 @@ class Clusters implements StatefulClearable {
         }
         
         if ( this.data.positions().keyChars.size() > 0 ) {
-            logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, "    [cluster placing] key chars bonus to placing importance : +10% ");
+            data.log.add(POSITIONS_CLUSTERS, "    [cluster placing] key chars bonus to placing importance : +10% ");
             this.clustersPlacingImportance = this.clustersPlacingImportance + 10;
             
             if ( this.clustersPlacingImportance > 100 ) {
@@ -1315,30 +1314,30 @@ class Clusters implements StatefulClearable {
     }
 
     void logState() {
-        logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, "    [cluster placing] %s", this.toString());
+        data.log.add(POSITIONS_CLUSTERS, "    [cluster placing] %s", this.toString());
         if ( placingBonusNotApplicableReason.isNotPresent() ) {
-            logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, "    [cluster placing] placing case       : %s ", placingCase.orThrow());
+            data.log.add(POSITIONS_CLUSTERS, "    [cluster placing] placing case       : %s ", placingCase.orThrow());
             if ( meanPosition != UNKNOWN_VALUE ) {
                 if ( this.adjustedVariantLength != UNKNOWN_VALUE ) {
-                    logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, "    [cluster placing] mean position      : %s/%s (%s) ", meanPosition, this.adjustedVariantLength, this.data.variant.length() - 1);
+                    data.log.add(POSITIONS_CLUSTERS, "    [cluster placing] mean position      : %s/%s (%s) ", meanPosition, this.adjustedVariantLength, this.data.variant.length() - 1);
                 } else {
-                    logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, "    [cluster placing] mean position      : %s/%s ", meanPosition, this.data.variant.length() - 1);
+                    data.log.add(POSITIONS_CLUSTERS, "    [cluster placing] mean position      : %s/%s ", meanPosition, this.data.variant.length() - 1);
                 } 
             }
             if ( placingPercent != UNKNOWN_VALUE ) {
-                logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, "    [cluster placing] placing percent    : %s%% ", placingPercent);
+                data.log.add(POSITIONS_CLUSTERS, "    [cluster placing] placing percent    : %s%% ", placingPercent);
             }
             if ( clustersPlacingImportance != UNKNOWN_VALUE ) {
-                logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, "    [cluster placing] placing importance : %s%% ", clustersPlacingImportance);
+                data.log.add(POSITIONS_CLUSTERS, "    [cluster placing] placing importance : %s%% ", clustersPlacingImportance);
             }
             if ( distanceBetweenClustersImportance != UNKNOWN_VALUE ) {
-                logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, "    [cluster placing] cluster distance importance : %s%% ", distanceBetweenClustersImportance);
+                data.log.add(POSITIONS_CLUSTERS, "    [cluster placing] cluster distance importance : %s%% ", distanceBetweenClustersImportance);
             }
         } else {
-            logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, "    [cluster placing] placing not applicable : %s ", placingBonusNotApplicableReason.orThrow());
+            data.log.add(POSITIONS_CLUSTERS, "    [cluster placing] placing not applicable : %s ", placingBonusNotApplicableReason.orThrow());
         }
 
-        logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, "    [cluster placing] placing bonus      : %s ", placingBonus);
+        data.log.add(POSITIONS_CLUSTERS, "    [cluster placing] placing bonus      : %s ", placingBonus);
     }
     
     @Override

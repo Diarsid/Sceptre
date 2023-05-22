@@ -3,44 +3,43 @@ package diarsid.sceptre.impl;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.IntStream;
 
+import diarsid.sceptre.api.model.Output;
+import diarsid.sceptre.api.model.Outputs;
 import diarsid.sceptre.api.model.Variant;
-import diarsid.sceptre.api.model.Variants;
 
 import static java.lang.String.format;
 import static java.util.Collections.sort;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Objects.nonNull;
-import static java.util.stream.Collectors.joining;
 
 import static diarsid.support.misc.MathFunctions.absDiff;
 import static diarsid.support.objects.collections.CollectionUtils.nonEmpty;
 import static diarsid.support.objects.collections.Lists.lastFrom;
 import static diarsid.support.strings.StringIgnoreCaseUtil.startsIgnoreCase;
-import static diarsid.support.strings.StringUtils.lower;
 
-public class VariantsImpl implements Variants {
+public class OutputsImpl implements Outputs {
     
     private static final int FEED_ALGORITHM_VERSION = 2;
     
-    private final List<Variant> variants;
+    private final List<Output> outputs;
     private final float bestWeight;
     private final float worstWeight;
     private final float weightDifference;
     private final float weightStep;
-    private List<Variant> currentSimilarVariants;
+    private List<Output> currentSimilarVariants;
     private int currentVariantIndex;
 
-    VariantsImpl(List<Variant> variants) {
-        sort(variants);
-        this.variants = unmodifiableList(variants);
-        if ( nonEmpty(this.variants) ) {
-            this.bestWeight = variants.get(0).weight();
-            this.worstWeight = lastFrom(variants).weight();
+    OutputsImpl(List<Output> outputs) {
+        sort(outputs);
+        this.outputs = unmodifiableList(outputs);
+        if ( nonEmpty(this.outputs) ) {
+            this.bestWeight = outputs.get(0).weight();
+            this.worstWeight = lastFrom(outputs).weight();
             this.weightDifference = (float) absDiff(this.bestWeight, this.worstWeight);
-            this.weightStep = this.weightDifference / this.variants.size();
-        } else {
+            this.weightStep = this.weightDifference / this.outputs.size();
+        }
+        else {
             this.bestWeight = 0;
             this.worstWeight = 0;
             this.weightDifference = 0;
@@ -50,21 +49,8 @@ public class VariantsImpl implements Variants {
         this.currentSimilarVariants = null;
     }
     
-    public static Variants unite(List<Variant> variants) {
-        return new VariantsImpl(variants);
-    }
-    
-    public static Optional<Variant> findVariantEqualToPattern(
-            List<Variant> variants) {
-        return variants
-                .stream()
-                .filter(variant -> variant.isEqualToPattern())
-                .findFirst();
-    }
-    
-    @Override
-    public IntStream indexes() {
-        return this.variants.stream().mapToInt(variant -> variant.index());
+    public static Outputs unite(List<Output> variants) {
+        return new OutputsImpl(variants);
     }
     
     @Override
@@ -98,70 +84,66 @@ public class VariantsImpl implements Variants {
     
     @Override
     public boolean isEmpty() {
-        return this.variants.isEmpty();
+        return this.outputs.isEmpty();
     }
     
     @Override
     public boolean isNotEmpty() {
-        return ! this.variants.isEmpty();
+        return ! this.outputs.isEmpty();
     }
     
     @Override
-    public Variant best() {
-        return this.variants.get(0);
+    public Output best() {
+        return this.outputs.get(0);
     }
     
     @Override
-    public String stamp() {
-        return this.variants
-                .stream()
-                .map(variant -> lower(variant.value()))
-                .collect(joining(";"));
+    public Outputs removeHavingStart(String start) {
+        Output current;
+        List<Output> newOutputs = new ArrayList<>(this.outputs);
+        for (int i = 0; i < newOutputs.size(); i++) {
+            current = newOutputs.get(i);
+            
+            if ( startsIgnoreCase(current.input(), start) ) {
+                newOutputs.remove(i);
+                i--;
+            }
+        }
+
+        return new OutputsImpl(newOutputs);
     }
     
     @Override
-    public void removeHavingSameStartAs(Variant variant) {
-        Variant current;
-        
-        for (int i = 0; i < this.variants.size(); i++) {
-            current = this.variants.get(i);
-            if ( current.index() <= variant.index()) {
+    public Outputs removeWorseThan(String input) {
+        List<Output> newOutputs = new ArrayList<>(this.outputs);
+
+        Output output;
+        boolean needToRemove = false;
+        for (int i = 0; i < newOutputs.size(); i++) {
+            output = newOutputs.get(i);
+
+            if ( needToRemove ) {
+                newOutputs.remove(i);
+                i--;
                 continue;
             }
-            
-            if ( startsIgnoreCase(current.nameOrValue(), variant.nameOrValue()) ) {
-                this.variants.remove(i);
-                i--;
-            }
-        }
-    }
-    
-    @Override
-    public Variants removeWorseThan(String variantValue) {
-        List<Variant> moidifiableVariants = new ArrayList<>(this.variants);
-        boolean needToRemove = false;
-        for (int i = 0; i < moidifiableVariants.size(); i++) {
-            if ( needToRemove ) {
-                moidifiableVariants.remove(i);
-                i--;
-            } else {
-                if ( moidifiableVariants.get(i).value().equalsIgnoreCase(variantValue) ) {
-                    needToRemove = true;
-                }
+
+            if ( output.input().equalsIgnoreCase(input) ) {
+                needToRemove = true;
             }
         }
         
-        return new VariantsImpl(moidifiableVariants);
+        return new OutputsImpl(newOutputs);
     }
     
     @Override
-    public String getVariantAt(int i) {
-        return this.variants.get(i).value();
+    public Output get(int i) {
+        return this.outputs.get(i);
     }
     
     @Override
     public int size() {
-        return this.variants.size();
+        return this.outputs.size();
     }
     
     @Override
@@ -202,12 +184,12 @@ public class VariantsImpl implements Variants {
     
     @Override
     public boolean hasOne() {
-        return ( this.variants.size() == 1 );
+        return this.outputs.size() == 1;
     }
     
     @Override
     public boolean hasMany() {
-        return ( this.variants.size() > 1 );
+        return this.outputs.size() > 1;
     }
     
 //    public Answer singleAnswer() {
@@ -219,7 +201,7 @@ public class VariantsImpl implements Variants {
         if ( nonNull(this.currentSimilarVariants) ) {
             this.currentSimilarVariants.clear();
         }
-        if ( this.currentVariantIndex < this.variants.size() - 1 ) {
+        if ( this.currentVariantIndex < this.outputs.size() - 1 ) {
             this.currentVariantIndex++;
             return true;
         } else {
@@ -229,14 +211,14 @@ public class VariantsImpl implements Variants {
     
     @Override
     public boolean isCurrentMuchBetterThanNext() {
-        if ( this.currentVariantIndex < this.variants.size() - 1 ) {
+        if ( this.currentVariantIndex < this.outputs.size() - 1 ) {
             if ( this.currentVariantIndex < 0 ) {
                 throw new IllegalStateException(
                         "Unexpected behavior: call .next() before accessing variants!");
             }
             
             float currentWeight = this.current().weight();
-            float nextWeight = this.variants.get(this.currentVariantIndex + 1).weight();
+            float nextWeight = this.outputs.get(this.currentVariantIndex + 1).weight();
             
             switch ( FEED_ALGORITHM_VERSION ) {
                 case 1 : {
@@ -263,7 +245,7 @@ public class VariantsImpl implements Variants {
                 }
             }
             
-        } else if ( this.currentVariantIndex == this.variants.size() - 1 ) {
+        } else if ( this.currentVariantIndex == this.outputs.size() - 1 ) {
             return true;
         } else {
             throw new IllegalStateException("Unexpected behavior.");
@@ -271,19 +253,21 @@ public class VariantsImpl implements Variants {
     }
     
     @Override
-    public Variant current() {
-        return this.variants.get(this.currentVariantIndex);
+    public Output current() {
+        return this.outputs.get(this.currentVariantIndex);
     }
     
     @Override
-    public List<Variant> nextSimilarVariants() {
+    public List<Output> nextSimilarSublist() {
         if ( nonNull(this.currentSimilarVariants) ) {
             this.currentSimilarVariants.clear();
-        } else {
+        }
+        else {
             this.currentSimilarVariants = new ArrayList<>();
-        }        
+        }
+
         boolean proceed = true;
-        while ( this.currentVariantIndex < this.variants.size() && proceed ) {
+        while ( this.currentVariantIndex < this.outputs.size() && proceed ) {
             if ( ! this.isCurrentMuchBetterThanNext() ) {
                 this.currentSimilarVariants.add(this.current());
                 this.currentVariantIndex++;
@@ -292,13 +276,14 @@ public class VariantsImpl implements Variants {
                 proceed = false;
             }            
         }
+
         return this.currentSimilarVariants;
     }
 
     @Override
     public int indexOf(String string) {
-        for (int i = 0; i < this.variants.size(); i++) {
-            if ( this.variants.get(i).value().equals(string) ) {
+        for (int i = 0; i < this.outputs.size(); i++) {
+            if ( this.outputs.get(i).input().equals(string) ) {
                 return i;
             }
         }
@@ -306,7 +291,7 @@ public class VariantsImpl implements Variants {
     }
 
     @Override
-    public int indexOf(Variant variant) {
-        return this.variants.indexOf(variant);
+    public int indexOf(Output output) {
+        return this.outputs.indexOf(output);
     }
 }

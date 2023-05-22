@@ -2,11 +2,8 @@ package diarsid.sceptre.api.model;
 
 import java.io.Serializable;
 import java.util.List;
-import java.util.stream.IntStream;
 
-public interface Variants extends Serializable {
-
-    IntStream indexes();
+public interface Outputs extends Serializable {
 
     void resetTraversing();
 
@@ -18,15 +15,13 @@ public interface Variants extends Serializable {
 
     boolean isNotEmpty();
 
-    Variant best();
+    Output best();
 
-    String stamp();
+    Outputs removeHavingStart(String start);
 
-    void removeHavingSameStartAs(Variant variant);
+    Outputs removeWorseThan(String variant);
 
-    Variants removeWorseThan(String variantValue);
-
-    String getVariantAt(int i);
+    Output get(int i);
 
     int size();
 
@@ -40,11 +35,11 @@ public interface Variants extends Serializable {
 
     boolean isCurrentMuchBetterThanNext();
 
-    Variant current();
+    Output current();
 
-    List<Variant> nextSimilarVariants();
+    List<Output> nextSimilarSublist();
 
     int indexOf(String string);
 
-    int indexOf(Variant variant);
+    int indexOf(Output output);
 }

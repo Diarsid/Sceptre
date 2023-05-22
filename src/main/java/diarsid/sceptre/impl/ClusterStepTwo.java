@@ -8,7 +8,6 @@ import diarsid.sceptre.impl.collections.ListChar;
 import diarsid.sceptre.impl.collections.ListInt;
 import diarsid.sceptre.impl.collections.impl.ListCharImpl;
 import diarsid.sceptre.impl.collections.impl.ListIntImpl;
-import diarsid.sceptre.impl.logs.AnalyzeLogType;
 import diarsid.support.objects.CommonEnum;
 import diarsid.support.objects.references.Possible;
 import diarsid.support.objects.references.References;
@@ -20,7 +19,9 @@ import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Objects.isNull;
 
-import static diarsid.sceptre.impl.AnalyzeImpl.logAnalyze;
+import static diarsid.sceptre.api.LogType.POSITIONS_SEARCH;
+import static diarsid.sceptre.impl.ClusterStepTwo.FoundType.CHOSEN_WORD;
+import static diarsid.sceptre.impl.ClusterStepTwo.FoundType.NEW_WORD;
 import static diarsid.sceptre.impl.ClusterStepTwo.PositionsInWordType.CHOSEN_OTHER_WORD;
 import static diarsid.sceptre.impl.ClusterStepTwo.PositionsInWordType.CHOSEN_WORD_END;
 import static diarsid.sceptre.impl.ClusterStepTwo.PositionsInWordType.CHOSEN_WORD_MIDDLE;
@@ -41,8 +42,6 @@ import static diarsid.sceptre.impl.ClusterStepTwo.PositionsInWordType.PRIORITY_D
 import static diarsid.sceptre.impl.ClusterStepTwo.PositionsPlacing.END;
 import static diarsid.sceptre.impl.ClusterStepTwo.PositionsPlacing.MIDDLE;
 import static diarsid.sceptre.impl.ClusterStepTwo.PositionsPlacing.START;
-import static diarsid.sceptre.impl.ClusterStepTwo.FoundType.CHOSEN_WORD;
-import static diarsid.sceptre.impl.ClusterStepTwo.FoundType.NEW_WORD;
 import static diarsid.sceptre.impl.MatchType.MATCH_DIRECTLY;
 import static diarsid.sceptre.impl.MatchType.MATCH_TYPO_LOOP;
 import static diarsid.sceptre.impl.MatchType.MATCH_TYPO_NEXT_IN_PATTERN_PREVIOUS_IN_VARIANT;
@@ -350,8 +349,8 @@ class ClusterStepTwo {
         this.assessedCharFilledInVariant = this.analyze.filledPositions.contains(variantPosition);
         this.assessedCharPatternPosition = patternPosition;
         this.assessedCharVariantPosition = variantPosition;
-        logAnalyze(
-                AnalyzeLogType.POSITIONS_SEARCH,
+        this.analyze.data.log.add(
+                POSITIONS_SEARCH,
                 "          [info] positions-in-cluster set assessed '%s' pattern:%s, variant:%s",
                 c, patternPosition, variantPosition);
     }
@@ -362,8 +361,8 @@ class ClusterStepTwo {
         this.assessedCharFilledInVariant = this.analyze.filledPositions.contains(variantPosition);
         this.assessedCharPatternPosition = patternPosition;
         this.assessedCharVariantPosition = variantPosition;
-        logAnalyze(
-                AnalyzeLogType.POSITIONS_SEARCH,
+        this.analyze.data.log.add(
+                POSITIONS_SEARCH,
                 "          [info] positions-in-cluster set assessed '%s' pattern:%s, variant:%s",
                 c, patternPosition, variantPosition);
     }
@@ -493,8 +492,8 @@ class ClusterStepTwo {
     }
 
     void approveCandidates() {
-        logAnalyze(
-                AnalyzeLogType.POSITIONS_SEARCH,
+        this.analyze.data.log.add(
+                POSITIONS_SEARCH,
                 "          [info] approve candidates ");
         for ( int i = 0; i < this.candidates.size(); i++ ) {
             if ( this.candidates.get(i) ) {
@@ -535,8 +534,8 @@ class ClusterStepTwo {
             this.filledInVariantQty--;
         }
         this.matchStrength = this.matchStrength - matchType.strength();
-        logAnalyze(
-                AnalyzeLogType.POSITIONS_SEARCH,
+        this.analyze.data.log.add(
+                POSITIONS_SEARCH,
                 "          [info] reject candidate '%s' pattern:%s, variant:%s, included: %s, %s",
                 c, patternPosition, variantPosition, isFilledInVariant, matchType.name());
     }
@@ -564,8 +563,8 @@ class ClusterStepTwo {
                 if ( ! wordOfFilledChar.equals(wordAnother) ) {
                     int distance = abs(wordOfFilledChar.index - wordAnother.index);
                     if ( distance > 1 ) {
-                        logAnalyze(
-                                AnalyzeLogType.POSITIONS_SEARCH,
+                        this.analyze.data.log.add(
+                                POSITIONS_SEARCH,
                                 "          [info] positions-in-cluster false-positive '%s' pattern:%s, variant:%s, included: %s, %s",
                                 c, patternPosition, variantPosition, isFilledInVariant, matchType.name());
                         return;
@@ -578,8 +577,8 @@ class ClusterStepTwo {
             StepTwoClusterPositionView existingPosition = this.positionViewAt(alreadyExistedInPattern);
             StepTwoClusterPositionView possiblePosition = this.possiblePositionView.fill(c, patternPosition, variantPosition, isFilledInVariant, isFilledInPattern, matchType);
 
-            logAnalyze(
-                    AnalyzeLogType.POSITIONS_SEARCH,
+            this.analyze.data.log.add(
+                    POSITIONS_SEARCH,
                     "          [info] positions-in-cluster duplicate: new '%s' pattern:%s, variant:%s -vs- existed '%s' pattern:%s, variant:%s",
                     possiblePosition.character, possiblePosition.patternPosition, possiblePosition.variantPosition,
                     existingPosition.character, existingPosition.patternPosition, existingPosition.variantPosition);
@@ -590,12 +589,12 @@ class ClusterStepTwo {
             else {
                 if ( possiblePosition.isBetterThan(existingPosition) ) {
                     possiblePosition.mergeInSubclusterInsteadOf(existingPosition);
-                    logAnalyze(
-                            AnalyzeLogType.POSITIONS_SEARCH,
+                    this.analyze.data.log.add(
+                            POSITIONS_SEARCH,
                             "          [info] positions-in-cluster duplicate: new position accepted");
                 } else {
-                    logAnalyze(
-                            AnalyzeLogType.POSITIONS_SEARCH,
+                    this.analyze.data.log.add(
+                            POSITIONS_SEARCH,
                             "          [info] positions-in-cluster duplicate: new position rejected");
                 }
 
@@ -646,8 +645,8 @@ class ClusterStepTwo {
                 }
 
                 if ( writeGivenAsNew ) {
-                    logAnalyze(
-                            AnalyzeLogType.POSITIONS_SEARCH,
+                    this.analyze.data.log.add(
+                            POSITIONS_SEARCH,
                             "          [info] positions-in-cluster is garbage: '%s' pattern:%s, variant:%s",
                             existingPosition.character, existingPosition.patternPosition, existingPosition.variantPosition);
                     this.remove(alreadyExistedInVariant);
@@ -671,8 +670,8 @@ class ClusterStepTwo {
                 }
                 this.directMatchesCount = this.directMatchesCount + this.countDirectMatchesWith(patternPosition, variantPosition);
                 this.matchStrength = this.matchStrength + matchType.strength();
-                logAnalyze(
-                        AnalyzeLogType.POSITIONS_SEARCH,
+                this.analyze.data.log.add(
+                        POSITIONS_SEARCH,
                         "          [info] positions-in-cluster '%s' pattern:%s, variant:%s, included: %s, %s, candidate:%s",
                         c, patternPosition, variantPosition, isFilledInVariant, matchType.name(), isCandidate);
             }
@@ -924,8 +923,8 @@ class ClusterStepTwo {
             return false;
         }
 
-        logAnalyze(
-                AnalyzeLogType.POSITIONS_SEARCH,
+        this.analyze.data.log.add(
+                POSITIONS_SEARCH,
                 "             [word start searching] %s",
                 this.word.get().charsString());
 
@@ -938,8 +937,8 @@ class ClusterStepTwo {
                 cPattern = this.analyze.data.patternChars.i(iPattern);
 
                 if ( cPattern == cVariant ) {
-                    logAnalyze(
-                            AnalyzeLogType.POSITIONS_SEARCH,
+                    this.analyze.data.log.add(
+                            POSITIONS_SEARCH,
                             "                [found] '%s'[pattern:%s, variant:%s]",
                             cPattern, iPattern, iVariant);
                     this.addInternal(cPattern, iPattern, iVariant, false, false, MATCH_TYPO_LOOP, false);

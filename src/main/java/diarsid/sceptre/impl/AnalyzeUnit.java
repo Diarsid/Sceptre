@@ -3,6 +3,7 @@ package diarsid.sceptre.impl;
 import java.util.List;
 import java.util.function.IntFunction;
 
+import diarsid.sceptre.api.LogType;
 import diarsid.sceptre.impl.collections.ArrayChar;
 import diarsid.sceptre.impl.collections.CharsCount;
 import diarsid.sceptre.impl.collections.Ints;
@@ -10,7 +11,7 @@ import diarsid.sceptre.impl.collections.SetInt;
 import diarsid.sceptre.impl.collections.impl.ArrayCharImpl;
 import diarsid.sceptre.impl.collections.impl.CharsCountImpl;
 import diarsid.sceptre.impl.collections.impl.SetIntImpl;
-import diarsid.sceptre.impl.logs.AnalyzeLogType;
+import diarsid.sceptre.impl.logs.Logging;
 import diarsid.sceptre.impl.weight.Weight;
 import diarsid.support.objects.GuardedPool;
 import diarsid.support.objects.PooledReusable;
@@ -19,10 +20,11 @@ import static java.lang.String.format;
 import static java.util.Objects.nonNull;
 import static java.util.stream.Collectors.joining;
 
-import static diarsid.sceptre.api.Sceptre.Weight.Estimate.BAD;
-import static diarsid.sceptre.api.Sceptre.Weight.Estimate.of;
-import static diarsid.sceptre.api.Sceptre.Weight.Estimate.preliminarilyOf;
-import static diarsid.sceptre.impl.AnalyzeImpl.logAnalyze;
+import static diarsid.sceptre.api.LogType.BASE;
+import static diarsid.sceptre.api.LogType.POSITIONS_CLUSTERS;
+import static diarsid.sceptre.api.WeightEstimate.BAD;
+import static diarsid.sceptre.api.WeightEstimate.of;
+import static diarsid.sceptre.api.WeightEstimate.preliminarilyOf;
 import static diarsid.sceptre.impl.AnalyzeUtil.lengthImportanceRatio;
 import static diarsid.sceptre.impl.AnalyzeUtil.missedTooMuch;
 import static diarsid.sceptre.impl.PositionsAnalyze.POS_NOT_FOUND;
@@ -65,7 +67,9 @@ class AnalyzeUnit extends PooledReusable {
             }                    
         };
     }
-    
+
+    final Logging log;
+
     final PositionsAnalyze positionsAnalyze;
     final WordsInVariant wordsInVariant;
 
@@ -91,8 +95,13 @@ class AnalyzeUnit extends PooledReusable {
     
     int notMissedPercent;
         
-    AnalyzeUnit(GuardedPool<Cluster> clusterPool, GuardedPool<WordInVariant> wordPool, GuardedPool<WordsInVariant.WordsInRange> wordsInRangePool) {
+    AnalyzeUnit(
+            Logging log,
+            GuardedPool<Cluster> clusterPool,
+            GuardedPool<WordInVariant> wordPool,
+            GuardedPool<WordsInVariant.WordsInRange> wordsInRangePool) {
         super();
+        this.log = log;
         this.positionsAnalyze = new PositionsAnalyze(
                 this, 
                 new Clusters(this, clusterPool), 
@@ -102,7 +111,7 @@ class AnalyzeUnit extends PooledReusable {
         this.variantPathSeparators = new SetIntImpl();
         this.variantTextSeparators = new SetIntImpl();
         this.wordsInVariant = new WordsInVariant(wordPool, wordsInRangePool);
-        this.weight = new Weight();
+        this.weight = new Weight(this.log);
         this.patternCharsCount = new CharsCountImpl();
     }
     
@@ -144,7 +153,7 @@ class AnalyzeUnit extends PooledReusable {
 
     void calculateWeight() {        
         this.weight.add(this.positionsAnalyze.weight);
-        logAnalyze(AnalyzeLogType.BASE, "  weight on step 1: %s (positions: %s) ", this.weight.sum(), this.positionsAnalyze.weight.sum());
+        log.add(BASE, "  weight on step 1: %s (positions: %s) ", this.weight.sum(), this.positionsAnalyze.weight.sum());
                 
         if ( this.weight.sum() > 0 ) {
             this.positionsAnalyze.badReason = "preliminary position calculation is too bad";
@@ -225,7 +234,7 @@ class AnalyzeUnit extends PooledReusable {
             }
         }
         
-        logAnalyze(AnalyzeLogType.BASE, "  weight on step 2: %s", this.weight);
+        log.add(BASE, "  weight on step 2: %s", this.weight);
     }
 
     void areAllPositionsPresentSortedAndNotPathSeparatorsBetween() {
@@ -363,7 +372,7 @@ class AnalyzeUnit extends PooledReusable {
     }
 
     void logState() {  
-        logAnalyze(AnalyzeLogType.BASE, "  variant       : %s", this.variant);
+        log.add(BASE, "  variant       : %s", this.variant);
         
         String patternCharsString = this.positionsAnalyze.positions
                 .stream()
@@ -381,52 +390,52 @@ class AnalyzeUnit extends PooledReusable {
                 .mapToObj(POSITION_INT_TO_STRING)
                 .map(s -> s.length() == 1 ? " " + s : s)
                 .collect(joining(" "));
-        logAnalyze(AnalyzeLogType.BASE, "  pattern chars : %s", patternCharsString);
-        logAnalyze(AnalyzeLogType.BASE, "  positions     : %s", positionsString);
+        log.add(BASE, "  pattern chars : %s", patternCharsString);
+        log.add(BASE, "  positions     : %s", positionsString);
                 
         if ( nonEmpty(this.positionsAnalyze.badReason) ) {
-            logAnalyze(AnalyzeLogType.BASE, "    %1$-25s %2$s", "bad reason", this.positionsAnalyze.badReason);
+            log.add(BASE, "    %1$-25s %2$s", "bad reason", this.positionsAnalyze.badReason);
             return;
         }
         
         if ( this.calculatedAsUsualClusters ) {
             this.logClustersState();
         } else {
-            logAnalyze(AnalyzeLogType.BASE, "  calculated as separated characters");
+            log.add(BASE, "  calculated as separated characters");
         }
-        if (AnalyzeLogType.POSITIONS_CLUSTERS.isEnabled()) {
-            logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, "  weight elements:");
+        if ( log.isEnabled(POSITIONS_CLUSTERS) ) {
+            log.add(POSITIONS_CLUSTERS, "  weight elements:");
             this.weight.observeAll((i, weightValue, element) -> {
                 if ( element.calculationType.is(APPLY_PERCENT_TO_SUM) ) {
-                    logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, format("      %1$s) x%2$7.2f%% : %3$s", i, weightValue, element.description));
+                    log.add(POSITIONS_CLUSTERS, format("      %1$s) x%2$7.2f%% : %3$s", i, weightValue, element.description));
                 }
                 else {
-                    logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, format("      %1$s) %2$-+7.2f : %3$s", i, weightValue, element.description));
+                    log.add(POSITIONS_CLUSTERS, format("      %1$s) %2$-+7.2f : %3$s", i, weightValue, element.description));
                 }
             });
         }
-        logAnalyze(AnalyzeLogType.BASE, "    %1$-25s %2$s", "total weight", this.weight);
+        log.add(BASE, "    %1$-25s %2$s", "total weight", this.weight);
     }
     
     private void logClustersState() {
-        logAnalyze(AnalyzeLogType.BASE, "    %1$-25s %2$s", "clusters", positionsAnalyze.clustersQty);
-        logAnalyze(AnalyzeLogType.BASE, "    %1$-25s %2$s", "clustered", positionsAnalyze.clustered);
-        logAnalyze(AnalyzeLogType.BASE, "    %1$-25s %2$s", "length delta", this.lengthDelta);
-        logAnalyze(AnalyzeLogType.BASE, "    %1$-25s %2$s", "distance between clusters", positionsAnalyze.clusters.distanceBetweenClusters());
-        logAnalyze(AnalyzeLogType.BASE, "    %1$-25s %2$s", "separators between clusters", positionsAnalyze.separatorsBetweenClusters);
-        logAnalyze(AnalyzeLogType.BASE, "    %1$-25s %2$s", "variant text separators ", this.variantTextSeparators.size());
-        logAnalyze(AnalyzeLogType.BASE, "    %1$-25s %2$s", "variant path separators ", this.variantPathSeparators.size());
-        logAnalyze(AnalyzeLogType.BASE, "    %1$-25s %2$s", "nonClustered", positionsAnalyze.nonClustered);
-        logAnalyze(AnalyzeLogType.BASE, "    %1$-25s %2$s", "nonClusteredImportance", positionsAnalyze.nonClusteredImportance);
-        logAnalyze(AnalyzeLogType.BASE, "    %1$-25s %2$s", "clustersImportance", positionsAnalyze.clustersImportance);
-        logAnalyze(AnalyzeLogType.BASE, "    %1$-25s %2$s", "missed", positionsAnalyze.missed);
-        logAnalyze(AnalyzeLogType.BASE, "    %1$-25s %2$s%%", "notMissedPercent", this.notMissedPercent);
+        log.add(BASE, "    %1$-25s %2$s", "clusters", positionsAnalyze.clustersQty);
+        log.add(BASE, "    %1$-25s %2$s", "clustered", positionsAnalyze.clustered);
+        log.add(BASE, "    %1$-25s %2$s", "length delta", this.lengthDelta);
+        log.add(BASE, "    %1$-25s %2$s", "distance between clusters", positionsAnalyze.clusters.distanceBetweenClusters());
+        log.add(BASE, "    %1$-25s %2$s", "separators between clusters", positionsAnalyze.separatorsBetweenClusters);
+        log.add(BASE, "    %1$-25s %2$s", "variant text separators ", this.variantTextSeparators.size());
+        log.add(BASE, "    %1$-25s %2$s", "variant path separators ", this.variantPathSeparators.size());
+        log.add(BASE, "    %1$-25s %2$s", "nonClustered", positionsAnalyze.nonClustered);
+        log.add(BASE, "    %1$-25s %2$s", "nonClusteredImportance", positionsAnalyze.nonClusteredImportance);
+        log.add(BASE, "    %1$-25s %2$s", "clustersImportance", positionsAnalyze.clustersImportance);
+        log.add(BASE, "    %1$-25s %2$s", "missed", positionsAnalyze.missed);
+        log.add(BASE, "    %1$-25s %2$s%%", "notMissedPercent", this.notMissedPercent);
     }
 
     boolean areTooMuchPositionsMissed() {
         boolean tooMuchMissed = missedTooMuch(this.positionsAnalyze.missed, this.patternChars.size());
         if ( tooMuchMissed ) {
-            logAnalyze(AnalyzeLogType.BASE, "    %s, missed: %s to much, skip variant!", this.variant, this.positionsAnalyze.missed);
+            log.add(BASE, "    %s, missed: %s to much, skip variant!", this.variant, this.positionsAnalyze.missed);
         }
         return tooMuchMissed;
     }
@@ -443,7 +452,7 @@ class AnalyzeUnit extends PooledReusable {
         boolean patternIsSingleWord = this.variantSeparators.isEmpty();
         if ( patternIsSingleWord ) {
             this.canClustersBeBad = false;
-            logAnalyze(AnalyzeLogType.BASE, "  variant is a single word");
+            log.add(BASE, "  variant is a single word");
             switch ( this.positionsAnalyze.clusters.quantity() ) {
                 case 0 : doWhenNoClusters(); break;
                 case 1 : doWhenSingleCluster(); break;
@@ -453,7 +462,7 @@ class AnalyzeUnit extends PooledReusable {
     } 
     
     private void doWhenNoClusters() {
-        logAnalyze(AnalyzeLogType.BASE, "    [abbreviation] ");
+        log.add(BASE, "    [abbreviation] ");
         if ( this.allPositionsPresentSortedAndNotPathSeparatorsBetween ) {
             this.positionsAnalyze.lookForSeparatedCharsPlacing();
         }
@@ -462,7 +471,7 @@ class AnalyzeUnit extends PooledReusable {
     private void doWhenSingleCluster() {
 //        this.positionsAnalyze.applySingleWordQuality();
         if ( this.positionsAnalyze.clusters.firstCluster().length() < 4 ) {
-            logAnalyze(AnalyzeLogType.BASE, "    [mark sequence] ");
+            log.add(BASE, "    [mark sequence] ");
             if ( this.weight.contains(VARIANT_CONTAINS_PATTERN) ) {
                 float bonus = percentAsFloat(pattern.length(), variant.length()) / 10;
                 this.weight.add(-bonus, SINGLE_WORD_VARIANT_CONTAINS_PATTERN);
@@ -489,7 +498,7 @@ class AnalyzeUnit extends PooledReusable {
         this.patternInVariantIndex = indexOfIgnoreCase(this.variant, this.pattern);
         if ( this.patternInVariantIndex >= 0 ) {
             float lengthRatio = patternLengthRatio(this.pattern);
-            logAnalyze(AnalyzeLogType.BASE, "  variant contains pattern: weight -%s", lengthRatio);
+            log.add(BASE, "  variant contains pattern: weight -%s", lengthRatio);
             this.weight.add(-lengthRatio, VARIANT_CONTAINS_PATTERN);
             this.variantContainsPattern = true;
         }
@@ -635,6 +644,6 @@ class AnalyzeUnit extends PooledReusable {
                 .stream()
                 .mapToObj(POSITION_INT_TO_STRING)
                 .collect(joining(" "));
-        logAnalyze(AnalyzeLogType.BASE, "  positions before sorting: %s", positionsS);
+        log.add(BASE, "  positions before sorting: %s", positionsS);
     }
 }

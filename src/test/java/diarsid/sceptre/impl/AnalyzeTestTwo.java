@@ -5,9 +5,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import diarsid.sceptre.api.model.Variant;
-import diarsid.sceptre.api.model.Variants;
-import diarsid.support.objects.GuardedPool;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -16,48 +13,54 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import diarsid.sceptre.api.Analyze;
+import diarsid.sceptre.api.AnalyzeBuilder;
+import diarsid.sceptre.api.model.Output;
+import diarsid.sceptre.api.model.Outputs;
+import diarsid.sceptre.api.model.Variant;
+import diarsid.support.objects.GuardedPool;
+
 import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.joining;
 
-import static diarsid.sceptre.impl.AnalyzeImpl.stringsToVariants;
-import static diarsid.support.configuration.Configuration.configure;
-import static diarsid.support.objects.Pools.pools;
-import static diarsid.support.objects.collections.CollectionUtils.nonEmpty;
 import static org.junit.jupiter.api.Assertions.fail;
 
-public class AnalyzeTestTwo {
+import static diarsid.sceptre.api.LogType.BASE;
+import static diarsid.sceptre.api.LogType.POSITIONS_CLUSTERS;
+import static diarsid.sceptre.api.LogType.POSITIONS_SEARCH;
+import static diarsid.sceptre.impl.AnalyzeImpl.stringsToInputs;
+import static diarsid.support.objects.Pools.pools;
+import static diarsid.support.objects.collections.CollectionUtils.nonEmpty;
 
-    static {
-        configure().withDefault(
-                "log = true",
-                "analyze.weight.base.log = true",
-                "analyze.weight.positions.search.log = true",
-                "analyze.weight.positions.clusters.log = true",
-                "analyze.result.variants.limit = 11",
-                "analyze.similarity.log.base = true",
-                "analyze.similarity.log.advanced = true");
-    }
+public class AnalyzeTestTwo {
     
-    private static AnalyzeImpl analyzeInstance;
+    private static Analyze analyzeInstance;
     private static int totalVariantsQuantity;
     private static long start;
     private static long stop;
     
-    private AnalyzeImpl analyze;
+    private Analyze analyze;
     private boolean expectedToFail;
     private String pattern;
-    private List<String> variants;
+    private List<String> inputs;
     private List<String> expected;
-    private Variants weightedVariants;
+    private Outputs weightedOutputs;
     
     public AnalyzeTestTwo() {
     }
 
     @BeforeAll
     public static void setUpClass() {
-        analyzeInstance = new AnalyzeImpl(pools());
+
+        analyzeInstance = new AnalyzeBuilder()
+                .withLogEnabled(true)
+                .withLogTypeEnabled(BASE, true)
+                .withLogTypeEnabled(POSITIONS_SEARCH, true)
+                .withLogTypeEnabled(POSITIONS_CLUSTERS, true)
+                .build();
+
         start = currentTimeMillis();
     }
     
@@ -86,14 +89,14 @@ public class AnalyzeTestTwo {
     
     @AfterEach
     public void tearDown() {
-        this.analyze.resultsLimitToDefault();
+
     }
     
     @Test
     public void test_projectsUkrPoshta_ukrposapi() {
         pattern = "ukrposapi";
         
-        variants = asList(            
+        inputs = asList(
                 "Projects/UkrPoshta",
                 "Projects/UkrPoshta/CainiaoAPI",
                 "Projects/UkrPoshta/UkrPostAPI");
@@ -111,7 +114,7 @@ public class AnalyzeTestTwo {
     public void test_projectsUkrPoshta_ukropsapi() {
         pattern = "ukropsapi";
         
-        variants = asList(            
+        inputs = asList(
                 "Projects/UkrPoshta",
                 "Projects/UkrPoshta/CainiaoAPI",
                 "Projects/UkrPoshta/UkrPostAPI");
@@ -130,7 +133,7 @@ public class AnalyzeTestTwo {
     private void weightVariantsAndCheckMatching() {
         boolean failed;
         try {
-            totalVariantsQuantity = totalVariantsQuantity + variants.size();
+            totalVariantsQuantity = totalVariantsQuantity + inputs.size();
             weightVariantsAndCheckMatchingInternally();
             failed = false;
         } catch (AssertionError e) {
@@ -145,11 +148,11 @@ public class AnalyzeTestTwo {
     }
     
     private void weightVariantsAndCheckMatchingInternally() {
-        weightedVariants = this.analyze.processVariants(pattern, stringsToVariants(variants));
+        weightedOutputs = this.analyze.processInputs(pattern, stringsToInputs(inputs));
         
         String expectedVariant;
         String actualVariant;
-        List<Variant> nextSimilarVariants;
+        List<Output> nextSimilarOutputs;
         
         List<String> reports = new ArrayList();        
         List<String> presentButNotExpected = new ArrayList<>();        
@@ -157,16 +160,16 @@ public class AnalyzeTestTwo {
         AtomicInteger counter = new AtomicInteger(0);
         int mismatches = 0;
         
-        if ( expected.isEmpty() && weightedVariants.size() > 0 ) {
+        if ( expected.isEmpty() && weightedOutputs.size() > 0 ) {
             fail("No variants expected!");
         }
         
-        while ( weightedVariants.next() && ( counter.get() < expected.size() ) ) {
+        while ( weightedOutputs.next() && ( counter.get() < expected.size() ) ) {
             
-            if ( weightedVariants.isCurrentMuchBetterThanNext() ) {
+            if ( weightedOutputs.isCurrentMuchBetterThanNext() ) {
                 
                 expectedVariant = expected.get(counter.getAndIncrement());
-                actualVariant = weightedVariants.current().value();
+                actualVariant = weightedOutputs.current().input();
                 
                 if ( actualVariant.equalsIgnoreCase(expectedVariant) ) {
                     reports.add(format("\n%s variant matches expected: %s", counter.get() - 1, expectedVariant));
@@ -178,9 +181,9 @@ public class AnalyzeTestTwo {
                             "    actual   : %s", counter.get() - 1, expectedVariant, actualVariant));
                 }
             } else {            
-                nextSimilarVariants = weightedVariants.nextSimilarVariants();
-                for (Variant variant : nextSimilarVariants) {
-                    actualVariant = variant.value();
+                nextSimilarOutputs = weightedOutputs.nextSimilarSublist();
+                for (Output output : nextSimilarOutputs) {
+                    actualVariant = output.input();
                     
                     if ( counter.get() < expected.size() ) {
                         expectedVariant = expected.get(counter.getAndIncrement());
@@ -205,11 +208,11 @@ public class AnalyzeTestTwo {
             reports.add("\n === Diff with expected === ");
         }
         
-        if ( weightedVariants.size() > expected.size() ) {
+        if ( weightedOutputs.size() > expected.size() ) {
             int offset = expected.size();
             String presentButNotExpectedVariant;
-            for (int i = offset; i < weightedVariants.size(); i++) {
-                presentButNotExpectedVariant = weightedVariants.getVariantAt(i);
+            for (int i = offset; i < weightedOutputs.size(); i++) {
+                presentButNotExpectedVariant = weightedOutputs.get(i).input();
                 presentButNotExpected.add(format("\n %s\n", presentButNotExpectedVariant));
             }
         }
@@ -243,17 +246,17 @@ public class AnalyzeTestTwo {
     
     private String collectVariantsToReport() {
         List<String> variantsWithWeight = new ArrayList<>();
-        weightedVariants.resetTraversing();
+        weightedOutputs.resetTraversing();
 
-        while ( weightedVariants.next() ) {            
-            if ( weightedVariants.isCurrentMuchBetterThanNext() ) {
-                variantsWithWeight.add("\n" + weightedVariants.current().value() + " is much better than next: " + weightedVariants.current().weight());
+        while ( weightedOutputs.next() ) {
+            if ( weightedOutputs.isCurrentMuchBetterThanNext() ) {
+                variantsWithWeight.add("\n" + weightedOutputs.current().input() + " is much better than next: " + weightedOutputs.current().weight());
             } else {
                 variantsWithWeight.add("\nnext candidates are similar: ");                
-                weightedVariants.nextSimilarVariants()
+                weightedOutputs.nextSimilarSublist()
                         .stream()
                         .forEach(candidate -> {
-                            variantsWithWeight.add("\n  - " + candidate.value() + " : " + candidate.weight());
+                            variantsWithWeight.add("\n  - " + candidate.input() + " : " + candidate.weight());
                         });
             }
         }

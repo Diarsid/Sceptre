@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package diarsid.sceptre.impl;
 
 
@@ -10,13 +5,13 @@ import java.util.Objects;
 
 import diarsid.sceptre.impl.collections.ListInt;
 import diarsid.sceptre.impl.collections.impl.ListIntImpl;
-import diarsid.sceptre.impl.logs.AnalyzeLogType;
+import diarsid.sceptre.impl.logs.Logging;
 import diarsid.support.objects.PooledReusable;
 
 import static java.lang.Math.abs;
 import static java.lang.String.format;
 
-import static diarsid.sceptre.impl.AnalyzeImpl.logAnalyze;
+import static diarsid.sceptre.api.LogType.POSITIONS_CLUSTERS;
 import static diarsid.sceptre.impl.collections.Ints.sumInts;
 
 class Cluster 
@@ -24,7 +19,8 @@ class Cluster
                 PooledReusable 
         implements 
                 Comparable<Cluster> {
-    
+
+    private final Logging log;
     private final ListInt repeats;
     private final ListInt repeatQties;
     private int firstPosition;
@@ -41,8 +37,9 @@ class Cluster
     private int teardown;
     private boolean rejected;
 
-    Cluster() {
+    Cluster(Logging log) {
         super();
+        this.log = log;
         this.repeats = new ListIntImpl();
         this.repeatQties = new ListIntImpl();
         this.firstPosition = PositionsAnalyze.POS_UNINITIALIZED;
@@ -323,7 +320,7 @@ class Cluster
     private void tearDownOn(int positionsQty) {
         positionsQty = abs(positionsQty);
         this.teardown = positionsQty;
-        logAnalyze(AnalyzeLogType.POSITIONS_CLUSTERS, "               [TEARDOWN] cluster is to be teardown by %s", positionsQty);
+        this.log.add(POSITIONS_CLUSTERS, "               [TEARDOWN] cluster is to be teardown by %s", positionsQty);
     }
 
     @Override

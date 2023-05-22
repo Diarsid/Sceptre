@@ -1,22 +1,10 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package diarsid.sceptre.impl;
-
-import diarsid.sceptre.impl.logs.AnalyzeLogType;
 
 import static java.lang.String.format;
 
-import static diarsid.sceptre.impl.AnalyzeImpl.logAnalyze;
+import static diarsid.sceptre.api.LogType.POSITIONS_SEARCH;
 import static diarsid.sceptre.impl.collections.Ints.doesNotExist;
-import static diarsid.support.misc.MathFunctions.absDiff;
 
-/**
- *
- * @author Diarsid
- */
 class PositionCandidate {
     
     private static final int UNINITIALIZED = -9;
@@ -62,15 +50,15 @@ class PositionCandidate {
 //        int patternPlacement = percentAsInt(positionInPatternIndex, this.data.pattern.length()) / 10;
 //        int otherPlacementDiff = absDiff(variantPlacement, patternPlacement);
         
-        if (AnalyzeLogType.POSITIONS_SEARCH.isEnabled()) {
-            logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "          [info] candidate %s in variant has:", otherPosition);
-            logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "             pattern order diff     %s", orderDiffInPattern == UNINITIALIZED ? "_" : orderDiffInPattern);
-            logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "             variant order diff     %s", orderDiffInVariant == UNINITIALIZED ? "_" : orderDiffInVariant);
+        if ( data.log.isEnabled(POSITIONS_SEARCH) ) {
+            data.log.add(POSITIONS_SEARCH, "          [info] candidate %s in variant has:", otherPosition);
+            data.log.add(POSITIONS_SEARCH, "             pattern order diff     %s", orderDiffInPattern == UNINITIALIZED ? "_" : orderDiffInPattern);
+            data.log.add(POSITIONS_SEARCH, "             variant order diff     %s", orderDiffInVariant == UNINITIALIZED ? "_" : orderDiffInVariant);
 //            logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "             approx. placement diff %s%%", otherPlacementDiff);
-            logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "             is near separator      %s", isNearSeparator);
-            logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "             to nearest position    %s", doesNotExist(distanceToNearestFilledPosition) ? "_" : distanceToNearestFilledPosition);
-            logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "             clustered positions    %s", clusteredAround);
-            logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "             chars remained         %s", charsRemained);
+            data.log.add(POSITIONS_SEARCH, "             is near separator      %s", isNearSeparator);
+            data.log.add(POSITIONS_SEARCH, "             to nearest position    %s", doesNotExist(distanceToNearestFilledPosition) ? "_" : distanceToNearestFilledPosition);
+            data.log.add(POSITIONS_SEARCH, "             clustered positions    %s", clusteredAround);
+            data.log.add(POSITIONS_SEARCH, "             chars remained         %s", charsRemained);
         }
         
         /* DEBUG */ if ( otherPosition == 42 ) {
@@ -84,7 +72,7 @@ class PositionCandidate {
                 isNearSeparator, 
                 distanceToNearestFilledPosition, 
                 clusteredAround) ) {
-            logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "          [info] accept %s", otherPosition);
+            data.log.add(POSITIONS_SEARCH, "          [info] accept %s", otherPosition);
             this.position = otherPosition;
             this.orderDiffInPattern = orderDiffInPattern;
             this.orderDiffInVariant = orderDiffInVariant;
@@ -94,7 +82,7 @@ class PositionCandidate {
             this.clusteredAround = clusteredAround;
             this.mutationsCommitted++;
         } else {
-            logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "          [info] worse than %s, reject %s", this.position, otherPosition);
+            data.log.add(POSITIONS_SEARCH, "          [info] worse than %s, reject %s", this.position, otherPosition);
         }       
     }
     

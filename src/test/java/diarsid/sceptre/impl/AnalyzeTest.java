@@ -14,9 +14,10 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import diarsid.sceptre.api.model.Variant;
-import diarsid.sceptre.api.model.Variants;
-import diarsid.sceptre.impl.logs.Log;
+import diarsid.sceptre.api.Analyze;
+import diarsid.sceptre.api.AnalyzeBuilder;
+import diarsid.sceptre.api.model.Output;
+import diarsid.sceptre.api.model.Outputs;
 import diarsid.support.objects.GuardedPool;
 
 import static java.lang.String.format;
@@ -28,37 +29,27 @@ import static java.util.stream.Collectors.joining;
 
 import static org.junit.jupiter.api.Assertions.fail;
 
-import static diarsid.support.configuration.Configuration.actualConfiguration;
-import static diarsid.support.configuration.Configuration.configure;
+import static diarsid.sceptre.api.LogType.BASE;
+import static diarsid.sceptre.api.LogType.POSITIONS_CLUSTERS;
+import static diarsid.sceptre.api.LogType.POSITIONS_SEARCH;
 import static diarsid.support.objects.Pools.pools;
 import static diarsid.support.objects.collections.CollectionUtils.nonEmpty;
 
 public class AnalyzeTest {
 
     private static final Logger log = LoggerFactory.getLogger(AnalyzeTest.class);
-    private static AnalyzeImpl analyzeInstance;
+    private static Analyze analyzeInstance;
     private static int totalVariantsQuantity;
     private static long start;
     private static long stop;
-
-    static {
-        configure().withDefault(
-                "log = true",
-                "analyze.weight.base.log = true",
-                "analyze.weight.positions.search.log = true",
-                "analyze.weight.positions.clusters.log = true",
-                "analyze.result.variants.limit = 11",
-                "analyze.similarity.log.base = true",
-                "analyze.similarity.log.advanced = true");
-    }
     
-    private AnalyzeImpl analyze;
+    private Analyze analyze;
     private boolean expectedToFail;
     private String pattern;
     private String noWorseThan;
     private List<String> variants;
     private List<String> expected;
-    private Variants weightedVariants;
+    private Outputs weightedOutputs;
     private boolean notExpectedAreCritical;
     
     public AnalyzeTest() {
@@ -66,23 +57,29 @@ public class AnalyzeTest {
     
     @BeforeAll
     public static void setUpClass() {
-        analyzeInstance = new AnalyzeImpl(
-                actualConfiguration().asInt("analyze.result.variants.limit"),
-                pools());
+        analyzeInstance = new AnalyzeBuilder()
+                .withLogEnabled(true)
+                .withLogTypeEnabled(BASE, true)
+                .withLogTypeEnabled(POSITIONS_SEARCH, true)
+                .withLogTypeEnabled(POSITIONS_CLUSTERS, true)
+                .build();
+
         start = currentTimeMillis();
     }
     
     @AfterAll
     public static void tearDownClass() {
         stop = currentTimeMillis();
-        Logger logger = LoggerFactory.getLogger(AnalyzeTest.class);
+
         String report = 
                 "\n ======================================" +
                 "\n ====== Total AnalyzeTest results =====" +
                 "\n ======================================" +
                 "\n  total time     : %s " + 
                 "\n  total variants : %s \n";
-        logger.info(format(report, stop - start, totalVariantsQuantity));
+
+        log.info(format(report, stop - start, totalVariantsQuantity));
+
         Optional<GuardedPool<AnalyzeUnit>> pool = pools().poolOf(AnalyzeUnit.class);
         if ( pool.isPresent() ) {
             GuardedPool<AnalyzeUnit> c = pool.get();
@@ -98,7 +95,7 @@ public class AnalyzeTest {
     
     @AfterEach
     public void tearDown() {
-        this.analyze.resultsLimitToDefault();
+
     }
     
     private void expectedToFail() {
@@ -160,14 +157,13 @@ public class AnalyzeTest {
         pattern = "phots";
         
         variants = asList(
-//                "Projects",
-//                "Images/Photos",
+                "Projects",
+                "Images/Photos",
                 "Photos");
         
         expected = asList( 
-                "Photos"
-//                ,
-//                "Images/Photos"
+                "Photos",
+                "Images/Photos"
         );
         
         weightVariantsAndCheckMatching();
@@ -1671,7 +1667,11 @@ public class AnalyzeTest {
                 "Tools",
                 "Tools_to",
                 "Tools_aaaaa",
-                "Tools_looking");
+                "Tools_aaaaa",
+                "Tools_looking",
+                "to_low_losing",
+                "book_tolstoy"
+                );
 
         worseVariantsDontMatter();
 
@@ -2922,8 +2922,6 @@ public class AnalyzeTest {
     @Disabled
     @Test
     public void test_synthetic_4() {
-        this.analyze.disableResultsLimit();
-        
         pattern = "abcXYZ";
         
         variants = asList(                
@@ -3079,15 +3077,15 @@ public class AnalyzeTest {
     
     private void weightVariantsAndCheckMatchingInternally() {
         if ( isNull(this.noWorseThan) ) {
-            weightedVariants = this.analyze.processStrings(pattern, variants);
+            weightedOutputs = this.analyze.processStrings(pattern, variants);
         } else {
-            weightedVariants = this.analyze.processStrings(pattern, noWorseThan, variants);
+            weightedOutputs = this.analyze.processStrings(pattern, noWorseThan, variants);
         }        
         
         String expectedVariant;
         String actualVariant;
         String presentButNotExpectedLine;
-        List<Variant> nextSimilarVariants;
+        List<Output> nextSimilarVariants;
         
         List<String> reports = new ArrayList<>();
         List<String> presentButNotExpected = new ArrayList<>();        
@@ -3095,16 +3093,16 @@ public class AnalyzeTest {
         AtomicInteger counter = new AtomicInteger(0);
         int mismatches = 0;
         
-        if ( expected.isEmpty() && weightedVariants.size() > 0 ) {
+        if ( expected.isEmpty() && weightedOutputs.size() > 0 ) {
             fail("No variants expected!");
         }
         
-        while ( weightedVariants.next() && ( counter.get() < expected.size() ) ) {
+        while ( weightedOutputs.next() && ( counter.get() < expected.size() ) ) {
             
-            if ( weightedVariants.isCurrentMuchBetterThanNext() ) {
+            if ( weightedOutputs.isCurrentMuchBetterThanNext() ) {
                 
                 expectedVariant = expected.get(counter.getAndIncrement());
-                actualVariant = weightedVariants.current().value();
+                actualVariant = weightedOutputs.current().input();
                 
                 if ( actualVariant.equalsIgnoreCase(expectedVariant) ) {
                     reports.add(format("\n%s variant matches expected: %s", counter.get() - 1, expectedVariant));
@@ -3116,9 +3114,9 @@ public class AnalyzeTest {
                             "\n    actual   : %s", counter.get() - 1, expectedVariant, actualVariant));
                 }
             } else {            
-                nextSimilarVariants = weightedVariants.nextSimilarVariants();
-                for (Variant weightedVariant : nextSimilarVariants) {
-                    actualVariant = weightedVariant.value();
+                nextSimilarVariants = weightedOutputs.nextSimilarSublist();
+                for (Output weightedVariant : nextSimilarVariants) {
+                    actualVariant = weightedVariant.input();
                     
                     if ( counter.get() < expected.size() ) {
                         expectedVariant = expected.get(counter.getAndIncrement());
@@ -3146,11 +3144,11 @@ public class AnalyzeTest {
             reports.add("\n === Diff with expected === ");
         }
         
-        if ( weightedVariants.size() > expected.size() ) {
+        if ( weightedOutputs.size() > expected.size() ) {
             int offset = expected.size();
             String presentButNotExpectedVariant;
-            for (int i = offset; i < weightedVariants.size(); i++) {
-                presentButNotExpectedVariant = weightedVariants.getVariantAt(i);
+            for (int i = offset; i < weightedOutputs.size(); i++) {
+                presentButNotExpectedVariant = weightedOutputs.get(i).input();
                 presentButNotExpectedLine = format("\n %s", presentButNotExpectedVariant);
                 if ( ! presentButNotExpected.contains(presentButNotExpectedLine) ) {
                     presentButNotExpected.add(presentButNotExpectedLine);
@@ -3191,17 +3189,17 @@ public class AnalyzeTest {
     
     private String collectVariantsToReport() {
         List<String> variantsWithWeight = new ArrayList<>();
-        weightedVariants.resetTraversing();
+        weightedOutputs.resetTraversing();
 
-        while ( weightedVariants.next() ) {            
-            if ( weightedVariants.isCurrentMuchBetterThanNext() ) {
-                variantsWithWeight.add("\n" + weightedVariants.current().value() + " is much better than next: " + weightedVariants.current().weight());
+        while ( weightedOutputs.next() ) {
+            if ( weightedOutputs.isCurrentMuchBetterThanNext() ) {
+                variantsWithWeight.add("\n" + weightedOutputs.current().input() + " is much better than next: " + weightedOutputs.current().weight());
             } else {
                 variantsWithWeight.add("\nnext candidates are similar: ");                
-                weightedVariants
-                        .nextSimilarVariants()
-                        .forEach(candidate -> {
-                            variantsWithWeight.add("\n  - " + candidate.value() + " : " + candidate.weight());
+                weightedOutputs
+                        .nextSimilarSublist()
+                        .forEach(output -> {
+                            variantsWithWeight.add("\n  - " + output.input() + " : " + output.weight());
                         });
             }
         }

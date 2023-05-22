@@ -3,14 +3,14 @@ package diarsid.sceptre.api.model;
 import java.io.Serializable;
 import java.util.Objects;
 
-import diarsid.sceptre.api.Sceptre;
+import diarsid.sceptre.api.WeightEstimate;
 
 import static java.lang.String.format;
 import static java.util.Objects.nonNull;
 
 import static diarsid.support.strings.StringUtils.lower;
 
-public final class Variant implements Serializable, Reindexable, Weightable {
+public final class Variant implements Serializable, Weighted {
     
     private String value;
     private String name;
@@ -84,12 +84,12 @@ public final class Variant implements Serializable, Reindexable, Weightable {
         return this;
     }
     
-    public boolean hasEqualOrBetterWeightThan(Sceptre.Weight.Estimate otherEstimate) {
-        return Sceptre.Weight.Estimate.of(this).isEqualOrBetterThan(otherEstimate);
+    public boolean hasEqualOrBetterWeightThan(WeightEstimate otherEstimate) {
+        return WeightEstimate.of(this).isEqualOrBetterThan(otherEstimate);
     }
 
     @Override
-    public boolean isBetterThan(Weightable other) {
+    public boolean isBetterThan(Weighted other) {
         return this.weight < other.weight();
     }
     
@@ -111,15 +111,15 @@ public final class Variant implements Serializable, Reindexable, Weightable {
                 lower(this.name).equals(lower(variant.name));
     }
     
-    @Override
-    public int index() {
-        return this.index;
-    }
-
-    @Override
-    public void setIndex(int index) {
-        this.index = index;
-    }    
+//    @Override
+//    public int index() {
+//        return this.index;
+//    }
+//
+//    @Override
+//    public void setIndex(int index) {
+//        this.index = index;
+//    }
     
     @Override
     public int hashCode() {
@@ -155,7 +155,7 @@ public final class Variant implements Serializable, Reindexable, Weightable {
     }
     
     @Override
-    public int compareTo(Weightable other) {
+    public int compareTo(Weighted other) {
         float otherWeight = other.weight();
 
         if ( this.weight > otherWeight ) {

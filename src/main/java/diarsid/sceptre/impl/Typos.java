@@ -3,13 +3,13 @@ package diarsid.sceptre.impl;
 import java.util.ArrayList;
 import java.util.List;
 
-import diarsid.sceptre.impl.logs.AnalyzeLogType;
+import diarsid.sceptre.impl.logs.Logging;
 import diarsid.support.objects.GuardedPool;
 import diarsid.support.objects.StatefulClearable;
 import diarsid.support.objects.references.Possible;
 
+import static diarsid.sceptre.api.LogType.POSITIONS_SEARCH;
 import static diarsid.sceptre.impl.Typos.Placing.BEFORE;
-import static diarsid.sceptre.impl.AnalyzeImpl.logAnalyze;
 import static diarsid.support.objects.Pools.pools;
 import static diarsid.support.objects.references.References.simplePossibleButEmpty;
 
@@ -20,13 +20,15 @@ class Typos implements StatefulClearable, AutoCloseable {
         AFTER
     }
     
+    private final Logging log;
     private final GuardedPool<Typo> typosPool;
     private final Possible<String> pattern;
     private final Possible<String> variant;
     private final List<Typo> typosBefore;
     private final List<Typo> typosAfter;
 
-    Typos() {
+    Typos(Logging log) {
+        this.log = log;
         this.typosPool = pools().createPool(Typo.class, () -> new Typo());
         this.pattern = simplePossibleButEmpty();
         this.variant = simplePossibleButEmpty();
@@ -43,12 +45,12 @@ class Typos implements StatefulClearable, AutoCloseable {
             Placing placing,
             int variantFromIncl, int variantToExcl,
             int patternFromIncl, int patternToExcl) {
-        logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "          [info] typo searching:");
-        logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "             in variant from incl. %s to excl %s - %s",
+        this.log.add(POSITIONS_SEARCH, "          [info] typo searching:");
+        this.log.add(POSITIONS_SEARCH, "             in variant from incl. %s to excl %s - %s",
                                      variantFromIncl,
                                      variantToExcl,
                                      this.variant.orThrow().substring(variantFromIncl, variantToExcl));
-        logAnalyze(AnalyzeLogType.POSITIONS_SEARCH, "             in pattern from incl. %s to excl %s - %s",
+        this.log.add(POSITIONS_SEARCH, "             in pattern from incl. %s to excl %s - %s",
                                      patternFromIncl,
                                      patternToExcl,
                                      this.pattern.orThrow().substring(patternFromIncl, patternToExcl));
