@@ -1,9 +1,9 @@
 package diarsid.sceptre.impl.logs;
 
 import java.util.Map;
-import java.util.function.Consumer;
 
-import diarsid.sceptre.api.AnalyzeBuilder;
+import diarsid.sceptre.impl.AnalyzeBuilder;
+import diarsid.sceptre.api.LogSink;
 import diarsid.sceptre.api.LogType;
 
 import static java.lang.String.format;
@@ -13,19 +13,19 @@ import static java.util.Objects.nonNull;
 public class Logging {
 
     private final Map<LogType, Boolean> enabledByLogType;
-    private final Consumer<String> logger;
+    private final LogSink logSink;
     private final boolean enabled;
 
     public Logging(AnalyzeBuilder builder) {
-        this.logger = builder.getLogDelegate();
-        this.enabledByLogType = builder.getEnabledByLogType();
-        this.enabled = builder.isLogEnabled();
+        this.logSink = builder.logSink();
+        this.enabledByLogType = builder.enabledByLogType();
+        this.enabled = builder.isLogEnabled() && nonNull(this.logSink);
     }
 
-    public Logging(Consumer<String> logger, Map<LogType, Boolean> enabledByLogType) {
-        this.logger = logger;
-        this.enabledByLogType = enabledByLogType;
-        this.enabled = true;
+    public void begins() {
+        if ( this.enabled ) {
+            this.logSink.begins();
+        }
     }
 
     public boolean isEnabled(LogType type) {
@@ -53,7 +53,7 @@ public class Logging {
             return;
         }
 
-        this.logger.accept(s);
+        this.logSink.accept(s);
     }
 
     public void add(LogType type, String s, Object arg0) {
@@ -61,7 +61,7 @@ public class Logging {
             return;
         }
 
-        this.logger.accept(format(s, arg0));
+        this.logSink.accept(format(s, arg0));
     }
 
     public void add(LogType type, String s, Object arg0, Object arg1) {
@@ -69,7 +69,7 @@ public class Logging {
             return;
         }
 
-        this.logger.accept(format(s, arg0, arg1));
+        this.logSink.accept(format(s, arg0, arg1));
     }
 
     public void add(LogType type, String s, Object arg0, Object arg1, Object arg2) {
@@ -77,7 +77,7 @@ public class Logging {
             return;
         }
 
-        this.logger.accept(format(s, arg0, arg1, arg2));
+        this.logSink.accept(format(s, arg0, arg1, arg2));
     }
 
     public void add(LogType type, String s, Object arg0, Object arg1, Object arg2, Object arg3) {
@@ -85,7 +85,7 @@ public class Logging {
             return;
         }
 
-        this.logger.accept(format(s, arg0, arg1, arg2, arg3));
+        this.logSink.accept(format(s, arg0, arg1, arg2, arg3));
     }
 
     public void add(LogType type, String s, Object arg0, Object arg1, Object arg2, Object arg3, Object arg4) {
@@ -93,7 +93,7 @@ public class Logging {
             return;
         }
 
-        this.logger.accept(format(s, arg0, arg1, arg2, arg3, arg4));
+        this.logSink.accept(format(s, arg0, arg1, arg2, arg3, arg4));
     }
 
     public void add(LogType type, String s, Object arg0, Object arg1, Object arg2, Object arg3, Object arg4, Object arg5) {
@@ -101,7 +101,7 @@ public class Logging {
             return;
         }
 
-        this.logger.accept(format(s, arg0, arg1, arg2, arg3, arg4, arg5));
+        this.logSink.accept(format(s, arg0, arg1, arg2, arg3, arg4, arg5));
     }
 
     public void add(LogType type, String s, Object... args) {
@@ -109,6 +109,12 @@ public class Logging {
             return;
         }
 
-        this.logger.accept(format(s, args));
+        this.logSink.accept(format(s, args));
+    }
+
+    public void finished() {
+        if ( this.enabled ) {
+            this.logSink.finished();
+        }
     }
 }

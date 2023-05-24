@@ -15,7 +15,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import diarsid.sceptre.api.Analyze;
-import diarsid.sceptre.api.AnalyzeBuilder;
 import diarsid.sceptre.api.model.Output;
 import diarsid.sceptre.api.model.Outputs;
 import diarsid.support.objects.GuardedPool;
@@ -49,7 +48,7 @@ public class AnalyzeTest {
     private String noWorseThan;
     private List<String> variants;
     private List<String> expected;
-    private Outputs weightedOutputs;
+    private Outputs outputs;
     private boolean notExpectedAreCritical;
     
     public AnalyzeTest() {
@@ -57,8 +56,10 @@ public class AnalyzeTest {
     
     @BeforeAll
     public static void setUpClass() {
-        analyzeInstance = new AnalyzeBuilder()
+        analyzeInstance = Analyze.Builder
+                .newInstance()
                 .withLogEnabled(true)
+//                .withLogSink(new LineByLineLogSink(System.out::println))
                 .withLogTypeEnabled(BASE, true)
                 .withLogTypeEnabled(POSITIONS_SEARCH, true)
                 .withLogTypeEnabled(POSITIONS_CLUSTERS, true)
@@ -3031,7 +3032,8 @@ public class AnalyzeTest {
         
         weightVariantsAndCheckMatching();
     }
-    
+
+    @Disabled("deduplication has been removed from implementation - it is now a duty of external code")
     @Test
     public void test_synthetic_7_duplicates() {
         pattern = "abcXYZ";
@@ -3077,9 +3079,9 @@ public class AnalyzeTest {
     
     private void weightVariantsAndCheckMatchingInternally() {
         if ( isNull(this.noWorseThan) ) {
-            weightedOutputs = this.analyze.processStrings(pattern, variants);
+            outputs = this.analyze.processStrings(pattern, variants);
         } else {
-            weightedOutputs = this.analyze.processStrings(pattern, noWorseThan, variants);
+            outputs = this.analyze.processStrings(pattern, noWorseThan, variants);
         }        
         
         String expectedVariant;
@@ -3093,16 +3095,16 @@ public class AnalyzeTest {
         AtomicInteger counter = new AtomicInteger(0);
         int mismatches = 0;
         
-        if ( expected.isEmpty() && weightedOutputs.size() > 0 ) {
+        if ( expected.isEmpty() && outputs.size() > 0 ) {
             fail("No variants expected!");
         }
         
-        while ( weightedOutputs.next() && ( counter.get() < expected.size() ) ) {
+        while ( outputs.next() && ( counter.get() < expected.size() ) ) {
             
-            if ( weightedOutputs.isCurrentMuchBetterThanNext() ) {
+            if ( outputs.isCurrentMuchBetterThanNext() ) {
                 
                 expectedVariant = expected.get(counter.getAndIncrement());
-                actualVariant = weightedOutputs.current().input();
+                actualVariant = outputs.current().input();
                 
                 if ( actualVariant.equalsIgnoreCase(expectedVariant) ) {
                     reports.add(format("\n%s variant matches expected: %s", counter.get() - 1, expectedVariant));
@@ -3114,7 +3116,7 @@ public class AnalyzeTest {
                             "\n    actual   : %s", counter.get() - 1, expectedVariant, actualVariant));
                 }
             } else {            
-                nextSimilarVariants = weightedOutputs.nextSimilarSublist();
+                nextSimilarVariants = outputs.nextSimilarSublist();
                 for (Output weightedVariant : nextSimilarVariants) {
                     actualVariant = weightedVariant.input();
                     
@@ -3144,11 +3146,11 @@ public class AnalyzeTest {
             reports.add("\n === Diff with expected === ");
         }
         
-        if ( weightedOutputs.size() > expected.size() ) {
+        if ( outputs.size() > expected.size() ) {
             int offset = expected.size();
             String presentButNotExpectedVariant;
-            for (int i = offset; i < weightedOutputs.size(); i++) {
-                presentButNotExpectedVariant = weightedOutputs.get(i).input();
+            for (int i = offset; i < outputs.size(); i++) {
+                presentButNotExpectedVariant = outputs.get(i).input();
                 presentButNotExpectedLine = format("\n %s", presentButNotExpectedVariant);
                 if ( ! presentButNotExpected.contains(presentButNotExpectedLine) ) {
                     presentButNotExpected.add(presentButNotExpectedLine);
@@ -3189,14 +3191,14 @@ public class AnalyzeTest {
     
     private String collectVariantsToReport() {
         List<String> variantsWithWeight = new ArrayList<>();
-        weightedOutputs.resetTraversing();
+        outputs.resetTraversing();
 
-        while ( weightedOutputs.next() ) {
-            if ( weightedOutputs.isCurrentMuchBetterThanNext() ) {
-                variantsWithWeight.add("\n" + weightedOutputs.current().input() + " is much better than next: " + weightedOutputs.current().weight());
+        while ( outputs.next() ) {
+            if ( outputs.isCurrentMuchBetterThanNext() ) {
+                variantsWithWeight.add("\n" + outputs.current().input() + " is much better than next: " + outputs.current().weight());
             } else {
                 variantsWithWeight.add("\nnext candidates are similar: ");                
-                weightedOutputs
+                outputs
                         .nextSimilarSublist()
                         .forEach(output -> {
                             variantsWithWeight.add("\n  - " + output.input() + " : " + output.weight());

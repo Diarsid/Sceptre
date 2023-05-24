@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Optional;
 
 import diarsid.sceptre.api.Analyze;
-import diarsid.sceptre.api.AnalyzeBuilder;
 import diarsid.sceptre.api.WeightEstimate;
 import diarsid.sceptre.api.model.Input;
 import diarsid.sceptre.api.model.Output;
@@ -26,14 +25,14 @@ import static diarsid.support.strings.StringUtils.lower;
 
 public class AnalyzeImpl implements Analyze {
 
-    public static final Version VERSION = new Version("1.3.10");
+    public static final Version VERSION = new Version("1.4.0");
 
     private final GuardedPool<AnalyzeUnit> analyzeUnitsPool;
 
     private final Logging log;
     
     public AnalyzeImpl(AnalyzeBuilder builder) {
-        Pools pools = builder.getPools();
+        Pools pools = builder.pools();
         this.log = new Logging(builder);
 
         GuardedPool<Cluster> clusterPool = pools.createPool(
@@ -101,68 +100,6 @@ public class AnalyzeImpl implements Analyze {
         }
     }
     
-    private Float weightStringInternally(
-            String pattern, String target) {
-        
-        AnalyzeUnit analyze = this.analyzeUnitsPool.give();
-        try {
-            analyze.set(pattern, target);
-            if ( analyze.isVariantEqualsPattern() ) {
-                return analyze.weight.sum();
-            }
-            analyze.checkIfVariantTextContainsPatternDirectly();
-            analyze.findWordsAndPathAndTextSeparators();
-            analyze.setPatternCharsAndPositions();
-            analyze.findPatternCharsPositions();
-//            analyze.checkUnsortedPositionsNormality();
-            analyze.logUnsortedPositions();
-            analyze.sortPositions();
-            analyze.findPositionsClusters();
-            analyze.areAllPositionsPresentSortedAndNotPathSeparatorsBetween();
-            analyze.ifSingleWordAbbreviation();
-
-            if ( analyze.ifClustersPresentButWeightTooBad() ) {
-                log.add(BASE, "  %s is too bad.", analyze.variant);
-                return WeightEstimate.TOO_BAD;
-            }
-
-            if ( analyze.areTooMuchPositionsMissed() ) {
-                return WeightEstimate.TOO_BAD;
-            }
-
-            analyze.calculateClustersImportance();
-            analyze.isFirstCharMatchInVariantAndPattern(pattern);
-            analyze.calculateWeight();  
-            analyze.logState();
-
-            if ( analyze.isVariantTooBad() ) {
-                log.add(BASE, "%s is too bad.", analyze.variant);
-                return WeightEstimate.TOO_BAD;
-            }
-            
-            return analyze.weight.sum();
-        }
-        finally {
-            this.analyzeUnitsPool.takeBack(analyze);
-        }
-    }
-
-    private static void indexing(List<? extends Indexable> inputs) {
-        if ( inputs.isEmpty() ) {
-            return;
-        }
-
-        boolean isIndexed = inputs.get(0).index() == 0;
-
-        if ( isIndexed ) {
-            return;
-        }
-
-        for ( int i = 0; i < inputs.size(); i++ ) {
-            inputs.get(i).setIndex(i);
-        }
-    }
-    
     @Override
     public Outputs processInputs(String pattern, List<Input> inputs) {
         List<Output> weightedVariants = this.processInputsToList(pattern, inputs);
@@ -200,6 +137,71 @@ public class AnalyzeImpl implements Analyze {
         return this.weightInputsListInternally(
                 pattern, noWorseThan, stringsToInputs(strings));
     }
+
+    private Float weightStringInternally(
+            String pattern, String target) {
+
+        AnalyzeUnit analyze = this.analyzeUnitsPool.give();
+
+        this.log.begins();
+        try {
+            analyze.set(pattern, target);
+            if ( analyze.isVariantEqualsPattern() ) {
+                return analyze.weight.sum();
+            }
+            analyze.checkIfVariantTextContainsPatternDirectly();
+            analyze.findWordsAndPathAndTextSeparators();
+            analyze.setPatternCharsAndPositions();
+            analyze.findPatternCharsPositions();
+//            analyze.checkUnsortedPositionsNormality();
+            analyze.logUnsortedPositions();
+            analyze.sortPositions();
+            analyze.findPositionsClusters();
+            analyze.areAllPositionsPresentSortedAndNotPathSeparatorsBetween();
+            analyze.ifSingleWordAbbreviation();
+
+            if ( analyze.ifClustersPresentButWeightTooBad() ) {
+                log.add(BASE, "  %s is too bad.", analyze.variant);
+                return WeightEstimate.TOO_BAD;
+            }
+
+            if ( analyze.areTooMuchPositionsMissed() ) {
+                return WeightEstimate.TOO_BAD;
+            }
+
+            analyze.calculateClustersImportance();
+            analyze.isFirstCharMatchInVariantAndPattern(pattern);
+            analyze.calculateWeight();
+            analyze.logState();
+
+            if ( analyze.isVariantTooBad() ) {
+                log.add(BASE, "%s is too bad.", analyze.variant);
+                return WeightEstimate.TOO_BAD;
+            }
+
+            return analyze.weight.sum();
+        }
+        finally {
+            this.log.finished();
+            this.analyzeUnitsPool.takeBack(analyze);
+        }
+    }
+
+    private static void indexing(List<? extends Indexable> inputs) {
+        if ( inputs.isEmpty() ) {
+            return;
+        }
+
+        boolean isIndexed = inputs.get(0).index() == 0;
+
+        if ( isIndexed ) {
+            return;
+        }
+
+        for ( int i = 0; i < inputs.size(); i++ ) {
+            inputs.get(i).setIndex(i);
+        }
+    }
     
     private List<Output> weightInputsListInternally(
             String pattern, String noWorseThan, List<Input> inputs) {
@@ -225,14 +227,15 @@ public class AnalyzeImpl implements Analyze {
         
         float minWeight = MAX_VALUE;
         float maxWeight = MIN_VALUE;
-        
+
+        this.log.begins();
         try {
             RealOutput output;
             variantsWeighting: for (InputIndexable input : inputs) {
                 variantText = input.string();
                 
                 log.add(BASE, "");
-                log.add(BASE, "===== ANALYZE : %s ( %s ) ===== ", variantText, pattern);
+                log.add(BASE, "===== Pattern:'%s' Input:'%s' ===== ", pattern, variantText);
 
                 analyzeUnit.set(pattern, variantText);
 
@@ -295,21 +298,21 @@ public class AnalyzeImpl implements Analyze {
                 
                 analyzeUnit.clearForReuse();
             }
+        
+            sort(weightedOutputs);
+
+            indexing(weightedOutputs);
+
+            this.log.add(BASE, "outputs qty: " + weightedOutputs.size());
+
+            for ( int i = 0; i < weightedOutputs.size(); i++ ) {
+                output = weightedOutputs.get(i);
+                this.log.add(BASE, "    %.3f : %s", output.weight(), output.input());
+            }
         }
         finally {
+            this.log.finished();
             this.analyzeUnitsPool.takeBack(analyzeUnit);
-        }
-        
-        sort(weightedOutputs);
-
-        indexing(weightedOutputs);
-
-        this.log.add(BASE, "weightedVariants qty: " + weightedOutputs.size());
-
-        Output output;
-        for ( int i = 0; i < weightedOutputs.size(); i++ ) {
-            output = weightedOutputs.get(i);
-            this.log.add(BASE, "%.3f : %s", output.weight(), output.input());
         }
 
         Object list = weightedOutputs;

@@ -1,20 +1,21 @@
-package diarsid.sceptre.api;
+package diarsid.sceptre.impl;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import diarsid.sceptre.impl.AnalyzeImpl;
+import diarsid.sceptre.api.Analyze;
+import diarsid.sceptre.api.LogSink;
+import diarsid.sceptre.api.LogType;
+import diarsid.sceptre.api.util.LineByLineLogSink;
 import diarsid.support.objects.Pools;
 
 import static java.util.Objects.isNull;
 
-import static diarsid.support.objects.Pools.pools;
-
-public class AnalyzeBuilder {
+public class AnalyzeBuilder implements Analyze.Builder {
 
     private Pools pools;
-    private Consumer<String> logDelegate;
+    private LogSink logSink;
     private boolean logEnabled;
     private Map<LogType, Boolean> enabledByLogType;
 
@@ -26,16 +27,25 @@ public class AnalyzeBuilder {
         return this;
     }
 
-    public AnalyzeBuilder withLogDelegate(Consumer<String> logDelegate) {
-        this.logDelegate = logDelegate;
+    @Override
+    public AnalyzeBuilder withLogSink(LogSink logSink) {
+        this.logSink = logSink;
         return this;
     }
 
+    @Override
+    public AnalyzeBuilder withLogSink(Consumer<String> lineByLineLogConsume) {
+        this.logSink = new LineByLineLogSink(lineByLineLogConsume);
+        return this;
+    }
+
+    @Override
     public AnalyzeBuilder withLogEnabled(boolean logEnabled) {
         this.logEnabled = logEnabled;
         return this;
     }
 
+    @Override
     public AnalyzeBuilder withEnabledByLogType(Map<LogType, Boolean> enabledByLogType) {
         if ( isNull(this.enabledByLogType) ) {
             this.enabledByLogType = enabledByLogType;
@@ -47,6 +57,7 @@ public class AnalyzeBuilder {
         return this;
     }
 
+    @Override
     public AnalyzeBuilder withLogTypeEnabled(LogType logType, boolean enabled) {
         if ( isNull(this.enabledByLogType) ) {
             this.enabledByLogType = new HashMap<>();
@@ -57,13 +68,10 @@ public class AnalyzeBuilder {
         return this;
     }
 
+    @Override
     public Analyze build() {
         if ( isNull(this.pools) ) {
-            this.pools = pools();
-        }
-
-        if ( isNull(this.logDelegate) ) {
-            this.logDelegate = System.out::println;
+            this.pools = Pools.pools();
         }
 
         if ( isNull(this.enabledByLogType) ) {
@@ -76,22 +84,28 @@ public class AnalyzeBuilder {
             }
         }
 
+        if ( isNull(this.logSink) ) {
+            if ( this.logEnabled ) {
+                this.logSink = System.out::println;
+            }
+        }
+
         return new AnalyzeImpl(this);
     }
 
-    public Pools getPools() {
+    public Pools pools() {
         return this.pools;
     }
 
-    public Consumer<String> getLogDelegate() {
-        return this.logDelegate;
+    public LogSink logSink() {
+        return this.logSink;
     }
 
     public boolean isLogEnabled() {
         return this.logEnabled;
     }
 
-    public Map<LogType, Boolean> getEnabledByLogType() {
+    public Map<LogType, Boolean> enabledByLogType() {
         return this.enabledByLogType;
     }
 }

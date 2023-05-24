@@ -14,10 +14,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import diarsid.sceptre.api.Analyze;
-import diarsid.sceptre.api.AnalyzeBuilder;
 import diarsid.sceptre.api.model.Output;
 import diarsid.sceptre.api.model.Outputs;
-import diarsid.sceptre.api.model.Variant;
 import diarsid.support.objects.GuardedPool;
 
 import static java.lang.String.format;
