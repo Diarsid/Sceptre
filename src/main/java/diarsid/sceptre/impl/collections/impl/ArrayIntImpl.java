@@ -81,7 +81,11 @@ public class ArrayIntImpl implements ArrayInt {
         this.size = size;
 
         if ( size > this.array.length ) {
-            this.array = new int[this.array.length + DEFAULT_ARRAY_SIZE];
+            int newTechnicalSize = this.array.length;
+            while ( newTechnicalSize < size ) {
+                newTechnicalSize = newTechnicalSize + DEFAULT_ARRAY_SIZE;
+            }
+            this.array = new int[newTechnicalSize];
         }
 
         Arrays.fill(this.array, 0, this.size, INT_NOT_SET);
@@ -174,6 +178,16 @@ public class ArrayIntImpl implements ArrayInt {
                 j--;
             }
         }
+    }
+
+    @Override
+    public void copy(ArrayInt other) {
+        this.clear();
+        this.setSize(other.size());
+
+        ArrayIntImpl otherImpl = (ArrayIntImpl) other;
+
+        System.arraycopy(otherImpl.array, 0, this.array, 0, this.size);
     }
 
     @Override

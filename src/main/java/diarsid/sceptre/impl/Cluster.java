@@ -35,6 +35,7 @@ class Cluster extends PooledReusable implements Comparable<Cluster> {
     private int teardown;
     private boolean rejected;
     private boolean joinedCluster;
+    private boolean misplaced;
 
     Cluster(Logging log) {
         super();
@@ -54,6 +55,7 @@ class Cluster extends PooledReusable implements Comparable<Cluster> {
         this.teardown = 0;
         this.rejected = false;
         this.joinedCluster = false;
+        this.misplaced = false;
     }
     
     void set(
@@ -181,6 +183,14 @@ class Cluster extends PooledReusable implements Comparable<Cluster> {
 
     boolean isJoinedClusters() {
         return this.joinedCluster;
+    }
+
+    boolean isMisplaced() {
+        return this.misplaced;
+    }
+
+    void markAsMisplaced() {
+        this.misplaced = true;
     }
 
     boolean isStartOf(WordInVariant word) {
@@ -353,6 +363,7 @@ class Cluster extends PooledReusable implements Comparable<Cluster> {
         this.teardown = 0;
         this.rejected = false;
         this.joinedCluster = false;
+        this.misplaced = misplaced;
     }
 
     @Override

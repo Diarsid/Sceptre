@@ -268,6 +268,18 @@ class Clusters implements StatefulClearable {
         }
         return previousCluster;
     }
+
+    Cluster clusterOfPositionOrNull(int variantPosition) {
+        Cluster cluster;
+        for (int i = this.clusters.size() - 1; i > -1; i--) {
+            cluster = this.clusters.get(i);
+            if ( cluster.contains(variantPosition) ) {
+                return cluster;
+            }
+        }
+
+        return null;
+    }
     
     boolean isEmpty() {
         return this.clusters.isEmpty();

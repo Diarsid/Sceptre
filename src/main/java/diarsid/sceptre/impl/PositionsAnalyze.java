@@ -158,7 +158,8 @@ class PositionsAnalyze {
     /* DEBUG UTIL */ }
     
     final AnalyzeUnit data;
-    
+
+    final ArrayInt originalPositions;
     final ArrayInt positions;
     
     int clustersQty;
@@ -223,6 +224,9 @@ class PositionsAnalyze {
     final ListInt extractedMissedRepeatedPositionsIndexes = new ListIntImpl();
     final ListChar missedRepeatedChars = new ListCharImpl();
     final ListInt missedRepeatedPositions = new ListIntImpl();
+
+    private final ListInt misplacingCheckVariantPositionsInPatternGap = new ListIntImpl();
+    private final List<Cluster> misplacingCheckClustersInPatternGap = new ArrayList<>();
     
     // v.3
     final MapIntInt positionUnsortedOrders = new MapIntIntImpl();
@@ -275,6 +279,7 @@ class PositionsAnalyze {
             AnalyzeUnit data, 
             Clusters clusters, 
             PositionCandidate positionCandidate) {
+        this.originalPositions = new ArrayIntImpl();
         this.positions = new ArrayIntImpl();
         this.data = data;
         this.clusters = clusters;
@@ -2642,6 +2647,19 @@ class PositionsAnalyze {
                 List<Cluster> clustersInWord = this.clusters.chosenInWord();
                 int spanInWord = -1;
 
+                if ( clustersInWord.size() > 1 ) {
+                    boolean hasMisplaced = this.checkOnMisplacing(word, clustersInWord);
+
+                    if ( hasMisplaced ) {
+                        for ( int i = 0; i < clustersInWord.size(); i++ ) {
+                            if ( clustersInWord.get(i).isMisplaced() ) {
+                                clustersInWord.remove(i);
+                                i--;
+                            }
+                        }
+                    }
+                }
+
                 Cluster cluster;
                 if ( clustersInWord.isEmpty() ) {
                     int singlePositionsInWordCount = word.intersections(this.singlePositions.filled());
@@ -3444,6 +3462,70 @@ class PositionsAnalyze {
         }
         return false;
     }
+
+    private boolean checkOnMisplacing(WordInVariant word, List<Cluster> clustersInWord) {
+        data.log.add(POSITIONS_CLUSTERS, "          [clusters misplacing check]");
+
+        Cluster clusterPrev = clustersInWord.get(0);
+        Cluster cluster;
+
+        int gapInPatternFirstIndex;
+        int gapInPatternLastIndex;
+
+        int variantPositionOfPatternGap;
+        int variantPosition;
+
+        Cluster clusterInGap;
+
+        boolean hasMisplaced = false;
+
+        for ( int i = 1; i < clustersInWord.size(); i++ ) {
+            cluster = clustersInWord.get(i);
+
+            gapInPatternFirstIndex = this.patternIndexesByVariantPosition.get(clusterPrev.lastPosition()) + 1;
+            gapInPatternLastIndex = this.patternIndexesByVariantPosition.get(cluster.firstPosition()) - 1;
+
+            if ( gapInPatternFirstIndex == gapInPatternLastIndex ) {
+                continue;
+            }
+
+            data.log.add(POSITIONS_CLUSTERS, "             [clusters] %s  <--->  %s", clusterPrev, cluster);
+
+            for ( int iPatternGap = gapInPatternFirstIndex; iPatternGap <= gapInPatternLastIndex; iPatternGap++ ) {
+                variantPositionOfPatternGap = this.originalPositions.i(iPatternGap);
+                if ( variantPositionOfPatternGap != POS_UNINITIALIZED && variantPositionOfPatternGap != POS_NOT_FOUND ) {
+                    this.misplacingCheckVariantPositionsInPatternGap.add(variantPositionOfPatternGap);
+                }
+            }
+
+            if ( this.misplacingCheckVariantPositionsInPatternGap.isNotEmpty() ) {
+                data.log.add(POSITIONS_CLUSTERS, "                in-between positions : %s", misplacingCheckVariantPositionsInPatternGap);
+                for ( int j = 0; j < this.misplacingCheckVariantPositionsInPatternGap.size(); j++ ) {
+                    variantPosition = this.misplacingCheckVariantPositionsInPatternGap.get(j);
+                    clusterInGap = this.clusters.clusterOfPositionOrNull(variantPosition);
+                    if ( nonNull(clusterInGap) ) {
+                        if ( ! this.misplacingCheckClustersInPatternGap.contains(clusterInGap) ) {
+                            this.misplacingCheckClustersInPatternGap.add(clusterInGap);
+                        }
+                    }
+                }
+
+                if ( ! this.misplacingCheckClustersInPatternGap.isEmpty() ) {
+                    data.log.add(POSITIONS_CLUSTERS, "                in-between clusters  : %s", misplacingCheckClustersInPatternGap);
+                    cluster.markAsMisplaced();
+                    hasMisplaced = true;
+                    data.log.add(POSITIONS_CLUSTERS, "             %s is marked as misplaced!", cluster);
+                }
+            }
+
+            clusterPrev = cluster;
+
+            this.misplacingCheckVariantPositionsInPatternGap.clear();
+            this.misplacingCheckClustersInPatternGap.clear();
+        }
+
+        return hasMisplaced;
+    }
     
     void processClusterPositionOrderStats() {  
         int currentPositionUnsortedOrder = this.positionUnsortedOrders.get(this.currentPosition);
@@ -3750,6 +3832,7 @@ class PositionsAnalyze {
     }
     
     final void clearPositionsAnalyze() {
+        this.originalPositions.clear();
         this.positions.clear();
         this.missed = 0;
         this.clustersQty = 0;
@@ -3807,6 +3890,8 @@ class PositionsAnalyze {
         this.garbagePatternPositions.clear();
         this.currentClusterIsRejected = false;
         this.currentClusterWordStartFound = false;
+        this.misplacingCheckVariantPositionsInPatternGap.clear();
+        this.misplacingCheckClustersInPatternGap.clear();
     }
     
     boolean previousCharInVariantInClusterWithCurrentChar(int currentPatternCharIndex) {
@@ -3851,6 +3936,7 @@ class PositionsAnalyze {
                 notFoundOrderOffset++;
             }
         }
+        this.originalPositions.copy(this.positions);
         this.positions.sort(STRAIGHT);
     }
 

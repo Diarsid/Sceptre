@@ -23,4 +23,6 @@ public interface ArrayInt extends Ints {
     IntStream stream();
 
     void sort(Sort sort);
+
+    void copy(ArrayInt other);
 }
