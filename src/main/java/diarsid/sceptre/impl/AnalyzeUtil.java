@@ -92,7 +92,17 @@ class AnalyzeUtil {
         float ci;
         int clusteredPercent = percentAsInt(clustered, clustered + nonClustered);
         if ( clustersQty < CLUSTER_QTY_TRESHOLD ) {
-            ci = clusteredPercent * clustered * (CLUSTER_QTY_TRESHOLD - clustersQty) / 10f;
+            float multuplier = 1;
+            if ( clustersQty == 1 ) {
+                multuplier = 1.4f;
+            }
+            else if ( clustersQty == 2 ) {
+                multuplier = 1.2f;
+            }
+            else if ( clustersQty == 3 ) {
+                multuplier = 1;
+            }
+            ci = clusteredPercent * clustered * multuplier / 10f;
         } else {
             ci = clusteredPercent * clustered * 0.8f / 10f;
         } 
@@ -171,7 +181,7 @@ class AnalyzeUtil {
 //        }
     }
 
-    static int cubeUpTo5AddSquareIfOver(int x) {
+    static int cubeUpTo5AddSquareIfOver_2(int x) {
         if ( x < 5 ) {
             return cube(x) + square(x-2);
         }
@@ -180,6 +190,18 @@ class AnalyzeUtil {
         }
 
         return cube(4) + square(x+1);
+    }
+
+    static int cubeUpTo5AddSquareIfOver(int x) {
+        return square(x);
+//        if ( x < 5 ) {
+//            return square(x) + square(x-2);
+//        }
+//        else if ( x == 5 ) {
+//            return square(4) + square(x);
+//        }
+//
+//        return square(4) + square(x+1);
     }
 
     public static void main(String[] args) {

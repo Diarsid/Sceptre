@@ -5,4 +5,5 @@ module diarsid.sceptre {
 
     exports diarsid.sceptre.api;
     exports diarsid.sceptre.api.model;
+    exports diarsid.sceptre.api.util;
 }

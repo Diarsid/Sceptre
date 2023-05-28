@@ -14,6 +14,8 @@ public interface ListInt extends Ints {
 
     int min();
 
+    int sum();
+
     void add(int element);
 
     void add(int index, int element);

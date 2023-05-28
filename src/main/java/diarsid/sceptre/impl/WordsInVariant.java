@@ -238,6 +238,20 @@ public class WordsInVariant implements StatefulClearable {
         return this.all.get(word.index + 1);
     }
 
+    public WordsInRange wordsOfOrNull(Cluster cluster) {
+        var words = wordsOfRange(cluster.firstPosition(), cluster.length());
+
+        if ( words.areEmpty() ) {
+            this.usedWordsInRanges.remove(this.usedWordsInRanges.size() - 1);
+            this.wordsInRangePool.takeBack(words);
+
+            return null;
+        }
+        else {
+            return words;
+        }
+    }
+
     public WordsInRange allDependentAfterOrNull(WordInVariant independentWord) {
         if ( independentWord.placing.is(DEPENDENT) ) {
             throw new IllegalArgumentException();

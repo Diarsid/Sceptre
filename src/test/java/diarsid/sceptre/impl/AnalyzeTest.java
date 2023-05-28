@@ -240,11 +240,7 @@ public class AnalyzeTest {
                 "Books/Tech/Java");
         
         expected = asList( 
-                "Books/Tech/Java",
-                "Tech",
-                "Books/tech",
-                "Books/Tech/Design", 
-                "Tech/langs");
+                "Books/Tech/Java");
         
         weightVariantsAndCheckMatching();
     }
@@ -432,7 +428,7 @@ public class AnalyzeTest {
                 "dev/sql_developer"
         );
         
-        expectedSameOrderAsVariants();
+        expected = asList("Tools/Servers/Data_Servers/MySQL");
         
         weightVariantsAndCheckMatching();
     }
@@ -1064,8 +1060,7 @@ public class AnalyzeTest {
                 "Books/Tech/Java");
         
         expected = asList( 
-                "Books/Tech/Java",
-                "Tech/langs");
+                "Books/Tech/Java");
         
         weightVariantsAndCheckMatching();
     }
@@ -1671,6 +1666,7 @@ public class AnalyzeTest {
                 "Tools_aaaaa",
                 "Tools_looking",
                 "to_low_losing",
+                "tolkien_lost",
                 "book_tolstoy"
                 );
 
@@ -1865,15 +1861,12 @@ public class AnalyzeTest {
 
         variants = asList(
                 "D:/DEV/1__Projects/UkrPoshta/UkrposhtaStatusNotificationService",
-                "D:/DEV/1__Projects/UkrPoshta/UkrposhtaStatusNotificationServiceClient"
-                ,
+                "D:/DEV/1__Projects/UkrPoshta/UkrposhtaStatusNotificationServiceClient",
                 "D:/DEV/1__Projects/UkrPoshta/UkrposhtaStatusNotificationGenerator"
         );
 
         expected = asList(
-                "D:/DEV/1__Projects/UkrPoshta/UkrposhtaStatusNotificationServiceClient",
-                "D:/DEV/1__Projects/UkrPoshta/UkrposhtaStatusNotificationService",
-                "D:/DEV/1__Projects/UkrPoshta/UkrposhtaStatusNotificationGenerator");
+                "D:/DEV/1__Projects/UkrPoshta/UkrposhtaStatusNotificationServiceClient");
 
         weightVariantsAndCheckMatching();
     }
@@ -2145,6 +2138,36 @@ public class AnalyzeTest {
         
         expectedSameOrderAsVariants();
         
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_projectsUkrPoshta_poshtapiukr() {
+        pattern = "poshtapiukr";
+
+        variants = asList(
+                "Projects/UkrPoshta/UkrPostAPI",
+                "Projects/UkrPoshta/CainiaoAPI",
+                "Projects/UkrPoshta");
+
+        expected = asList(
+                "Projects/UkrPoshta/UkrPostAPI",
+                "Projects/UkrPoshta/CainiaoAPI",
+                "Projects/UkrPoshta"
+        );
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_projectsUkrPoshta_poshtapiukr_2() {
+        pattern = "poshtapiukr";
+
+        variants = asList(
+                "D:/DEV/1__Projects/UkrPoshta/UkrPoshta_API");
+
+        expectedSameOrderAsVariants();
+
         weightVariantsAndCheckMatching();
     }
     
@@ -2755,8 +2778,7 @@ public class AnalyzeTest {
         pattern = "godmnwar";
 
         variants = asList(
-                "The Wars of Gods and Men: Book III of the Earth Chronicles (The Earth Chronicles) by Zecharia Sitchin",
-                "On Killing: The Psychological Cost of Learning to Kill in War and Society by Dave Grossman");
+                "The Wars of Gods and Men: Book III of the Earth Chronicles (The Earth Chronicles) by Zecharia Sitchin");
 
         expectedSameOrderAsVariants();
 

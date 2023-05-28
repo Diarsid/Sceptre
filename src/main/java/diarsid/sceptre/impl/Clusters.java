@@ -117,6 +117,29 @@ class Clusters implements StatefulClearable {
             this.clusters.add(cluster);
         }
     }
+
+    void acceptProcessedAsJoined(Cluster cluster, List<Cluster> joinedClusters) {
+        if ( this.arranged ) {
+            throw new IllegalStateException(
+                    "It is forbidden to add next cluster after arrengement!");
+        }
+
+        if ( cluster.isRejected() ) {
+            throw new IllegalStateException(
+                    "Adding rejected cluster as joined!");
+        }
+        else {
+            Cluster joinedCluster;
+            for ( int i = 0; i < joinedClusters.size(); i++ ) {
+                joinedCluster = joinedClusters.get(i);
+                this.lastAdded.resetTo(joinedCluster);
+                this.clusters.add(joinedCluster);
+            }
+
+            this.clustersTakenFromPool.remove(cluster);
+            this.clusterPool.takeBack(cluster);
+        }
+    }
     
     List<Cluster> all() {
         return this.clusters;

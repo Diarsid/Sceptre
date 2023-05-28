@@ -101,6 +101,16 @@ public class ListIntImpl implements ListInt {
     }
 
     @Override
+    public int sum() {
+        int sum = 0;
+        for ( int i = 0; i < this.size; i++ ) {
+            sum = sum + this.array[i];
+        }
+
+        return sum;
+    }
+
+    @Override
     public void add(int element) {
         if ( this.array.length == this.size ) {
             extend();

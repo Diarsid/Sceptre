@@ -3,6 +3,7 @@ package diarsid.sceptre.impl;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import diarsid.sceptre.impl.collections.ArrayInt;
@@ -100,6 +101,10 @@ public class WordInVariant extends PooledReusable {
 
     public void complete() {
         completed = true;
+    }
+
+    public boolean isEqualTo(Cluster cluster) {
+        return this.startIndex == cluster.firstPosition() && this.length == cluster.length();
     }
 
     public boolean hasSameWord(WordInVariant other) {
@@ -411,5 +416,21 @@ public class WordInVariant extends PooledReusable {
                 ", length=" + length +
                 ", completed=" + completed +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof WordInVariant)) return false;
+        WordInVariant word = (WordInVariant) o;
+        return index == word.index &&
+                startIndex == word.startIndex &&
+                endIndex == word.endIndex &&
+                placing == word.placing;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(index, startIndex, endIndex, placing);
     }
 }

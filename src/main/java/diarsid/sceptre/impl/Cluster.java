@@ -10,19 +10,17 @@ import diarsid.support.objects.PooledReusable;
 
 import static java.lang.Math.abs;
 import static java.lang.String.format;
+import static java.lang.String.join;
 
 import static diarsid.sceptre.api.LogType.POSITIONS_CLUSTERS;
 import static diarsid.sceptre.impl.collections.Ints.sumInts;
 
-class Cluster 
-        extends 
-                PooledReusable 
-        implements 
-                Comparable<Cluster> {
+class Cluster extends PooledReusable implements Comparable<Cluster> {
 
     private final Logging log;
     private final ListInt repeats;
     private final ListInt repeatQties;
+
     private int firstPosition;
     private int patternLength;
     private int length;
@@ -36,6 +34,7 @@ class Cluster
     private int compensationSum;
     private int teardown;
     private boolean rejected;
+    private boolean joinedCluster;
 
     Cluster(Logging log) {
         super();
@@ -54,6 +53,7 @@ class Cluster
         this.compensationSum = 0;
         this.teardown = 0;
         this.rejected = false;
+        this.joinedCluster = false;
     }
     
     void set(
@@ -67,7 +67,8 @@ class Cluster
             int shifts, 
             boolean haveCompensation,
             int compensationSum,
-            boolean rejected) {
+            boolean rejected,
+            boolean joinedCluster) {
         this.firstPosition = firstPosition;
         this.patternLength = patternLength;
         this.length = length;
@@ -79,6 +80,7 @@ class Cluster
         this.ordersDiffHaveCompensation = haveCompensation;
         this.compensationSum = compensationSum;
         this.rejected = rejected;
+        this.joinedCluster = joinedCluster;
     }
     
     ListInt repeats() {
@@ -175,6 +177,16 @@ class Cluster
 
     boolean isRejected() {
         return this.rejected;
+    }
+
+    boolean isJoinedClusters() {
+        return this.joinedCluster;
+    }
+
+    boolean isStartOf(WordInVariant word) {
+        int lastPosition = this.lastPosition();
+
+        return this.firstPosition == word.startIndex && lastPosition < word.endIndex;
     }
 
     boolean intersectsWith(WordInVariant word) {
@@ -340,6 +352,7 @@ class Cluster
         this.compensationSum = 0;
         this.teardown = 0;
         this.rejected = false;
+        this.joinedCluster = false;
     }
 
     @Override
