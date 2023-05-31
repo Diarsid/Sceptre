@@ -2170,6 +2170,8 @@ public class AnalyzeTest {
 
         weightVariantsAndCheckMatching();
     }
+
+    // TODO ukrposhtarchiv : d:/dev/1__projects/ukrposhta/ukrposhtastatustracking
     
     @Test
     public void test_PriceAPICase_pricapi() {
@@ -2215,6 +2217,8 @@ public class AnalyzeTest {
         
         weightVariantsAndCheckMatching();
     }
+
+    // TODO progsloclscl : freedom of contract and paternalism: prospects and limits of an economic approach (perspectives from social economics) by péter cserne
     
     @Test
     public void test_WinampCase_() {
@@ -2847,6 +2851,30 @@ public class AnalyzeTest {
         expectedSameOrderAsVariants();
 
         weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_progsloclscl() {
+        pattern = "progsloclscl";
+
+        variants = asList(
+                "D:/SOUL/Programs/Locally/Social");
+
+        expectedSameOrderAsVariants();
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_solmnmies() {
+        pattern = "solmnmies";
+
+        variants = asList(
+                "King Solomon's Mines (Allan Quatermain #1) by H. Rider Haggard");
+
+        expectedSameOrderAsVariants();
+
+        weightVariantsAndCheckMatching(); // TODO
     }
     
     @Test

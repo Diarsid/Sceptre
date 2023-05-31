@@ -46,6 +46,8 @@ import static diarsid.sceptre.impl.MatchType.MATCH_DIRECTLY;
 import static diarsid.sceptre.impl.MatchType.MATCH_TYPO_LOOP;
 import static diarsid.sceptre.impl.MatchType.MATCH_TYPO_NEXT_IN_PATTERN_PREVIOUS_IN_VARIANT;
 import static diarsid.sceptre.impl.MatchType.MATCH_TYPO_PREVIOUS_IN_PATTERN_PREVIOUSx2_IN_VARIANT;
+import static diarsid.sceptre.impl.WordInVariant.Placing.DEPENDENT;
+import static diarsid.sceptre.impl.WordInVariant.Placing.INDEPENDENT;
 import static diarsid.support.misc.MathFunctions.absDiff;
 
 class ClusterStepTwo {
@@ -511,6 +513,27 @@ class ClusterStepTwo {
         }
     }
 
+    int rejectCandidatesBelongingByPatternToOtherWords(WordInVariant word) {
+        WordInVariant wordOfCandidate;
+        int patternPosition;
+        int variantPosition;
+        int rejectedCount = 0;
+        for ( int i = 0; i < this.fillingsInPattern.size(); i++ ) {
+            if ( this.fillingsInPattern.get(i) ) {
+                patternPosition = this.patternPositions.get(i);
+                variantPosition = this.analyze.positions.i(patternPosition);
+                wordOfCandidate = this.analyze.data.wordsInVariant.wordOf(variantPosition);
+                if ( wordOfCandidate.index != word.index ) {
+                    rejectedCount++;
+                    this.remove(i);
+                    i--;
+                }
+            }
+        }
+
+        return rejectedCount;
+    }
+
     boolean hasBackwardTypos() {
         int position;
         for ( int i = 0; i < this.variantPositions.size(); i++ ) {
@@ -672,8 +695,8 @@ class ClusterStepTwo {
                 this.matchStrength = this.matchStrength + matchType.strength();
                 this.analyze.data.log.add(
                         POSITIONS_SEARCH,
-                        "          [info] positions-in-cluster '%s' pattern:%s, variant:%s, included: %s, %s, candidate:%s",
-                        c, patternPosition, variantPosition, isFilledInVariant, matchType.name(), isCandidate);
+                        "          [info] positions-in-cluster '%s' pattern:%s, variant:%s, included(variant:%s pattern:%s), %s, candidate:%s",
+                        c, patternPosition, variantPosition, isFilledInVariant, isFilledInPattern, matchType.name(), isCandidate);
             }
         }        
     }
@@ -1270,6 +1293,26 @@ class ClusterStepTwo {
                                 return false;
                             }
                             else {
+                                if ( thisType.foundType.is(otherType.foundType) ) {
+                                    if ( thisWord.index != otherWord.index ) {
+                                        WordsInVariant.WordsInRange wordsBefore;
+                                        if ( thisWord.placing.is(INDEPENDENT) && otherWord.placing.is(DEPENDENT) ) {
+                                            wordsBefore = this.analyze.data.wordsInVariant.independentAndDependentWordsBefore(otherWord);
+                                            int intersectionsBefore = wordsBefore.intersections(this.analyze.filledPositions);
+                                            if ( intersectionsBefore > 1 ) {
+                                                return false;
+                                            }
+                                        }
+                                        else if ( thisWord.placing.is(DEPENDENT) && otherWord.placing.is(INDEPENDENT) ) {
+                                            wordsBefore = this.analyze.data.wordsInVariant.independentAndDependentWordsBefore(thisWord);
+                                            int intersectionsBefore = wordsBefore.intersections(this.analyze.filledPositions);
+                                            if ( intersectionsBefore > 1 ) {
+                                                return true;
+                                            }
+                                        }
+                                    }
+                                }
+
                                 if ( thisPositionsWords.independents() > otherPositionsWords.independents() ) {
                                     return true;
                                 }

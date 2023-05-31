@@ -1303,8 +1303,6 @@ class PositionsAnalyze {
                                     variantLookup: for (int jVariant = iVariant; jVariant <= limitVariant; jVariant++) {
                                         variantCh = data.variant.charAt(jVariant);
                                         if ( patternCh == variantCh ) {
-                                            data.log.add(POSITIONS_SEARCH, "          [info] loop-typo found '%s' (variant:%s pattern:%s)",
-                                                    patternCh, jVariant, iPattern);
                                             matches++;
                                             currStepTwoCluster.addAsCandidate(
                                                     patternCh,
@@ -1318,7 +1316,13 @@ class PositionsAnalyze {
                                 }
 
                                 if ( matches > 1 ) {
-                                    currStepTwoCluster.approveCandidates();
+                                    int rejectedCount = currStepTwoCluster.rejectCandidatesBelongingByPatternToOtherWords(currentWord);
+                                    if ( matches - rejectedCount > 1 ) {
+                                        currStepTwoCluster.approveCandidates();
+                                    }
+                                    else {
+                                        currStepTwoCluster.rejectCandidates();
+                                    }
                                 }
                                 else {
                                     currStepTwoCluster.rejectCandidates();

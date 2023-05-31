@@ -214,6 +214,21 @@ public class WordsInVariant implements StatefulClearable {
         throw new IllegalStateException();
     }
 
+    public WordsInRange independentAndDependentWordsBefore(WordInVariant dependentWord) {
+        WordInVariant firstIndependent = this.firstIndependentBefore(dependentWord);
+
+        WordsInRange words = this.wordsInRangePool.give();
+        this.usedWordsInRanges.add(words);
+
+        words.add(firstIndependent);
+
+        for ( int i = firstIndependent.index + 1; i < dependentWord.index; i++ ) {
+            words.add(this.all.get(i));
+        }
+
+        return words;
+    }
+
     public WordInVariant wordOf(int indexInVariant) {
         WordInVariant word = this.wordsByCharInVariantIndex.get(indexInVariant);
         if ( word == null ) {
