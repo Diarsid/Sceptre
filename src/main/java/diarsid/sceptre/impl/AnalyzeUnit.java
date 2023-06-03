@@ -19,6 +19,7 @@ import diarsid.support.objects.PooledReusable;
 import static java.lang.String.format;
 import static java.util.Objects.nonNull;
 import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toCollection;
 
 import static diarsid.sceptre.api.LogType.BASE;
 import static diarsid.sceptre.api.LogType.POSITIONS_CLUSTERS;
@@ -645,5 +646,13 @@ class AnalyzeUnit extends PooledReusable {
                 .mapToObj(POSITION_INT_TO_STRING)
                 .collect(joining(" "));
         log.add(BASE, "  positions before sorting: %s", positionsS);
+    }
+
+    boolean doesPatternContainsCharJustAfter(char c, int patternIndexExcl) {
+        if ( patternIndexExcl == this.pattern.length() - 1 ) {
+            return false;
+        }
+
+        return c == this.patternChars.i(patternIndexExcl + 1);
     }
 }

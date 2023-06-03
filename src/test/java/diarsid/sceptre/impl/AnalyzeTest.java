@@ -2874,7 +2874,7 @@ public class AnalyzeTest {
 
         expectedSameOrderAsVariants();
 
-        weightVariantsAndCheckMatching(); // TODO
+        weightVariantsAndCheckMatching();
     }
     
     @Test

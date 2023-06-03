@@ -929,6 +929,70 @@ class ClusterStepTwo {
         }
     }
 
+    private int hasSameNoLoopMatchesAs(ClusterStepTwo other) {
+        MatchType thisType;
+        MatchType otherType;
+
+        char thisChar;
+        char otherChar;
+
+        int thisPatternIndex = -1;
+        int otherPatternIndex;
+
+        boolean same = true;
+        int sameCount = 0;
+
+        for ( int i = 0; i < this.matches.size() && i < other.matches.size(); i++ ) {
+            thisType = this.matches.get(i);
+            otherType = other.matches.get(i);
+
+            if ( thisType.isNot(MATCH_TYPO_LOOP) && otherType.isNot(MATCH_TYPO_LOOP) ) {
+                thisChar = this.chars.get(i);
+                otherChar = other.chars.get(i);
+                if ( thisChar == otherChar ) {
+                    thisPatternIndex = this.patternPositions.get(i);
+                    otherPatternIndex = other.patternPositions.get(i);
+                    if ( thisPatternIndex == otherPatternIndex ) {
+                        sameCount++;
+                    }
+                    else {
+                        same = false;
+                        break;
+                    }
+                }
+                else {
+                    same = false;
+                    break;
+                }
+            }
+            else {
+                break;
+            }
+        }
+
+        if ( same && sameCount > 0 ) {
+            return thisPatternIndex;
+        }
+        else {
+            return -1;
+        }
+    }
+
+    private boolean allNoLoopMatchesBelongTo(WordInVariant word) {
+        for ( int i = 0; i < this.matches.size(); i++ ) {
+            if ( this.matches.get(i).isNot(MATCH_TYPO_LOOP) ) {
+                if ( ! word.hasIndex(this.variantPositions.get(i)) ) {
+                    return false;
+                }
+            }
+            else {
+                break;
+            }
+        }
+
+        return true;
+    }
+
     private boolean searchForStartOfNewWord() {
         WordInVariant word = this.word.orThrow();
 
@@ -1148,6 +1212,20 @@ class ClusterStepTwo {
                     }
                 }
                 else {
+                    int lastCommonNoLoopMatchInPattern = this.hasSameNoLoopMatchesAs(other);
+                    if ( lastCommonNoLoopMatchInPattern > -1 ) {
+                        if ( this.allNoLoopMatchesBelongTo(thisWord) && other.allNoLoopMatchesBelongTo(otherWord) ) {
+                            if ( this.analyze.data.doesPatternContainsCharJustAfter(this.assessedChar, lastCommonNoLoopMatchInPattern) ) {
+                                if ( this.assessedCharVariantPosition < other.assessedCharVariantPosition ) {
+                                    return true;
+                                }
+                                else {
+                                    return false;
+                                }
+                            }
+                        }
+                    }
+
                     int thisPriorityAdj = 0;
                     int otherPriorityAdj = 0;
 
