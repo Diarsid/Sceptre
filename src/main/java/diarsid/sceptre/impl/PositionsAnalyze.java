@@ -1480,7 +1480,7 @@ class PositionsAnalyze {
                             int iVariant;
                             char patternChar;
                             char variantChar;
-                            boolean hasAdded = false;
+                            boolean hasBeenAddedInLoop = false;
 
                             char lastAddedChar = '_';
                             int lastAddedCharVariantPosition = -1;
@@ -1492,7 +1492,7 @@ class PositionsAnalyze {
                                 patternChar = data.pattern.charAt(iPattern);
                                 variantChar = data.variant.charAt(iVariant);
                                 if ( patternChar == variantChar ) {
-                                    hasAdded = true;
+                                    hasBeenAddedInLoop = true;
                                     lastAddedChar = variantChar;
                                     lastAddedCharVariantPosition = iVariant;
                                     lastAddedCharPatternPosition = iPattern;
@@ -1508,7 +1508,13 @@ class PositionsAnalyze {
                                 i++;
                             }
 
-                            if ( hasAdded ) {
+                            if ( ! hasBeenAddedInLoop ) {
+                                lastAddedCharVariantPosition = currStepOneCluster.lastVariantPosition();
+                                lastAddedCharPatternPosition = currStepOneCluster.lastPatternPosition();
+                                lastAddedChar = data.pattern.charAt(lastAddedCharPatternPosition);
+                            }
+
+//                            if ( hasAdded ) {
                                 WordInVariant word;
                                 char wordFirstChar;
                                 wordsConflictsLoop: for ( int iWord = 0; iWord < data.wordsInVariant.all.size(); iWord++ ) {
@@ -1521,6 +1527,9 @@ class PositionsAnalyze {
                                                 char nextPatternChar = data.pattern.charAt(lastAddedCharPatternPosition + 1);
                                                 if ( nextWordChar == nextPatternChar ) {
                                                     currStepOneCluster.removeLastNext();
+                                                    if ( ! hasBeenAddedInLoop ) {
+                                                        localUnclusteredPatternCharIndexes.add(lastAddedCharPatternPosition);
+                                                    }
                                                     data.log.add(POSITIONS_SEARCH, "          [candidate] '%s'(%s in variant) reject - conflicts with word %s", lastAddedChar, lastAddedCharVariantPosition, word.charsString());
                                                     data.log.add(POSITIONS_SEARCH, "               %s", displayStepOneClusterLastAddedPosition());
                                                     data.log.add(POSITIONS_SEARCH, "               %s : %s", data.pattern, data.variant);
@@ -1530,7 +1539,7 @@ class PositionsAnalyze {
                                         }
                                     }
                                 }
-                            }
+//                            }
                         }
                     }
                 } else if ( findPositionsStep.typoSearchingAllowed()) {
@@ -1839,6 +1848,10 @@ class PositionsAnalyze {
     private boolean hasPossibleConflict(WordInVariant word, ClusterStepOne cluster) {
         int clusterPosition1 = cluster.mainOfVariant();
         int clusterPosition2 = cluster.nextOfVariant();
+
+        if ( clusterPosition2 < 0 ) {
+            return false;
+        }
 
         int wordPosition0 = word.startIndex;
         int wordPosition1 = wordPosition0 + 1;
@@ -2722,6 +2735,11 @@ class PositionsAnalyze {
                                                 data.log.add(POSITIONS_CLUSTERS, "          +2 no cluster, single positions count == 1, independent word havin positions in further dependent");
                                             }
                                         }
+
+                                        if ( word.length == 2 ) {
+                                            wordQuality = wordQuality + 2;
+                                            data.log.add(POSITIONS_CLUSTERS, "          +1 no cluster, single positions count == 1, independent word length = 2");
+                                        }
                                     }
                                 }
                                 else {
@@ -2795,7 +2813,7 @@ class PositionsAnalyze {
 
                                     }
                                     else {
-                                        if ( singlePositionsInWordCount == 2 ) {
+                                        if ( singlePositionsInWordCount >= 2 ) {
                                             if ( this.clusters.quantity() == 0 ) {
                                                 wordQuality = wordQuality + 1;
                                                 data.log.add(POSITIONS_CLUSTERS, "          +1 single positions contains word start and end, no clusters at all found");
@@ -2813,6 +2831,13 @@ class PositionsAnalyze {
                                                     bad = false;
                                                     wordQuality = wordQuality + 1;
                                                     data.log.add(POSITIONS_CLUSTERS, "          +1 single positions contains only start and middle, word start is key char");
+                                                }
+
+                                                if ( ! bad ) {
+                                                    if ( singlePositionsInWordCount > 2 ) {
+                                                        wordQuality = wordQuality + 1;
+                                                        data.log.add(POSITIONS_CLUSTERS, "          +1 single positions > 2");
+                                                    }
                                                 }
 
                                                 if ( bad ) {
@@ -3248,7 +3273,10 @@ class PositionsAnalyze {
 
             data.log.add(POSITIONS_CLUSTERS, "          sum : %s", wordQuality);
             int weightValue;
-            if ( wordQuality == 1 ) {
+            if ( wordQuality == 0 ) {
+                weightValue = 25;
+            }
+            else if ( wordQuality == 1 ) {
                 weightValue = -2;
             }
             else if ( wordQuality == -1 ) {
@@ -3266,9 +3294,14 @@ class PositionsAnalyze {
 
             this.foundWordInVariantQualities.add(wordQuality);
             if ( weightValue != 0 ) {
-                this.weight.add(weightValue, WORD_QUALITY);
-                if ( weightValue > 0 && weightValue < 50 ) {
-                    this.weight.add(50, WORD_QUALITY);
+                if ( weightValue == 25 ) {
+                    this.weight.add(weightValue, WORD_QUALITY);
+                }
+                else {
+                    this.weight.add(weightValue, WORD_QUALITY);
+                    if ( weightValue > 0 && weightValue < 50 ) {
+                        this.weight.add(50, WORD_QUALITY);
+                    }
                 }
             }
 

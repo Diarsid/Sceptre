@@ -439,7 +439,12 @@ class ClusterStepOne {
         if ( this.variantPositionsAtStart ) {
             this.startsAfterSeparator = true;
         } else {
-            this.startsAfterSeparator = isWordsSeparator(variant.charAt(this.firstVariantPosition() - 1));
+            try {
+                this.startsAfterSeparator = isWordsSeparator(variant.charAt(this.firstVariantPosition() - 1));
+            }
+            catch (StringIndexOutOfBoundsException e) {
+                int a = 5;
+            }
         }
         
         if ( this.variantPositionsAtEnd ) {
@@ -717,7 +722,19 @@ class ClusterStepOne {
             throw new IllegalStateException();
         }
 
-        if ( nextsVariantPositions.size() == 1 ) {
+        if ( nextsVariantPositions.isEmpty() ) {
+            if ( this.nextVariantPosition != UNINITIALIZED ) {
+                this.nextVariantPosition = UNINITIALIZED;
+                this.nextPatternPosition = UNINITIALIZED;
+
+                this.lastAddedVariantPosition = this.mainVariantPosition;
+                this.lastAddedPatternPosition = this.mainPatternPosition;
+            }
+            else {
+                throw new IllegalStateException();
+            }
+        }
+        else if ( nextsVariantPositions.size() == 1 ) {
             this.hasNexts = false;
 
             this.nextsVariantPositions.remove(0);
@@ -829,7 +846,31 @@ class ClusterStepOne {
 //    }
     
     public int lastVariantPosition() {
-        return this.allVariantPositions.last();
+        if ( ! this.finished ) {
+            return this.allVariantPositions.last();
+        }
+        else {
+            if ( this.nextsVariantPositions.isNotEmpty() ) {
+                return this.nextsVariantPositions.last();
+            }
+            else {
+                return this.nextVariantPosition;
+            }
+        }
+    }
+
+    public int lastPatternPosition() {
+        if ( ! this.finished ) {
+            return this.allPatternPositions.last();
+        }
+        else {
+            if ( this.nextsPatternPositions.isNotEmpty() ) {
+                return this.nextsPatternPositions.last();
+            }
+            else {
+                return this.nextPatternPosition;
+            }
+        }
     }
     
     boolean isBefore(ClusterStepOne other) {

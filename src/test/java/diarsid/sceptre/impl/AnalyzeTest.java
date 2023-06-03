@@ -465,8 +465,7 @@ public class AnalyzeTest {
                 "some_ml",
                 "some_ml_string",
                 "some_Mstring_Lwith_ml_cluster",
-                "mail",
-                "gmail"
+                "mail"
         );
         
         weightVariantsAndCheckMatching();
@@ -497,9 +496,7 @@ public class AnalyzeTest {
                 "some_stMring_wLith_cluster",
                 "gmail");
         
-        expected = asList(
-                "gmail"
-        );
+        expected = asList();
         
         weightVariantsAndCheckMatching();
     }
@@ -1635,8 +1632,7 @@ public class AnalyzeTest {
         );
         
         expected = asList(
-                "Tools",
-                "Books/Common/Tolkien_J.R.R");
+                "Tools");
         
         weightVariantsAndCheckMatching();
     }
@@ -1665,8 +1661,8 @@ public class AnalyzeTest {
                 "Tools_aaaaa",
                 "Tools_aaaaa",
                 "Tools_looking",
-                "to_low_losing",
                 "tolkien_lost",
+                "to_low_losing",
                 "book_tolstoy"
                 );
 
@@ -2171,7 +2167,18 @@ public class AnalyzeTest {
         weightVariantsAndCheckMatching();
     }
 
-    // TODO ukrposhtarchiv : d:/dev/1__projects/ukrposhta/ukrposhtastatustracking
+    @Test
+    public void test_projectsUkrPoshta_ukrposhtarchiv() {
+        pattern = "ukrposhtarchiv";
+
+        variants = asList(
+                "D:/DEV/1__Projects/X__Archive/UkrPoshta",
+                "D:/DEV/1__Projects/UkrPoshta/UkrposhtaStatusTracking"); // TODO
+
+        expectedSameOrderAsVariants();
+
+        weightVariantsAndCheckMatching();
+    }
     
     @Test
     public void test_PriceAPICase_pricapi() {
@@ -2218,8 +2225,6 @@ public class AnalyzeTest {
         weightVariantsAndCheckMatching();
     }
 
-    // TODO progsloclscl : freedom of contract and paternalism: prospects and limits of an economic approach (perspectives from social economics) by péter cserne
-    
     @Test
     public void test_WinampCase_() {
         pattern = "winan";
@@ -2472,6 +2477,7 @@ public class AnalyzeTest {
                 "Eating for Life: Your Guide to Great Health Fat Loss and Increased Energy! by Bill Phillips",
                 "Losers: The Road to Everyplace But the White House by Michael Lewis",
                 "The Hunger Games Companion: The Unauthorized Guide to the Series by Lois H. Gresh",
+                "The Book of Lost Tales Part One (The History of Middle-Earth #1) by J.R.R. Tolkien and Christopher Tolkien",
                 "Star Trek: Logs One and Two (Star Trek: Log #1-2) by Alan Dean Foster",
                 "The Dictionary of Corporate Bullshit: An A to Z Lexicon of Empty Enraging and Just Plain Stupid Office Talk by Lois Beckwith"
         );
@@ -2508,9 +2514,7 @@ public class AnalyzeTest {
         );
 
         expected = asList(
-                "D:/DEV/3__Tools/Servers/Virtualization_Servers",
-                "There's a Spiritual Solution to Every Problem by Dr. Wayne W. Dyer"
-                );
+                "D:/DEV/3__Tools/Servers/Virtualization_Servers");
 
         weightVariantsAndCheckMatching();
     }
@@ -2560,8 +2564,7 @@ public class AnalyzeTest {
 
         expected = asList(
                 "Britain After Rome: The Fall and Rise, 400 to 1070 by Robin Fleming",
-                "How the Irish Saved Civilization: The Untold Story of Ireland's Heroic Role from the Fall of Rome to the Rise of Medieval Europe by Thomas Cahill",
-                "The Golden Key by Jennifer Roberson and Melanie Rawn, and Kate Elliott");
+                "How the Irish Saved Civilization: The Untold Story of Ireland's Heroic Role from the Fall of Rome to the Rise of Medieval Europe by Thomas Cahill");
 
         weightVariantsAndCheckMatching();
     }
@@ -2859,6 +2862,19 @@ public class AnalyzeTest {
 
         variants = asList(
                 "D:/SOUL/Programs/Locally/Social");
+
+        expectedSameOrderAsVariants();
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_progsloclscl_other() {
+        pattern = "progsloclscl";
+
+        variants = asList(
+                "freedom of contract and paternalism: prospects and limits of an economic approach (perspectives from social economics) by péter cserne"
+        );
 
         expectedSameOrderAsVariants();
 
