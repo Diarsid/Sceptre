@@ -2173,9 +2173,9 @@ public class AnalyzeTest {
 
         variants = asList(
                 "D:/DEV/1__Projects/X__Archive/UkrPoshta",
-                "D:/DEV/1__Projects/UkrPoshta/UkrposhtaStatusTracking"); // TODO
+                "D:/DEV/1__Projects/UkrPoshta/UkrposhtaStatusTracking");
 
-        expectedSameOrderAsVariants();
+        expected = asList("D:/DEV/1__Projects/X__Archive/UkrPoshta");
 
         weightVariantsAndCheckMatching();
     }
@@ -2189,8 +2189,7 @@ public class AnalyzeTest {
                 "Projects/UkrPoshta/PriceCalculationAPI");
         
         expected = asList(
-                "Projects/UkrPoshta/PriceCalculationAPI",
-                "Projects/UkrPoshta/CainiaoAPI");
+                "Projects/UkrPoshta/PriceCalculationAPI");
         
         weightVariantsAndCheckMatching();
     }

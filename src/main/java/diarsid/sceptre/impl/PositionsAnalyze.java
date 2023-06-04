@@ -1514,32 +1514,28 @@ class PositionsAnalyze {
                                 lastAddedChar = data.pattern.charAt(lastAddedCharPatternPosition);
                             }
 
-//                            if ( hasAdded ) {
-                                WordInVariant word;
-                                char wordFirstChar;
-                                wordsConflictsLoop: for ( int iWord = 0; iWord < data.wordsInVariant.all.size(); iWord++ ) {
-                                    word = data.wordsInVariant.all.get(iWord);
-                                    if ( word.length > 2 ) {
-                                        wordFirstChar = data.variant.charAt(word.startIndex);
-                                        if ( wordFirstChar == lastAddedChar ) {
-                                            if ( lastAddedCharPatternPosition < data.pattern.length() - 1 ) {
-                                                char nextWordChar = data.variant.charAt(word.startIndex + 1);
-                                                char nextPatternChar = data.pattern.charAt(lastAddedCharPatternPosition + 1);
-                                                if ( nextWordChar == nextPatternChar ) {
-                                                    currStepOneCluster.removeLastNext();
-                                                    if ( ! hasBeenAddedInLoop ) {
-                                                        localUnclusteredPatternCharIndexes.add(lastAddedCharPatternPosition);
-                                                    }
-                                                    data.log.add(POSITIONS_SEARCH, "          [candidate] '%s'(%s in variant) reject - conflicts with word %s", lastAddedChar, lastAddedCharVariantPosition, word.charsString());
-                                                    data.log.add(POSITIONS_SEARCH, "               %s", displayStepOneClusterLastAddedPosition());
-                                                    data.log.add(POSITIONS_SEARCH, "               %s : %s", data.pattern, data.variant);
-                                                    break wordsConflictsLoop;
-                                                }
+                            WordInVariant word;
+                            char wordFirstChar;
+                            wordsConflictsLoop: for ( int iWord = 0; iWord < data.wordsInVariant.all.size(); iWord++ ) {
+                                word = data.wordsInVariant.all.get(iWord);
+                                if ( word.length > 2 ) {
+                                    wordFirstChar = data.variant.charAt(word.startIndex);
+                                    if ( wordFirstChar == lastAddedChar ) {
+                                        if ( lastAddedCharPatternPosition < data.pattern.length() - 1 ) {
+                                            char nextWordChar = data.variant.charAt(word.startIndex + 1);
+                                            char nextPatternChar = data.pattern.charAt(lastAddedCharPatternPosition + 1);
+                                            if ( nextWordChar == nextPatternChar ) {
+                                                currStepOneCluster.removeLastNext();
+                                                localUnclusteredPatternCharIndexes.add(lastAddedCharPatternPosition);
+                                                data.log.add(POSITIONS_SEARCH, "          [candidate] '%s'(%s in variant) reject - conflicts with word %s", lastAddedChar, lastAddedCharVariantPosition, word.charsString());
+                                                data.log.add(POSITIONS_SEARCH, "               %s", displayStepOneClusterLastAddedPosition());
+                                                data.log.add(POSITIONS_SEARCH, "               %s : %s", data.pattern, data.variant);
+                                                break wordsConflictsLoop;
                                             }
                                         }
                                     }
                                 }
-//                            }
+                            }
                         }
                     }
                 } else if ( findPositionsStep.typoSearchingAllowed()) {
@@ -2750,14 +2746,18 @@ class PositionsAnalyze {
                                 }
                             }
                             else {
-//                                if ( this.data.wordsInVariant.all.size() > 3 ) {
-//                                    wordQuality = wordQuality - 2;
-//                                    data.log.add(POSITIONS_CLUSTERS, "          -2 no cluster, word start not in single positions, words qty > 3");
-//                                }
-//                                else {
-//                                    wordQuality = wordQuality - 4;
-//                                    data.log.add(POSITIONS_CLUSTERS, "          -4 no cluster, word start not in single positions, words qty <= 3");
-//                                }
+                                boolean misspelling = this.checkOnSinglePositionMisspelling(word, all);
+
+                                if ( misspelling ) {
+                                    if ( this.data.wordsInVariant.all.size() > 3 ) {
+                                        wordQuality = wordQuality - 2;
+                                        data.log.add(POSITIONS_CLUSTERS, "          -2 no cluster, word start not in single positions, words qty > 3");
+                                    }
+                                    else {
+                                        wordQuality = wordQuality - 4;
+                                        data.log.add(POSITIONS_CLUSTERS, "          -4 no cluster, word start not in single positions, words qty <= 3");
+                                    }
+                                }
                             }
 
                             if ( wordQuality > 0 ) {
@@ -2851,6 +2851,10 @@ class PositionsAnalyze {
                                         }
                                     }
                                 }
+                            }
+                            else {
+                                wordQuality = wordQuality - 5;
+                                data.log.add(POSITIONS_CLUSTERS, "          -5 single positions > 1, word start not found");
                             }
                         }
                     }
@@ -3274,7 +3278,7 @@ class PositionsAnalyze {
             data.log.add(POSITIONS_CLUSTERS, "          sum : %s", wordQuality);
             int weightValue;
             if ( wordQuality == 0 ) {
-                weightValue = 25;
+                weightValue = 24;
             }
             else if ( wordQuality == 1 ) {
                 weightValue = -2;
@@ -3294,7 +3298,7 @@ class PositionsAnalyze {
 
             this.foundWordInVariantQualities.add(wordQuality);
             if ( weightValue != 0 ) {
-                if ( weightValue == 25 ) {
+                if ( weightValue == 24 ) {
                     this.weight.add(weightValue, WORD_QUALITY);
                 }
                 else {
@@ -3498,6 +3502,62 @@ class PositionsAnalyze {
             }
         }
         return false;
+    }
+
+    private boolean checkOnSinglePositionMisspelling(WordInVariant word, List<WordInVariant> allFoundWords) {
+        final boolean APPLY_MISSPELLING_PENALTY = true;
+        final boolean IGNORE_MISSPELLING = false;
+
+        int iVariant = word.firstIntersection(this.filledPositions);
+
+        if ( iVariant < 0 ) {
+            throw new IllegalArgumentException();
+        }
+
+        int iPattern = this.patternIndexesByVariantPosition.get(iVariant);
+        char iChar = data.patternChars.i(iPattern);
+
+        if ( iPattern == 0 ) {
+            return APPLY_MISSPELLING_PENALTY;
+        }
+        else if ( iPattern == data.pattern.length() - 1) {
+            int iPatternPrev = iPattern - 1;
+            int iVariantPrev = this.positions.i(iPatternPrev);
+
+            if ( iVariantPrev < 0 ) {
+                return APPLY_MISSPELLING_PENALTY;
+            }
+
+            WordInVariant word1 = data.wordsInVariant.wordOf(iVariantPrev);
+
+            if ( word1.index < word.index ) {
+                return IGNORE_MISSPELLING;
+            }
+            else {
+                return APPLY_MISSPELLING_PENALTY;
+            }
+        }
+        else {
+            int iPatternPrev = iPattern - 1;
+            int iVariantPrev = this.positions.i(iPatternPrev);
+
+            int iPatternNext = iPattern + 1;
+            int iVariantNext = this.positions.i(iPatternNext);
+
+            if ( iVariantPrev < 0 || iVariantNext < 0 ) {
+                return APPLY_MISSPELLING_PENALTY;
+            }
+
+            WordInVariant wordPrev = data.wordsInVariant.wordOf(iVariantPrev);
+            WordInVariant wordNext = data.wordsInVariant.wordOf(iVariantNext);
+
+            if ( wordPrev.hasSameWord(wordNext) ) {
+                return IGNORE_MISSPELLING;
+            }
+            else {
+                return APPLY_MISSPELLING_PENALTY;
+            }
+        }
     }
 
     private boolean checkOnMisplacing(WordInVariant word, List<Cluster> clustersInWord) {

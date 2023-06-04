@@ -184,24 +184,25 @@ public class WordInVariant extends PooledReusable {
         return -1;
     }
 
+    public int firstIntersection(Ints ints) {
+        Ints.Elements elements = ints.elements();
+        int index;
+        while ( elements.hasNext() ) {
+            elements.next();
+            index = elements.current();
+            if ( index >= startIndex && index <= endIndex ) {
+                return index;
+            }
+        }
+
+        return -1;
+    }
+
     public int intersections(ListInt indexes) {
         int count = 0;
         int index;
         for ( int i = 0; i < indexes.size(); i++ ) {
             index = indexes.get(i);
-            if ( index < 0 ) {
-                continue;
-            }
-            if ( this.startIndex <= index && this.endIndex >= index ) {
-                count++;
-            }
-        }
-        return count;
-    }
-
-    public int intersections(int[] indexes) {
-        int count = 0;
-        for ( int index : indexes ) {
             if ( index < 0 ) {
                 continue;
             }
