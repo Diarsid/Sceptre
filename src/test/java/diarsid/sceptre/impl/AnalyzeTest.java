@@ -2625,7 +2625,78 @@ public class AnalyzeTest {
         weightVariantsAndCheckMatching();
     }
 
+    @Test
+    public void test_projupsth_2() {
+        pattern = "projupsth";
 
+        variants = asList(
+                "D:/DEV/1__Projects/UkrPoshta",
+                "D:/DEV/1__Projects/UkrPoshta/StatusNotificationService",
+                "D:/DEV/1__Projects/UkrPoshta/UkrposhtaStatusNotificationService"
+        );
+
+        expectedSameOrderAsVariants();
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_projupsth_1() {
+        pattern = "projupsth";
+
+        variants = asList(
+                "D:/DEV/1__Projects/UkrPoshta",
+                "The Judicial Process: Law, Courts, and Judicial Politics by Christopher P. Banks"
+        );
+
+        expected = asList(
+                "D:/DEV/1__Projects/UkrPoshta");
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_projsupsth_1() {
+        pattern = "projsupsth";
+
+        variants = asList(
+                "D:/DEV/1__Projects/UkrPoshta"
+        );
+
+        expectedSameOrderAsVariants();
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_projsupsth() {
+        pattern = "projsupsth";
+
+        variants = asList(
+                "D:/DEV/1__Projects/UkrPoshta",
+                "D:/DEV/1__Projects/UkrPoshta/StatusNotificationService",
+                "D:/DEV/1__Projects/UkrPoshta/UkrposhtaStatusNotificationService"
+        );
+
+        expectedSameOrderAsVariants();
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_upsthprojs() {
+        pattern = "upsthprojs";
+
+        variants = asList(
+                "D:/DEV/1__Projects/UkrPoshta",
+                "D:/DEV/1__Projects/UkrPoshta/StatusNotificationService",
+                "D:/DEV/1__Projects/UkrPoshta/UkrposhtaStatusNotificationService"
+        );
+
+        expectedSameOrderAsVariants();
+
+        weightVariantsAndCheckMatching();
+    }
 
     @Test
     public void test_passnjss() {
@@ -2875,7 +2946,7 @@ public class AnalyzeTest {
                 "freedom of contract and paternalism: prospects and limits of an economic approach (perspectives from social economics) by péter cserne"
         );
 
-        expectedSameOrderAsVariants();
+        expected = asList();
 
         weightVariantsAndCheckMatching();
     }

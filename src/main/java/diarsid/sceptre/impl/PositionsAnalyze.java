@@ -1337,58 +1337,19 @@ class PositionsAnalyze {
                                             currentChar, currentPatternCharPositionInVariant, currentPatternCharIndex);
                                     WordInVariant word = data.wordsInVariant.wordOf(currentPatternCharPositionInVariant);
                                     if ( word.hasStartIn(filledPositions) ) {
-                                        currStepTwoCluster.add(
-                                                currentChar,
-                                                currentPatternCharIndex,
-                                                currentPatternCharPositionInVariant,
-                                                filledPositions.contains(currentPatternCharPositionInVariant),
-                                                isPositionSetAt(currentPatternCharIndex),
-                                                MATCH_WORD_END);
+                                        boolean allowed = this.isAllowedAsWordEnd(word, currentPatternCharIndex);
+                                        if ( allowed ) {
+                                            currStepTwoCluster.add(
+                                                    currentChar,
+                                                    currentPatternCharIndex,
+                                                    currentPatternCharPositionInVariant,
+                                                    filledPositions.contains(currentPatternCharPositionInVariant),
+                                                    isPositionSetAt(currentPatternCharIndex),
+                                                    MATCH_WORD_END);
+                                        }
                                     }
                                 }
                             }
-
-//                            if ( data.pattern.length() - currentPatternCharIndex > 2 ) {
-//                                char next2CharInPattern = data.patternChars[currentPatternCharIndex + 2];
-//                                if ( nextCharInVariant == next2CharInPattern ) {
-//                                    if ( notFoundPatternChars.contains(next2CharInPattern) ) {
-//                                        data.log.add(POSITIONS_SEARCH, "          [info] typo found '%s'(%s in variant) - '%s' is next*2 in pattern and next in variant",
-//                                                currentChar, currentPatternCharPositionInVariant, nextCharInVariant);
-//                                        if ( nonEmpty(positionsInCluster) ) {
-//                                            positionsInCluster.add(currentPatternCharPositionInVariant + 1);
-//                                            currStepTwoCluster.add(
-//                                                    next2CharInPattern,
-//                                                    currentPatternCharIndex + 2,
-//                                                    currentPatternCharPositionInVariant + 1,
-//                                                    filledPositions.contains(currentPatternCharPositionInVariant + 1),
-//                                                    this.isPositionSetAt(currentPatternCharIndex + 2),
-//                                                    MATCH_TYPO_2);
-//
-//                                            if ( data.pattern.length() - currentPatternCharIndex > 3 &&
-//                                                 data.variant.length() - currentPatternCharPositionInVariant > 3 ) {
-//                                                int next3Position = currentPatternCharPositionInVariant + 3;
-//                                                char next3CharInPattern = data.patternChars[currentPatternCharIndex + 3];
-//                                                char next3CharInVariant = data.variant.charAt(next3Position);
-//                                                if ( next3CharInPattern == next3CharInVariant ) {
-//                                                    boolean next3PositionIncluded = filledPositions.contains(next3Position);
-//                                                    if ( next3PositionIncluded || notFoundPatternChars.contains(next3CharInVariant) ) {
-//                                                        data.log.add(POSITIONS_SEARCH, "          [info] cluster continuation '%s'(%s in variant) found",
-//                                                                next3CharInVariant, currentPatternCharPositionInVariant + 3);
-//                                                        positionsInCluster.add(currentPatternCharPositionInVariant + 3);
-//                                                        currStepTwoCluster.add(
-//                                                                next3CharInVariant,
-//                                                                currentPatternCharIndex + 3,
-//                                                                next3Position,
-//                                                                next3PositionIncluded,
-//                                                                this.isPositionSetAt(currentPatternCharIndex + 3),
-//                                                                MATCH_TYPO_3_1);
-//                                                    }
-//                                                }
-//                                            }
-//                                        }
-//                                    }
-//                                }
-//                            }
                         }
                     }
                     else if ( ! hasNextInVariant ) {
@@ -1398,13 +1359,16 @@ class PositionsAnalyze {
                                     currentChar, currentPatternCharPositionInVariant, currentPatternCharIndex);
                             WordInVariant word = data.wordsInVariant.wordOf(currentPatternCharPositionInVariant);
                             if ( word.hasStartIn(filledPositions) ) {
-                                currStepTwoCluster.add(
-                                        currentChar,
-                                        currentPatternCharIndex,
-                                        currentPatternCharPositionInVariant,
-                                        filledPositions.contains(currentPatternCharPositionInVariant),
-                                        isPositionSetAt(currentPatternCharIndex),
-                                        MATCH_WORD_END);
+                                boolean allowed = this.isAllowedAsWordEnd(word, currentPatternCharIndex);
+                                if ( allowed ) {
+                                    currStepTwoCluster.add(
+                                            currentChar,
+                                            currentPatternCharIndex,
+                                            currentPatternCharPositionInVariant,
+                                            filledPositions.contains(currentPatternCharPositionInVariant),
+                                            isPositionSetAt(currentPatternCharIndex),
+                                            MATCH_WORD_END);
+                                }
                             }
                         }
                     }
@@ -1859,6 +1823,38 @@ class PositionsAnalyze {
         char clusterChar2 = data.variant.charAt(clusterPosition2);
 
         return ( wordChar0 == clusterChar1 && wordChar1 == clusterChar2 );
+    }
+
+    private boolean isAllowedAsWordEnd(WordInVariant word, int currentPatternCharIndex) {
+        int wordStartVariantPosition = word.startIndex;
+        int wordStartPatternPosition = this.patternIndexesByVariantPosition.get(wordStartVariantPosition);
+
+        int otherWordsBetweenCount = 0;
+
+        int position;
+        WordInVariant positionWord;
+        for ( int iPattern = wordStartPatternPosition + 1; iPattern < currentPatternCharIndex; iPattern++ ) {
+            position = this.positions.i(iPattern);
+
+            if ( position == POS_NOT_FOUND || position == POS_UNINITIALIZED ) {
+                continue;
+            }
+
+            positionWord = this.data.wordsInVariant.wordOf(position);
+
+            if ( positionWord.index == word.index ) {
+                continue;
+            }
+
+            otherWordsBetweenCount++;
+        }
+
+        if ( otherWordsBetweenCount > 0 ) {
+            return false;
+        }
+        else {
+            return true;
+        }
     }
 
     private void acceptPreviousCluster() {
@@ -2639,11 +2635,22 @@ class PositionsAnalyze {
             }
         }
 
+        boolean allWordsAreSingleChars = false;
         boolean isSpecialCase;
         int wordQuality;
 
         WordInVariant word;
         List<WordInVariant> all = foundWords.all();
+        int singleCharsWordsCount = 0;
+        for ( int iWord = 0; iWord < all.size(); iWord++ ) {
+            word = all.get(iWord);
+            if ( word.length == 1 ) {
+                singleCharsWordsCount++;
+            }
+        }
+
+        allWordsAreSingleChars = singleCharsWordsCount == all.size();
+
         iterateFoundWords: for ( int iWord = 0; iWord < all.size(); iWord++ ) {
             word = all.get(iWord);
             wordQuality = 0;
@@ -2654,6 +2661,10 @@ class PositionsAnalyze {
             if ( word.length == 1 ) {
                 wordQuality = 1;
                 data.log.add(POSITIONS_CLUSTERS, "          1 single-char-word");
+                if ( allWordsAreSingleChars ) {
+                    wordQuality = wordQuality + 3;
+                    data.log.add(POSITIONS_CLUSTERS, "          +3 all words are single-char-words");
+                }
             }
             else {
                 this.clusters.chooseAllOf(word);

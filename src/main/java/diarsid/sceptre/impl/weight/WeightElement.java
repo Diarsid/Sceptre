@@ -12,7 +12,7 @@ import static diarsid.sceptre.impl.weight.WeightElement.WeightType.PREDEFINED;
 public enum WeightElement implements CommonEnum<WeightElement> {
     
     CHAR_IS_ONE_CHAR_WORD(
-            -19.2f, "char is one-char-word"),
+            -6.21f, "char is one-char-word"),
     PREVIOUS_CHAR_IS_SEPARATOR_CURRENT_CHAR_AT_PATTERN_START(
             -7.71f, "previous char is word separator, current char is at pattern start!"),
     PREVIOUS_CHAR_IS_SEPARATOR(
