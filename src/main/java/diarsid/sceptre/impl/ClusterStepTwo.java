@@ -18,6 +18,7 @@ import static java.lang.Math.abs;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
 
 import static diarsid.sceptre.api.LogType.POSITIONS_SEARCH;
 import static diarsid.sceptre.impl.ClusterStepTwo.FoundType.CHOSEN_WORD;
@@ -310,6 +311,8 @@ class ClusterStepTwo {
     
     private final StepTwoClusterPositionView existingPositionView;
     private final StepTwoClusterPositionView possiblePositionView;
+
+    private final OrdersEstimator candidatesOrderEstimator;
     
     private char assessedChar;
     private int assessedCharPatternPosition;
@@ -340,6 +343,7 @@ class ClusterStepTwo {
         this.word = References.simplePossibleButEmpty();
         this.positionsInWordType = References.simplePossibleButEmpty();
         this.directMatchesCount = 0;
+        this.candidatesOrderEstimator = new OrdersEstimator(this.analyze.data.log);
         
         this.existingPositionView = new StepTwoClusterPositionView(this);
         this.possiblePositionView = new StepTwoClusterPositionView(this);
@@ -491,6 +495,30 @@ class ClusterStepTwo {
             boolean isFilledInPattern,
             MatchType matchType) {
         this.addInternal(c, patternPosition, variantPosition, isFilled, isFilledInPattern, matchType, TRUE);
+        candidatesOrderEstimator.add(patternPosition, variantPosition);
+    }
+
+    void setCandidatesOrderEstimate(int iPattern, int iVariant) {
+        candidatesOrderEstimator.set(iPattern, iVariant);
+    }
+
+    void finalizeOrdersEstimate() {
+        int qualityCorrelation = 0;
+        MatchType matchType;
+        for ( int i = 0; i < this.matches.size(); i++ ) {
+            matchType = this.matches.get(i);
+            if ( matchType.isNot(MATCH_TYPO_LOOP) && ! matchType.isBackward ) {
+                qualityCorrelation++;
+            }
+        }
+
+        candidatesOrderEstimator.correlateQuality(qualityCorrelation);
+    }
+
+    boolean isOrdersEstimateOk() {
+        boolean isOk = candidatesOrderEstimator.isOk();
+        candidatesOrderEstimator.clear();
+        return isOk;
     }
 
     void approveCandidates() {
@@ -526,6 +554,7 @@ class ClusterStepTwo {
                 if ( wordOfCandidate.index != word.index ) {
                     rejectedCount++;
                     this.remove(i);
+                    candidatesOrderEstimator.remove(patternPosition);
                     i--;
                 }
             }
@@ -557,6 +586,9 @@ class ClusterStepTwo {
             this.filledInVariantQty--;
         }
         this.matchStrength = this.matchStrength - matchType.strength();
+        if ( nonNull(this.candidatesOrderEstimator) ) {
+            this.candidatesOrderEstimator.remove(patternPosition);
+        }
         this.analyze.data.log.add(
                 POSITIONS_SEARCH,
                 "          [info] reject candidate '%s' pattern:%s, variant:%s, included: %s, %s",
@@ -573,7 +605,7 @@ class ClusterStepTwo {
             Boolean isCandidate) {
         int alreadyExistedInPattern = this.patternPositions.indexOf(patternPosition);
 
-        if ( c == 'n' && patternPosition == 14) {
+        if ( c == 'e' && patternPosition == 4) {
             boolean debug = true;
         }
 
@@ -629,51 +661,69 @@ class ClusterStepTwo {
             boolean writeGivenAsNew;
 
             if ( alreadyExistedInVariant > -1 ) {
+                StepTwoClusterPositionView existingPosition = this.positionViewAt(alreadyExistedInVariant);
+                StepTwoClusterPositionView possiblePosition = this.possiblePositionView.fill(c, patternPosition, variantPosition, isFilledInVariant, isFilledInPattern, matchType);
+
                 int patternPositionOfExistedInVariant = this.patternPositions.get(alreadyExistedInVariant);
 
-                int diffInPatternExisting = abs(assessedCharPatternPosition - patternPositionOfExistedInVariant);
-                int diffInPatternNew = abs(assessedCharPatternPosition - patternPosition);
+                boolean applyFullDiffCalculations = true;
+                if ( this.word.orThrow().startIndex == assessedCharVariantPosition ) {
+                    if ( patternPositionOfExistedInVariant < assessedCharPatternPosition && patternPosition > assessedCharPatternPosition && assessedCharPatternPosition + this.word.orThrow().length > patternPosition ) {
+                        applyFullDiffCalculations = false;
+                    }
+                }
 
-                StepTwoClusterPositionView existingPosition = this.positionViewAt(alreadyExistedInVariant);
+                if ( applyFullDiffCalculations ) {
+                    int diffInPatternExisting = abs(assessedCharPatternPosition - patternPositionOfExistedInVariant);
+                    int diffInPatternNew = abs(assessedCharPatternPosition - patternPosition);
 
-                if ( this.chars.size() > 1 ) {
-                    StepTwoClusterPositionView possiblePosition = this.possiblePositionView.fill(c, patternPosition, variantPosition, isFilledInVariant, isFilledInPattern, matchType);
+                    if ( this.chars.size() > 1 ) {
 
-                    int testPatternPosition;
-                    int testVariantPosition;
-                    int diffWithExisting;
-                    int diffWithPossible;
-                    int diffWithExistingSum = 0;
-                    int diffWithPossibleSum = 0;
-                    for ( int i = 0; i < chars.size(); i++) {
-                        testPatternPosition = patternPositions.get(i);
-                        testVariantPosition = variantPositions.get(i);
-                        if ( existingPosition.is(testPatternPosition, testVariantPosition) ) {
-                            continue;
+                        int testPatternPosition;
+                        int testVariantPosition;
+                        int diffWithExisting;
+                        int diffWithPossible;
+                        int diffWithExistingSum = 0;
+                        int diffWithPossibleSum = 0;
+                        for ( int i = 0; i < chars.size(); i++) {
+                            testPatternPosition = patternPositions.get(i);
+                            testVariantPosition = variantPositions.get(i);
+                            if ( existingPosition.is(testPatternPosition, testVariantPosition) ) {
+                                continue;
+                            }
+
+                            diffWithExisting = existingPosition.countDiffWith(testPatternPosition, testVariantPosition);
+                            diffWithPossible = possiblePosition.countDiffWith(testPatternPosition, testVariantPosition);
+
+                            diffWithExistingSum = diffWithExistingSum + diffWithExisting;
+                            diffWithPossibleSum = diffWithPossibleSum + diffWithPossible;
                         }
 
-                        diffWithExisting = existingPosition.countDiffWith(testPatternPosition, testVariantPosition);
-                        diffWithPossible = possiblePosition.countDiffWith(testPatternPosition, testVariantPosition);
-
-                        diffWithExistingSum = diffWithExistingSum + diffWithExisting;
-                        diffWithPossibleSum = diffWithPossibleSum + diffWithPossible;
+                        writeGivenAsNew =
+                                diffInPatternExisting + diffWithExistingSum >= diffInPatternNew + diffWithPossibleSum;
                     }
-
-                    writeGivenAsNew =
-                            diffInPatternExisting + diffWithExistingSum >= diffInPatternNew + diffWithPossibleSum;
+                    else {
+                        writeGivenAsNew =
+                                diffInPatternExisting >= diffInPatternNew;
+                    }
                 }
                 else {
-                    writeGivenAsNew =
-                            diffInPatternExisting >= diffInPatternNew;
+                    writeGivenAsNew = true;
                 }
 
                 if ( writeGivenAsNew ) {
                     this.analyze.data.log.add(
                             POSITIONS_SEARCH,
-                            "          [info] positions-in-cluster is garbage: '%s' pattern:%s, variant:%s",
+                            "          [info] existing position-in-cluster is garbage: '%s' pattern:%s, variant:%s",
                             existingPosition.character, existingPosition.patternPosition, existingPosition.variantPosition);
                     this.remove(alreadyExistedInVariant);
                     this.analyze.garbagePatternPositions.add(existingPosition.patternPosition);
+                }
+                else {
+                    this.analyze.data.log.add(
+                            POSITIONS_SEARCH,
+                            "          [info] possible position-in-cluster is garbage: '%s' pattern:%s, variant:%s",
+                            possiblePosition.character, possiblePosition.patternPosition, possiblePosition.variantPosition);
                 }
             }
             else {
@@ -1545,6 +1595,7 @@ class ClusterStepTwo {
         this.word.nullify();
         this.positionsInWordType.nullify();
         this.directMatchesCount = 0;
+        this.candidatesOrderEstimator.clear();
     }
     
     @Override

@@ -214,9 +214,9 @@ class PositionsAnalyze {
     ClusterStepOne prevStepOneCluster;
     ClusterStepOne lastSavedStepOneCluster;
 
-    ClusterStepTwo currStepTwoCluster = new ClusterStepTwo(this);
-    ClusterStepTwo prevStepTwoCluster = new ClusterStepTwo(this);
-    ClusterStepTwo swapStepTwoCluster = new ClusterStepTwo(this);
+    ClusterStepTwo currStepTwoCluster;
+    ClusterStepTwo prevStepTwoCluster;
+    ClusterStepTwo swapStepTwoCluster;
 
     final ListInt garbagePatternPositions = new ListIntImpl();
 
@@ -282,6 +282,11 @@ class PositionsAnalyze {
         this.originalPositions = new ArrayIntImpl();
         this.positions = new ArrayIntImpl();
         this.data = data;
+
+        this.currStepTwoCluster = new ClusterStepTwo(this);
+        this.prevStepTwoCluster = new ClusterStepTwo(this);
+        this.swapStepTwoCluster = new ClusterStepTwo(this);
+
         this.clusters = clusters;
         this.positionCandidate = positionCandidate;
         this.keyChars = new ListIntImpl();
@@ -612,6 +617,15 @@ class PositionsAnalyze {
 
         if ( this.nonClustered < 0 ) {
             this.nonClustered = 0;
+        }
+
+        if ( this.clustered > this.data.pattern.length() ) {
+            if ( this.nonClustered == 0 ) {
+                this.clustered = this.data.pattern.length();
+            }
+            else {
+                throw new IllegalStateException();
+            }
         }
                 
         this.clusters.arrange();
@@ -1208,39 +1222,92 @@ class PositionsAnalyze {
                                         nearestPositionInVariant = nextNextPosition;
                                         nextNextFoundAsTypo = true;
 
-                                        if ( data.pattern.length() - currentPatternCharIndex > 2 && 
-                                             data.variant.length() - currentPatternCharPositionInVariant > 3) {
-                                            char next2CharInPattern = data.patternChars.i(currentPatternCharIndex + 2);
-                                            int next3Position = currentPatternCharPositionInVariant + 3;
-                                            char next3CharInVariant = data.variant.charAt(next3Position);
-                                            if ( next2CharInPattern == next3CharInVariant ) {
-                                                positionsInCluster.add(next3Position);
-                                                currStepTwoCluster.add(
-                                                        next2CharInPattern,
-                                                        currentPatternCharIndex + 2,
-                                                        next3Position,
-                                                        filledPositions.contains(next3Position),
-                                                        isPositionSetAt(currentPatternCharIndex + 2),
-                                                        MATCH_TYPO_NEXTx2_IN_PATTERN_NEXTx3_IN_VARIANT);
+//                                        if ( data.pattern.length() - currentPatternCharIndex > 2 &&
+//                                             data.variant.length() - currentPatternCharPositionInVariant > 3) {
+//                                            char next2CharInPattern = data.patternChars.i(currentPatternCharIndex + 2);
+//                                            int next3Position = currentPatternCharPositionInVariant + 3;
+//                                            char next3CharInVariant = data.variant.charAt(next3Position);
+//                                            if ( next2CharInPattern == next3CharInVariant ) {
+//                                                positionsInCluster.add(next3Position);
+//                                                currStepTwoCluster.add(
+//                                                        next2CharInPattern,
+//                                                        currentPatternCharIndex + 2,
+//                                                        next3Position,
+//                                                        filledPositions.contains(next3Position),
+//                                                        isPositionSetAt(currentPatternCharIndex + 2),
+//                                                        MATCH_TYPO_NEXTx2_IN_PATTERN_NEXTx3_IN_VARIANT);
+//
+//                                                if ( data.pattern.length() - currentPatternCharIndex > 3 ) {
+//                                                    char next3CharInPattern = data.patternChars.i(currentPatternCharIndex + 3);
+//                                                    if ( next3CharInPattern == nextCharInVariant ) {
+//                                                        boolean needToInclude = notFoundPatternChars.contains(nextCharInVariant);
+//                                                        if ( needToInclude ) {
+//                                                            positionsInCluster.add(currentPatternCharPositionInVariant + 1);
+//                                                            currStepTwoCluster.add(
+//                                                                    next3CharInPattern,
+//                                                                    currentPatternCharIndex + 3,
+//                                                                    currentPatternCharPositionInVariant + 1,
+//                                                                    filledPositions.contains(currentPatternCharPositionInVariant + 1),
+//                                                                    isPositionSetAt(currentPatternCharIndex + 3),
+//                                                                    MATCH_TYPO_NEXTx3_IN_PATTERN_NEXT_IN_VARIANT);
+//                                                        }
+//                                                    }
+//                                                }
+//                                            }
+//                                        }
 
-                                                if ( data.pattern.length() - currentPatternCharIndex > 3 ) {
-                                                    char next3CharInPattern = data.patternChars.i(currentPatternCharIndex + 3);
-                                                    if ( next3CharInPattern == nextCharInVariant ) {
-                                                        boolean needToInclude = notFoundPatternChars.contains(nextCharInVariant);
-                                                        if ( needToInclude ) {
-                                                            positionsInCluster.add(currentPatternCharPositionInVariant + 1);
-                                                            currStepTwoCluster.add(
-                                                                    next3CharInPattern,
-                                                                    currentPatternCharIndex + 3,
-                                                                    currentPatternCharPositionInVariant + 1,
-                                                                    filledPositions.contains(currentPatternCharPositionInVariant + 1),
-                                                                    isPositionSetAt(currentPatternCharIndex + 3),
-                                                                    MATCH_TYPO_NEXTx3_IN_PATTERN_NEXT_IN_VARIANT);
-                                                        }                                                    
+                                        if ( true ) {
+                                            if ( data.pattern.length() - currentPatternCharIndex > 2 ) {
+                                                char next2CharInPattern = data.patternChars.i(currentPatternCharIndex + 2);
+                                                if ( next2CharInPattern == nextCharInVariant ) {
+                                                    positionsInCluster.add(currentPatternCharPositionInVariant + 1);
+                                                    boolean included = filledPositions.contains(currentPatternCharPositionInVariant + 1);
+                                                    data.log.add(POSITIONS_SEARCH, "          [info] typo found '%s'(%s in variant) - '%s' is next*2 in pattern and next in variant",
+                                                            currentChar, currentPatternCharPositionInVariant, nextCharInVariant);
+                                                    currStepTwoCluster.add(
+                                                            next2CharInPattern,
+                                                            currentPatternCharIndex + 2,
+                                                            currentPatternCharPositionInVariant + 1,
+                                                            included,
+                                                            this.isPositionSetAt(currentPatternCharIndex + 2),
+                                                            MATCH_TYPO_NEXTx2_IN_PATTERN_NEXT_IN_VARIANT);
+                                                }
+
+                                                if ( data.variant.length() - currentPatternCharPositionInVariant > 3 ) {
+                                                    int next3Position = currentPatternCharPositionInVariant + 3;
+                                                    char next3CharInVariant = data.variant.charAt(next3Position);
+                                                    if ( next2CharInPattern == next3CharInVariant ) {
+                                                        positionsInCluster.add(next3Position);
+                                                        currStepTwoCluster.add(
+                                                                next2CharInPattern,
+                                                                currentPatternCharIndex + 2,
+                                                                next3Position,
+                                                                filledPositions.contains(next3Position),
+                                                                isPositionSetAt(currentPatternCharIndex + 2),
+                                                                MATCH_TYPO_NEXTx2_IN_PATTERN_NEXTx3_IN_VARIANT);
+
+                                                        if ( data.pattern.length() - currentPatternCharIndex > 3 ) {
+                                                            char next3CharInPattern = data.patternChars.i(currentPatternCharIndex + 3);
+                                                            if ( next3CharInPattern == nextCharInVariant ) {
+                                                                boolean needToInclude = notFoundPatternChars.contains(nextCharInVariant);
+                                                                if ( needToInclude ) {
+                                                                    positionsInCluster.add(currentPatternCharPositionInVariant + 1);
+                                                                    currStepTwoCluster.add(
+                                                                            next3CharInPattern,
+                                                                            currentPatternCharIndex + 3,
+                                                                            currentPatternCharPositionInVariant + 1,
+                                                                            filledPositions.contains(currentPatternCharPositionInVariant + 1),
+                                                                            isPositionSetAt(currentPatternCharIndex + 3),
+                                                                            MATCH_TYPO_NEXTx3_IN_PATTERN_NEXT_IN_VARIANT);
+                                                                }
+                                                            }
+                                                        }
                                                     }
                                                 }
                                             }
                                         }
+
+
                                     }                                         
                                 }
                                 else {
@@ -1298,6 +1365,8 @@ class PositionsAnalyze {
                                 int matches = 0;
                                 char variantCh;
                                 char patternCh;
+
+                                currStepTwoCluster.setCandidatesOrderEstimate(currentPatternCharIndex, currentPatternCharPositionInVariant);
                                 patternLookup: for (; iPattern <= limitPattern; iPattern++) {
                                     patternCh = data.pattern.charAt(iPattern);
                                     variantLookup: for (int jVariant = iVariant; jVariant <= limitVariant; jVariant++) {
@@ -1314,11 +1383,17 @@ class PositionsAnalyze {
                                         }
                                     }
                                 }
+                                currStepTwoCluster.finalizeOrdersEstimate();
 
                                 if ( matches > 1 ) {
                                     int rejectedCount = currStepTwoCluster.rejectCandidatesBelongingByPatternToOtherWords(currentWord);
                                     if ( matches - rejectedCount > 1 ) {
-                                        currStepTwoCluster.approveCandidates();
+                                        if ( currStepTwoCluster.isOrdersEstimateOk() ) {
+                                            currStepTwoCluster.approveCandidates();
+                                        }
+                                        else {
+                                            currStepTwoCluster.rejectCandidates();
+                                        }
                                     }
                                     else {
                                         currStepTwoCluster.rejectCandidates();

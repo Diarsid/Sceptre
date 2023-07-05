@@ -1,12 +1,15 @@
 package diarsid.sceptre.impl.logs;
 
+import java.util.HashMap;
 import java.util.Map;
 
+import diarsid.sceptre.api.util.LineByLineLogSink;
 import diarsid.sceptre.impl.AnalyzeBuilder;
 import diarsid.sceptre.api.LogSink;
 import diarsid.sceptre.api.LogType;
 
 import static java.lang.String.format;
+import static java.util.Arrays.stream;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 
@@ -20,6 +23,14 @@ public class Logging {
         this.logSink = builder.logSink();
         this.enabledByLogType = builder.enabledByLogType();
         this.enabled = builder.isLogEnabled() && nonNull(this.logSink);
+    }
+
+    public Logging() {
+        this.logSink = new LineByLineLogSink(System.out::println);
+        this.enabled = true;
+        this.enabledByLogType = new HashMap<>();
+
+        stream(LogType.values()).forEach(type -> this.enabledByLogType.put(type, true));
     }
 
     public void begins() {

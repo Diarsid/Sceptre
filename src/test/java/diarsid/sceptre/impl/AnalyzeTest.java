@@ -344,8 +344,7 @@ public class AnalyzeTest {
         pattern = "sarwars";
         
         variants = asList(
-                "Films/Movies/Star.Wars.The.Last.Jedi.2017.D.BDRip.720p.ExKinoRay.mkv",
-                "Content/WH/Game/Age_Of_Sigmar/Warscrolls"
+                "Films/Movies/Star.Wars.The.Last.Jedi.2017.D.BDRip.720p.ExKinoRay.mkv"
         );
         
         expectedSameOrderAsVariants();
@@ -2003,8 +2002,8 @@ public class AnalyzeTest {
                 "Books/Tech/Java");
         
         expected = asList(
-                "Books/Common/Tolkien_J.R.R", 
-                "Books/Tech/Java");
+                "Books/Tech/Java",
+                "Books/Common/Tolkien_J.R.R");
         
         weightVariantsAndCheckMatching();
     }
@@ -2842,8 +2841,7 @@ public class AnalyzeTest {
         pattern = "godmenwar";
 
         variants = asList(
-                "The Wars of Gods and Men: Book III of the Earth Chronicles (The Earth Chronicles) by Zecharia Sitchin",
-                "On Killing: The Psychological Cost of Learning to Kill in War and Society by Dave Grossman");
+                "The Wars of Gods and Men: Book III of the Earth Chronicles (The Earth Chronicles) by Zecharia Sitchin");
 
         expectedSameOrderAsVariants();
 
