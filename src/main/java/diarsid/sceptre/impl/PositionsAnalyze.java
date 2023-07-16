@@ -3207,7 +3207,7 @@ class PositionsAnalyze {
                                 clusterAtWordStart = true;
                                 wordStartFound = true;
                                 wordQuality++;
-                                data.log.add(POSITIONS_CLUSTERS, "          +1 first cluster, word starts and ends in single cluster");
+                                data.log.add(POSITIONS_CLUSTERS, "          +1 first cluster, word starts with cluster");
                             }
                             else if ( this.singlePositions.contains(word.startIndex) ) {
                                 wordStartFound = true;
@@ -3270,10 +3270,11 @@ class PositionsAnalyze {
                             else {
                                 if ( singlePositionsInWordCount > 1 ) {
                                     wordQuality = wordQuality + 4;
-                                    data.log.add(POSITIONS_CLUSTERS, "          +4 clusterAtWordStart, wordEndFound, singlePositionsInWord");
+                                    data.log.add(POSITIONS_CLUSTERS, "          +4 clusterAtWordStart, wordEndFound, singlePositionsInWord > 1");
                                 }
                                 else {
-                                    // no +
+                                    wordQuality = wordQuality + 3;
+                                    data.log.add(POSITIONS_CLUSTERS, "          +3 clusterAtWordStart, wordEndFound, singlePositionsInWord = 1 at end");
                                 }
                             }
                         }
@@ -4155,6 +4156,8 @@ class PositionsAnalyze {
         boolean currentEqualsNext = false;
         int repeatAbsDiffSum;
 
+        boolean ignoreFirstOrderAndMeanDiff = false;
+
         boolean isLastPair;
 
         boolean isBad = false;
@@ -4306,6 +4309,24 @@ class PositionsAnalyze {
                 if ( repeatQty != 0 ) {
                     cluster.repeats().add(repeat);
                     cluster.repeatQties().add(repeatQty);
+
+                    if ( diffCount == 1 ) {
+                        int iPrevBeforeLastBeforeRepeat = i - repeatQty;
+                        if ( iPrevBeforeLastBeforeRepeat > -1 ) {
+                            int iPrevPrevOrder = orders.get(iPrevBeforeLastBeforeRepeat);
+                            if ( absDiff(iPrevPrevOrder, repeat) == 1 && absDiff(lastBeforeRepeat, repeat) == repeatQty + 1 ) {
+                                data.log.add(POSITIONS_CLUSTERS, "              [order-diff] compensation for (%s * %s) <-- %s", repeat, repeatQty, iPrevPrevOrder);
+                                diffSumAbs = 0;
+                                shifts = shifts + repeatQty;
+                                haveCompensation = true;
+                                lastBeforeRepeat = UNINITIALIZED;
+
+                                if ( iPrevBeforeLastBeforeRepeat == 0 ) {
+                                    ignoreFirstOrderAndMeanDiff = true;
+                                }
+                            }
+                        }
+                    }
                 }
                 repeat = 0;
                 repeatQty = 0;
@@ -4339,7 +4360,7 @@ class PositionsAnalyze {
 
         boolean accidentalDifferentClustersJoin = false;
 
-        if ( firstOrder != diffMean ) {
+        if ( firstOrder != diffMean && ! ignoreFirstOrderAndMeanDiff ) {
             diffCount++;
 
             boolean ignore = false;

@@ -2898,6 +2898,18 @@ public class AnalyzeTest {
     }
 
     @Test
+    public void test_crishphrtolkinjrr() {
+        pattern = "crishphrtolkinjrr";
+
+        variants = asList(
+                "Pictures by J.R.R. Tolkien by J.R.R. Tolkien and Christopher Tolkien");
+
+        expectedSameOrderAsVariants();
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
     public void test_brontstreflc() {
         pattern = "brontstreflc";
 
