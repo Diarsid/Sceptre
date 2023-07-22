@@ -4327,6 +4327,21 @@ class PositionsAnalyze {
                             }
                         }
                     }
+
+                    if ( ! ignoreFirstOrderAndMeanDiff ) {
+                        if ( firstOrder != diffMean ) {
+                            if ( repeatQty == clusterLength-1 ) {
+                                WordInVariant word = data.wordsInVariant.wordOf(clusterFirstPosition);
+                                if ( word.startIndex == clusterFirstPosition ) {
+                                    if ( abs(firstOrder - diffMean ) == 1 ) {
+                                        ignoreFirstOrderAndMeanDiff = true;
+                                        diffSumAbs--;
+                                        data.log.add(POSITIONS_CLUSTERS, "              [order-diff] ignore first order diff as insignificant");
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
                 repeat = 0;
                 repeatQty = 0;

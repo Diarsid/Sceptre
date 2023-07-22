@@ -223,7 +223,9 @@ public class AnalyzeTest {
                 "Films/List.txt");
         
         expected = asList( 
-                "LostFilm");
+                "LostFilm",
+                "Films/List",
+                "Films/List.txt");
         
         weightVariantsAndCheckMatching();
     }
@@ -1662,6 +1664,7 @@ public class AnalyzeTest {
                 "Tools_looking",
                 "tolkien_lost",
                 "to_low_losing",
+                "lost_old_to",
                 "book_tolstoy"
                 );
 
@@ -2489,6 +2492,19 @@ public class AnalyzeTest {
 
         variants = asList(
                 "D:/DEV/3__Tools/Servers"
+        );
+
+        expectedSameOrderAsVariants();
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_3toolssevrirtl() {
+        pattern = "3toolssevrirtl";
+
+        variants = asList(
+                "D:/DEV/3__Tools/Servers/Virtualization_Servers"
         );
 
         expectedSameOrderAsVariants();
