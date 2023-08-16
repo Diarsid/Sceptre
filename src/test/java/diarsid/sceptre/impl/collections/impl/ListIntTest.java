@@ -18,6 +18,13 @@ public class ListIntTest {
     }
 
     @Test
+    void testArrayConstructor() {
+        list = new ListIntImpl(1, 2, 3, 4, 5);
+
+        int a = 5;
+    }
+
+    @Test
     void testAdd() {
         list.add(10);
         list.add(11);

@@ -9,7 +9,6 @@ import diarsid.sceptre.impl.collections.ListInt;
 import static diarsid.sceptre.impl.collections.impl.Constants.DEFAULT_ARRAY_SIZE;
 import static diarsid.sceptre.impl.collections.impl.Constants.INT_NOT_SET;
 import static diarsid.sceptre.impl.collections.impl.Sort.REVERSE;
-import static diarsid.sceptre.impl.collections.impl.Sort.STRAIGHT;
 
 public class ListIntImpl implements ListInt {
 
@@ -48,6 +47,20 @@ public class ListIntImpl implements ListInt {
         this.array = new int[DEFAULT_ARRAY_SIZE];
         this.size = 0;
         Arrays.fill(this.array, INT_NOT_SET);
+        this.elements = new Elements(this);
+    }
+
+    public ListIntImpl(int... ints) {
+        if ( ints.length < DEFAULT_ARRAY_SIZE ) {
+            this.array = new int[DEFAULT_ARRAY_SIZE];
+        }
+        else {
+            int times = ints.length / DEFAULT_ARRAY_SIZE;
+            this.array = new int[(times + 1) * DEFAULT_ARRAY_SIZE];
+        }
+        this.size = ints.length;
+        System.arraycopy(ints, 0, this.array, 0, ints.length);
+        Arrays.fill(this.array, this.size, this.array.length, INT_NOT_SET);
         this.elements = new Elements(this);
     }
 
@@ -260,8 +273,15 @@ public class ListIntImpl implements ListInt {
     }
 
     @Override
-    public void fill(int element) {
+    public void fillWith(int element) {
         Arrays.fill(this.array, 0, this.size, element);
+    }
+
+    @Override
+    public void addIntsRange(int fromIncl, int toIncl) {
+        for ( int i = fromIncl; i <= toIncl; i++ ) {
+            this.add(i);
+        }
     }
 
     @Override

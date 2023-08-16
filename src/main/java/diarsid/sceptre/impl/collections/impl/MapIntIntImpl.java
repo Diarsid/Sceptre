@@ -418,6 +418,7 @@ public class MapIntIntImpl implements MapIntInt {
             next.set(key, value);
             this.entries[0] = next;
             this.size++;
+            return;
         }
 
         Entry entry = null;
@@ -436,6 +437,63 @@ public class MapIntIntImpl implements MapIntInt {
 
         if ( exists ) {
             entry.value = value;
+        }
+        else {
+            int indexOfFirstKeyMoreThanGiven = indexOfLastKeyLessThanGiven + 1;
+
+            if ( indexOfFirstKeyMoreThanGiven == this.entries.length ) {
+                this.extendArray();
+
+                Entry next = ENTRIES_POOL.give();
+                next.set(key, value);
+                this.entries[indexOfFirstKeyMoreThanGiven] = next;
+            }
+            else {
+                if ( this.entries.length == this.size ) {
+                    this.extendArray();
+                }
+
+                Entry insert = ENTRIES_POOL.give();
+                insert.set(key, value);
+
+                System.arraycopy(
+                        this.entries, indexOfFirstKeyMoreThanGiven,
+                        this.entries, indexOfFirstKeyMoreThanGiven + 1,
+                        this.size - indexOfFirstKeyMoreThanGiven);
+
+                this.entries[indexOfFirstKeyMoreThanGiven] = insert;
+            }
+
+            this.size++;
+        }
+    }
+
+    @Override
+    public void putOrIncrementValueIfKeyExists(int key, int value) {
+        if ( this.size == 0 ) {
+            Entry next = ENTRIES_POOL.give();
+            next.set(key, value);
+            this.entries[0] = next;
+            this.size++;
+            return;
+        }
+
+        Entry entry = null;
+        boolean exists = false;
+        int indexOfLastKeyLessThanGiven = -1;
+        for ( int i = 0; i < this.size; i++ ) {
+            entry = this.entries[i];
+            if ( entry.key < key ) {
+                indexOfLastKeyLessThanGiven = i;
+            }
+            if ( entry.key == key ) {
+                exists = true;
+                break;
+            }
+        }
+
+        if ( exists ) {
+            entry.value = entry.value + 1;
         }
         else {
             int indexOfFirstKeyMoreThanGiven = indexOfLastKeyLessThanGiven + 1;

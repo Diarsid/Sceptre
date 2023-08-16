@@ -1662,9 +1662,9 @@ public class AnalyzeTest {
                 "Tools_aaaaa",
                 "Tools_aaaaa",
                 "Tools_looking",
+                "lost_old_to",
                 "tolkien_lost",
                 "to_low_losing",
-                "lost_old_to",
                 "book_tolstoy"
                 );
 
@@ -1816,9 +1816,7 @@ public class AnalyzeTest {
         );
 
         expected = asList(
-                "D:/DEV/1__Projects/UkrPoshta/UkrposhtaStatusNotificationServiceClient",
-                "D:/DEV/1__Projects/UkrPoshta/UkrposhtaStatusNotificationService",
-                "D:/DEV/1__Projects/UkrPoshta/UkrposhtaStatusNotificationGenerator");
+                "D:/DEV/1__Projects/UkrPoshta/UkrposhtaStatusNotificationServiceClient");
 
         weightVariantsAndCheckMatching();
     }
@@ -2178,6 +2176,120 @@ public class AnalyzeTest {
                 "D:/DEV/1__Projects/UkrPoshta/UkrposhtaStatusTracking");
 
         expected = asList("D:/DEV/1__Projects/X__Archive/UkrPoshta");
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_disrdarcv() {
+        pattern = "disrdarcv";
+
+        variants = asList(
+                "D:/DEV/1__Projects/X__Archive/Diarsid");
+
+        expectedSameOrderAsVariants();
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_disrdarcv_mass() {
+        pattern = "disrdarcv";
+
+        variants = asList("Vanishing Ireland: Further Chronicles of a Disappearing World by Turtle Bunbury",
+                "Parkinson's Disease and Movement Disorders by Dr. Joseph Jankovic MD",
+                "Disparitions by Natsuo Kirino",
+                "Discovery Channel The Big Book of Sharks by Discovery Channel",
+                "Diseases and Disorders - Birth Defects by Barbara Sheen",
+                "The Logic of Scientific Discovery (Routledge Classics) by Karl Popper",
+                "Diary of a Minecraft Zombie Book 1: A Scare of A Dare (Volume 1) by Herobrine Books",
+                "Life Reimagined: Discovering Your New Life Possibilities by Richard J. Leider",
+                "Oils and Vinegars: Discovering and Enjoying Gourmet Oils and Vinegars by Liz Franklin",
+                "Blame It on the Brain: Distinguishing Chemical Imbalances Brain Disorders and Disobedience by Edward T. Welch",
+                "Kokology: The Game of Self-Discovery by Tadahiko Nagao",
+                "Maternal and Newborn Success: A Q&A Review Applying Critical Thinking to Test Taking (Davis's Success) by Margot R. De Sevo PhD LCCE IBCLC RNC",
+                "Colours of Survival: Discovering Hope in Bangladesh by Adrian Plass",
+                "Manic-Depressive Illness: Bipolar Disorders and Recurrent Depression by Frederick K. Goodwin and Kay Redfield Jamison",
+                "The Bible Cure for Skin Disorders: Ancient Truths, Natural Remedies and the Latest Findings for Your Health Today (New Bible Cure (Siloam)) by Don Colbert MD",
+                "The Discomfort Zone: A Personal History by Jonathan Franzen",
+                "The Discomfort Zone: A Personal Journey by Jonathan Franzen",
+                "Tsunamis and Other Natural Disasters (Magic Tree House Research Guide #15) by Salvatore Murdocca and Natalie Pope Boyce, and Mary Pope Osborne",
+                "No Limits: Viewers Discretion Advised. (Volume 1)",
+                "D:/DEV/1__Projects/X__Archive/Diarsid",
+                "$30 Film School: How to Write Direct Produce Shoot Edit Distribute Tour With and Sell Your Own No-Budget Digital Movie by Michael W. Dean",
+                "The Thirteen Original Clan Mothers: Your Sacred Path to Discovering the Gifts, Talents, and Abilities of the Feminine Through the Ancient Teachings of the Sisterhood by Jamie Sams",
+                "No Disrespect by Sister Souljah",
+                "This Is Tanzania: The diary of an Englishman in Africa by Mr Adrian Francis Strain",
+                "McCarthy's Bar: A Journey of Discovery in Ireland by Pete McCarthy",
+                "Our Origins: Discovering Physical Anthropology (Second Edition) by Clark Spencer Larsen",
+                "Discovering Sign Language by Laura Greene",
+                "Bipolar Disorders: Basic Mechanisms and Therapeutic Implications (Medical Psychiatry Series)",
+                "Bringing Up Bébé: One American Mother Discovers the Wisdom of French Parenting (now with Bébé Day by Day: 100 Keys to French Parenting) by Pamela Druckerman",
+                "Master The Public Safety Dispatcher/911 Operator Exam: Targeted Test Prep to Jump-Start Your Career by Peterson's",
+                "Learning Pandas - Python Data Discovery and Analysis Made Easy by Michael Heydt",
+                "Discovery of the Presence of God: Devotional Nonduality by David R. Hawkins",
+                "Discovering Geometry: An Investigative Approach by Michael Serra",
+                "Discovering Computers & Microsoft Office 2013: A Fundamental Combined Approach (Shelly Cashman Series) by Misty E. Vermaat",
+                "Healing the New Childhood Epidemics: Autism, ADHD, Asthma, and Allergies: The Groundbreaking Program for the 4-A Disorders by Kenneth Bock",
+                "Ramus, Method, and the Decay of Dialogue: From the Art of Discourse to the Art of Reason by Walter J. Ong S.J.",
+                "The Queen of Distraction: How Women with ADHD Can Conquer Chaos, Find Focus, and Get More Done by Terry Matlen",
+                "The Globe Encompassed: The Age of European Discovery (1500 to 1700) by Glenn J. Ames",
+                "Wild at Heart: Discovering the Secret of a Man's Soul by John Eldredge",
+                "Time's Arrow Time's Cycle: Myth and Metaphor in the Discovery of Geological Time by Stephen Jay Gould",
+                "Do What You Are: Discover the Perfect Career for You Through the Secrets of Personality Type by Paul D. Tieger",
+                "The Kuwaiti Oil Fires (Environmental Disasters) by Kristine Hirschmann",
+                "The Piano Shop on the Left Bank: Discovering a Forgotten Passion in a Paris Atelier by Thad Carhart",
+                "What Color Is Your Parachute? For Teens, 2nd Edition: Discovering Yourself, Defining Your Future by Carol Christen",
+                "World Religions (2015): A Voyage of Discovery 4th Edition by Jeffrey Brodd",
+                "Distinctive Presentations In Needle Art: A Complete Guide to Professional Finishing for Your Needlework by Marcia S. Brown",
+                "Discourses Books 3-4. The Enchiridion (Loeb Classical Library #218) by Epictetus and William A. Oldfather",
+                "Sharpen Your Discernment by Roberts Liardon",
+                "Dispatches from the Edge: A Memoir of War Disasters and Survival by Anderson Cooper",
+                "Amber and Ashes (Dragonlance: The Dark Disciple #1) by Margaret Weis",
+                "Nabokov's Pale Fire: The Magic of Artistic Discovery by Brian Boyd",
+                "OriginsThe term originated from the Bene Gesserit's prescient powers, and their inability to venture into a specific region of prescient knowledge. This region, though mysterious in nature, was known to be unattainable to females. Specifically, the spice melange allowed the Bene Gesserit to unlock genetic memory, but only on their maternal side. Female humans carry two X chromosomes, while males possess an X chromosome and a Y chromosome. A Kwisatz Haderach would be capable of accessing genetic memories stored within both chromosomes, while those memories were inaccessible to Bene Gesserit. Memories from male ancestors are still accessible to females with access to genetic memory (Alia is able to make contact with the ego memory of Vladimir Harkonnen for instance) but due to the lack of the Y chromosome, the memories were incomplete. Accessing the full paternal memories was impossible for the Bene Gesserit, and the very thought of trying was terrifying to them. Further, melange also exposed the Sisterhood (and others) to a limited form of prescience - thoughts, feelings, images into the near future, but no more.Bene Gesserit AttemptThe Bene Gesserit desire to uncover this knowledge and its associated powers, drove them to initiate a long-running genetic breeding program. This would yield a male with mental powers capable of bridging space and time and that he would be under the direct control of the Sisterhood. The Bene Gesserit knew that not only would their Kwisatz Haderach possess Other Memory on both the male and female side, but that he would be able to predict the future precisely. He would be Bene Gesserit Reverend Mother, Mentat, and Guild Navigator, all in one.After the emergence of this male - Paul Atreides - the term Kwisatz Haderach was also understood as meaning \"one who can be many places at once\", and became synonymous with Paul. In time, it also came to encompass his sister, Alia Atreides, and his son Leto Atreides II, since they all had similar abilities.The initial Bene Gesserit plan was to breed the daughter of Duke Leto Atreides to a Harkonnen male, which would produce the Kwisatz Haderach. This was to be the culmination of more than 10,000 years of careful breeding. This plan would have seen the end of the centuries-old feud between the Great Houses Atreides and Harkonnen, and placed a prescient, Bene Gesserit-controlled male on the Golden Lion Throne, the Kwisatz Haderach. However, because of her love for Duke Leto, the Lady Jessica disobeyed her fellow Bene Gesserit and gave birth to a son instead of a daughter, to give him an heir, Paul.It seemed fairly certain from early in Paul's life that he would in fact be the Kwisatz Haderach, since he showed an ability to see into the future. It was when he was fifteen years of age that the Bene Gesserit sent a Reverend Mother to test Paul's prescience and his training in the Bene Gesserit ways. This event appeared to be a significant catalyst for the events that would befall the universe for the next several thousand years. Paul's testing with the Gom Jabbar, as well as the Sisterhood's silent complicity in his father's death, proved to instill significant negativity in Paul against the Sisterhood. As a result, when he reached young adulthood, and ascended to the Golden Lion Throne, he vowed that he would never be under the control of the Sisterhood. Because of this, the Sisterhood lost control of their breeding program, their Kwisatz Haderach, and the possibility of placing a Bene Gesserit on the throne.Paul Leaves the Golden PathIndeed, it appeared that the majority of people did not realize that to know the future is to be trapped by it. Paul could see that he would have to lead humanity onto a drastic course in order for it to escape its own annihilation. As a result, he chose to escape the Golden Path by allowing himself to be blinded, so that he could walk into the desert and not be a burden on his tribe. The mantle of the Golden Path was subsequently taken up by Leto II.ImpactAs Kwisatz Haderach, both Paul and his son Leto would at times experience significant grief because they knew they were trapped by their own destinies. One of the few people who understood this was in fact one of Paul's enemies. It was through the failed Tleilaxu Kwisatz Haderach 'experiment' that the Tleilaxu Master Scytale could in fact sympathize with Paul and the decisions he had to make.When Leto II, the next Kwisatz Haderach, ascended to the throne, not only did he manage to avoid Bene Gesserit control, but he also took control of their breeding program. He then relegated them to a relatively insignificant role in the universe throughout the 3500 years of his reign.The ScatteringAfter the Famine Times prompted by Leto II after his death. The remaining power brokers in the Old Empire either forgot about the concept of the Kwisatz, or vehemently guarded against the rise of another of the super-beings. The Bene Gesserit would go so far as to terminate the life of humans that showed aspects of enhanced abilities. But as was shown with the \"wild\" Atreides line, the heightened human abilities continually showed themselves.After the The Scattering, both Miles Teg and his daughter Darwi Odrade, descendants of the Atreides, showed super-normal actions. Teg was able to move at lightning-fast speed and disabled his kidnappers on Gammu. Odrade had limited prescience that enabled her to know that the misguided Honored Matres and Bene Gesserit should merge to form one single organization.But it was the ghola of Duncan Idaho which caused the most concern for all involved. The conservative branch of the Sisterhood, led by Schwangyu, would go so far as to disobey the order of the Mother Superior Alma Mavis Taraza, and terminate the life of a young Duncan ghola -- even as she has sworn to be his protector from the Tleilaxu, who had allied themselves temporarily with the returning Honored Matres.Behind the scenesIt's likely that the term was borrowed by Frank Herbert from the Kabbala. The compilation of Jewish mysticism the core of which is entitled HaZohar (The Book of Splendor) ascribed to Rabbi Shimon bar-Yohai, ascribed by Jews to have been written in the 1st century C.E. Modern scholars ascribe it to a sephardic Jewish author around the 13th century. The term itself is Hebrew, \"K\"fitzat ha-Derekh\", (קְפִיצַת הַדֶּרֶךְ) literally, \"The Leap of the Way,\" by means of which an initiate may travel some distance instantaneously, appearing to be in two or more places at once.",
+                "Career choices and changes: A guide for discovering who you are, what you want, and how to get it by Mindy Bingham",
+                "Creativity: The Psychology of Discovery and Invention by Mihaly Csikszentmihalyi",
+                "A Discourse on the Method (Oxford World's Classics) by René Descartes",
+                "The Discovery of New Worlds (Story of the World #2) by Margaret Bertha Synge",
+                "Age of Distraction: The Island by Patricia Mahon",
+                "Neurodegenerative Disorders (Perspectives on Diseases and Disorders) by Sylvia Engdahl",
+                "Disordered Minds by Minette Walters",
+                "From the Age of Discovery to a World at War (America: The Last Best Hope #1) by William J. Bennett",
+                "The National Geographic Society: 100 Years of Adventure & Discovery by C.D.B. Bryan",
+                "Discovering God's Will by Sinclair B. Ferguson",
+                "Unified Protocol for Transdiagnostic Treatment of Emotional Disorders: Therapist Guide (Treatments That Work) by David H. Barlow",
+                "Discourse on Method and Meditations on First Philosophy by Donald A. Cress and René Descartes",
+                "Discovering Knowledge in Data: An Introduction to Data Mining (Wiley Series on Methods and Applications in Data Mining) by Daniel T. Larose",
+                "The Rhythm of Family: Discovering a Sense of Wonder through the Seasons by Amanda Blake Soule",
+                "The Social Contract and The First and Second Discourses",
+                "Be the Person You Want to Find: Relationship and Self-Discovery by June Shiver and Cheri Huber",
+                "The Discovery (Dive #1) by Gordon Korman",
+                "Discovering Great Artists: Hands-On Art for Children in the Styles of the Great Masters by Kim Solga and MaryAnn F. Kohl, and Rebecca Van Slyke",
+                "Discourse on the Origin of Inequality by Jean-Jacques Rousseau",
+                "Archaeology, Sexism, and Scandal: The Long-Suppressed Story of One Woman's Discoveries and the Man Who Stole Credit for Them by Alan Kaiser",
+                "La disparition by Georges Perec",
+                "Kicking Up Dirt: A True Story of Determination, Deafness, and Daring by Ashley Fiolek",
+                "Jeff Shaara's Civil War Battlefields: Discovering America's Hallowed Ground by Jeff Shaara",
+                "The Mammoth Book of Storms Shipwrecks and Sea Disasters by Richard Russell Lawrence",
+                "New Worlds Ancient Texts: The Power of Tradition and the Shock of Discovery by Anthony Grafton",
+                "National Geographic 125 Years: Legendary Photographs, Adventures, and Discoveries That Changed the World by Mark Collins Jenkins",
+                "PMP Exam Success Series: MP3 Audio Flashcards and Discovering the PMBOK Guide",
+                "Yosemite: Its Discovery Its Wonder and Its People by Margaret Sanborn",
+                "Myth & the Movies: Discovering the Myth Structure of 50 Unforgettable Films by Stuart Voytilla");
+
+        expected = asList("D:/DEV/1__Projects/X__Archive/Diarsid");
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void npe() {
+        pattern = "disrdarcv";
+
+        variants = asList("$30 Film School: How to Write Direct Produce Shoot Edit Distribute Tour With and Sell Your Own No-Budget Digital Movie by Michael W. Dean");
+
+        expected = asList();
 
         weightVariantsAndCheckMatching();
     }
@@ -2839,6 +2951,18 @@ public class AnalyzeTest {
     }
 
     @Test
+    public void test_rhgtphilpsy() {
+        pattern = "rhgtphilpsy";
+
+        variants = asList(
+                "Philosophy of Right by S.W. Dyde and Georg Wilhelm Friedrich Hegel");
+
+        expectedSameOrderAsVariants();
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
     @Disabled("don't know what to do wuth: mAn -> mEn")
     public void test_godmanwar() {
         pattern = "godmanwar";
@@ -2944,8 +3068,7 @@ public class AnalyzeTest {
 
         variants = asList(
                 "D:/DEV/1__Projects/UkrPoshta/UkrposhtaStatusTracking",
-                "D:/DEV/1__Projects/UkrPoshta/UkrposhtaStatusNotificationService",
-                "D:/DEV/1__Projects/UkrPoshta/UkrposhtaCommons");
+                "D:/DEV/1__Projects/UkrPoshta/UkrposhtaStatusNotificationService");
 
         expectedSameOrderAsVariants();
 

@@ -238,6 +238,14 @@ class Cluster extends PooledReusable implements Comparable<Cluster> {
 
         return false;
     }
+
+    void writePositionsTo(ListInt positions) {
+        positions.addIntsRange(this.firstPosition, this.lastPosition());
+    }
+
+    boolean isNotSame(Cluster other) {
+        return this.firstPosition != other.firstPosition;
+    }
     
     void finish() {
         if ( this.length > 2 ) {

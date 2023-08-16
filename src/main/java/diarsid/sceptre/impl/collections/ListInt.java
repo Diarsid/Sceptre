@@ -2,9 +2,14 @@ package diarsid.sceptre.impl.collections;
 
 import java.util.stream.IntStream;
 
+import diarsid.sceptre.impl.collections.impl.ListIntImpl;
 import diarsid.sceptre.impl.collections.impl.Sort;
 
 public interface ListInt extends Ints {
+
+    static ListInt asListInt(int... ints) {
+        return new ListIntImpl(ints);
+    }
 
     void clear();
 
@@ -32,7 +37,9 @@ public interface ListInt extends Ints {
 
     int lastIndexOf(int element);
 
-    void fill(int element);
+    void fillWith(int element);
+
+    void addIntsRange(int fromIncl, int toIncl);
 
     void sort(Sort sort);
 

@@ -213,6 +213,19 @@ public class WordInVariant extends PooledReusable {
         return count;
     }
 
+    public void collectIntersections(ListInt indexes, ListInt collector) {
+        int index;
+        for ( int i = 0; i < indexes.size(); i++ ) {
+            index = indexes.get(i);
+            if ( index < 0 ) {
+                continue;
+            }
+            if ( this.startIndex <= index && this.endIndex >= index ) {
+                collector.add(index);
+            }
+        }
+    }
+
     public boolean isEnclosedByFound(Ints indexes, int askedIndex) {
         int matchesBefore = 0;
         int matchesAfter = 0;

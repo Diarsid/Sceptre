@@ -1,9 +1,5 @@
 package diarsid.sceptre.impl.collections;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Set;
-
 import static java.lang.Math.round;
 
 import static diarsid.support.objects.collections.CollectionUtils.getNearest;
@@ -20,6 +16,10 @@ public interface Ints {
     }
 
     int size();
+
+    default boolean hasSize(int size) {
+        return this.size() == size;
+    }
 
     boolean isEmpty();
 
@@ -44,9 +44,10 @@ public interface Ints {
     public static int meanSmartIgnoringZeros(ListInt ints) {
         int sum = 0;
         int zeros = 0;
+        int size = ints.size();
 
         int element;
-        for (int i = 0; i < ints.size(); i++ ) {
+        for (int i = 0; i < size; i++ ) {
             element = ints.get(i);
             if ( element == 0 ) {
                 zeros++;
@@ -59,13 +60,18 @@ public interface Ints {
             return 0;
         }
 
-        int size = ints.size();
+        return meanSmartConsideringZeros(sum, size, zeros);
+    }
+
+    public static int meanSmartConsideringZeros(int sum, int size, int zeros) {
         if ( zeros == 0 ) {
             return round( (float) sum / size);
-        } else {
+        }
+        else {
             if ( zeros > size / 2 ) {
                 return 0;
-            } else {
+            }
+            else {
                 return round( (float) sum / (size - zeros) );
             }
         }

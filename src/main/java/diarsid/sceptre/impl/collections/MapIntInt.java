@@ -57,6 +57,8 @@ public interface MapIntInt {
 
     void put(int key, int value);
 
+    void putOrIncrementValueIfKeyExists(int key, int value);
+
     void remove(int key);
 
     void clear();

@@ -64,6 +64,8 @@ public enum WeightElement implements CommonEnum<WeightElement> {
             "clusters near, are in one part"),
     CHAR_AFTER_PREVIOUS_SEPARATOR_AND_CLUSTER_ENCLOSING_WORD(
             "char after previous separator and cluster enclosing single word"),
+    CHAR_AFTER_PREVIOUS_SEPARATOR_AND_CLUSTER_ENCLOSING_WORD_IS_MISPLACED(
+            "char after previous separator and cluster enclosing single word - misplacing!"),
     CLUSTER_IS_WORD(
             "cluster is a word"),
     UNNATURAL_POSITIONING_CLUSTER_AT_END_PATTERN_AT_START(

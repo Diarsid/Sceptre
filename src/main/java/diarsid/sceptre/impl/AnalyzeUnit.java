@@ -17,6 +17,7 @@ import diarsid.support.objects.GuardedPool;
 import diarsid.support.objects.PooledReusable;
 
 import static java.lang.String.format;
+import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toCollection;
@@ -581,10 +582,18 @@ class AnalyzeUnit extends PooledReusable {
                 }
 
                 if ( isNewWordStart ) {
+                    if ( isNull(wordInVariant) ) {
+                        wordInVariant = wordsInVariant.next(INDEPENDENT);
+                    }
+
                     if ( wordInVariant.length > 0 ) {
                         wordInVariant.complete();
                         wordInVariant = wordsInVariant.next(DEPENDENT);
                     }
+                }
+
+                if ( isNull(wordInVariant) ) {
+                    throw new IllegalStateException();
                 }
 
                 wordInVariant.set(current, c);
