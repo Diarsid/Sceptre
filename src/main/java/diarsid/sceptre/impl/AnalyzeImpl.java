@@ -25,7 +25,7 @@ import static diarsid.support.strings.StringUtils.lower;
 
 public class AnalyzeImpl implements Analyze {
 
-    public static final Version VERSION = new Version("1.4.11");
+    public static final Version VERSION = new Version("1.4.12");
 
     private final GuardedPool<AnalyzeUnit> analyzeUnitsPool;
 
@@ -47,9 +47,13 @@ public class AnalyzeImpl implements Analyze {
                 WordsInVariant.WordsInRange.class,
                 () -> new WordsInVariant.WordsInRange());
 
+        GuardedPool<Step2LoopCandidatePosition> step2LoopCandidatePositionsPool = pools.createPool(
+                Step2LoopCandidatePosition.class,
+                () -> new Step2LoopCandidatePosition());
+
         this.analyzeUnitsPool = pools.createPool(
                 AnalyzeUnit.class, 
-                () -> new AnalyzeUnit(this.log, clusterPool, wordPool, wordsInRangePool));
+                () -> new AnalyzeUnit(this.log, clusterPool, wordPool, wordsInRangePool, step2LoopCandidatePositionsPool));
     }
 
     @Override

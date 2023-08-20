@@ -2284,6 +2284,17 @@ public class AnalyzeTest {
     }
 
     @Test
+    public void test_lasthrsnligh() {
+        pattern = "lasthrsnligh";
+
+        variants = asList("The Last Hours of Ancient Sunlight: The Fate of the World and What We Can Do Before It's Too Late by Neale Donald Walsch and Thom Hartmann, and Joseph Chilton Pearce");
+
+        expectedSameOrderAsVariants();
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
     public void npe() {
         pattern = "disrdarcv";
 

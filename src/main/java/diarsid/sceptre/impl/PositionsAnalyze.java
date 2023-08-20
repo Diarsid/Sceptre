@@ -21,6 +21,7 @@ import diarsid.sceptre.impl.collections.impl.MapIntIntImpl;
 import diarsid.sceptre.impl.collections.impl.SetIntImpl;
 import diarsid.sceptre.impl.weight.Weight;
 import diarsid.support.misc.MathFunctions;
+import diarsid.support.objects.GuardedPool;
 import diarsid.support.objects.references.Possible;
 
 import static java.lang.Integer.MIN_VALUE;
@@ -38,6 +39,8 @@ import static diarsid.sceptre.impl.AnalyzeUtil.clustersImportanceDependingOn;
 import static diarsid.sceptre.impl.AnalyzeUtil.cubeUpTo5AddSquareIfOver;
 import static diarsid.sceptre.impl.AnalyzeUtil.inconsistencyOf;
 import static diarsid.sceptre.impl.AnalyzeUtil.nonClusteredImportanceDependingOn;
+import static diarsid.sceptre.impl.Step2LoopCandidatePosition.FIRST_IS_LAST_IN_PATTERN;
+import static diarsid.sceptre.impl.Step2LoopCandidatePosition.FIRST_IS_LAST_IN_VARIANT;
 import static diarsid.sceptre.impl.ClusterPreference.PREFER_LEFT;
 import static diarsid.sceptre.impl.ClusterStepOne.calculateSimilarity;
 import static diarsid.sceptre.impl.ClusterStepOneDuplicateComparison.compare;
@@ -58,7 +61,6 @@ import static diarsid.sceptre.impl.WordInVariant.Placing.DEPENDENT;
 import static diarsid.sceptre.impl.WordInVariant.Placing.INDEPENDENT;
 import static diarsid.sceptre.impl.collections.Ints.doesExist;
 import static diarsid.sceptre.impl.collections.Ints.getNearestToValueFromSetExcluding;
-import static diarsid.sceptre.impl.collections.Ints.meanSmartIgnoringZeros;
 import static diarsid.sceptre.impl.collections.impl.Sort.REVERSE;
 import static diarsid.sceptre.impl.collections.impl.Sort.STRAIGHT;
 import static diarsid.sceptre.api.LogType.POSITIONS_CLUSTERS;
@@ -164,6 +166,9 @@ class PositionsAnalyze {
     final ArrayInt positions;
 
     private final SmartMean smartMean = new SmartMean();
+    private final GuardedPool<Step2LoopCandidatePosition> candidatePositionsPool;
+    private final List<Step2LoopCandidatePosition> step2LoopCandidatePositionsInLoop = new ArrayList<>();
+    private final List<Step2LoopCandidatePosition> step2LoopCandidatePositionsInLoopSorting = new ArrayList<>();
     
     int clustersQty;
     int clustered;
@@ -284,7 +289,8 @@ class PositionsAnalyze {
     PositionsAnalyze(
             AnalyzeUnit data, 
             Clusters clusters, 
-            PositionCandidate positionCandidate) {
+            PositionCandidate positionCandidate,
+            GuardedPool<Step2LoopCandidatePosition> candidatePositionsPool) {
         this.originalPositions = new ArrayIntImpl();
         this.positions = new ArrayIntImpl();
         this.data = data;
@@ -302,6 +308,8 @@ class PositionsAnalyze {
         this.currStepOneCluster = new ClusterStepOne(this.data.log);
         this.prevStepOneCluster = new ClusterStepOne(this.data.log);
         this.lastSavedStepOneCluster = new ClusterStepOne(this.data.log);
+
+        this.candidatePositionsPool = candidatePositionsPool;
 
         this.clearPositionsAnalyze();
     }
@@ -1369,31 +1377,74 @@ class PositionsAnalyze {
                                 }
 
                                 int matches = 0;
+                                int stolenChars = 0;
                                 char variantCh;
                                 char patternCh;
 
-                                currStepTwoCluster.setCandidatesOrderEstimate(currentPatternCharIndex, currentPatternCharPositionInVariant);
-                                patternLookup: for (; iPattern <= limitPattern; iPattern++) {
-                                    patternCh = data.pattern.charAt(iPattern);
-                                    variantLookup: for (int jVariant = iVariant; jVariant <= limitVariant; jVariant++) {
-                                        variantCh = data.variant.charAt(jVariant);
-                                        if ( patternCh == variantCh ) {
+                                try {
+                                    currStepTwoCluster.setCandidatesOrderEstimate(currentPatternCharIndex, currentPatternCharPositionInVariant);
+                                    patternLookup: for (; iPattern <= limitPattern; iPattern++) {
+                                        patternCh = data.pattern.charAt(iPattern);
+                                        variantLookup: for (int jVariant = iVariant; jVariant <= limitVariant; jVariant++) {
+                                            variantCh = data.variant.charAt(jVariant);
+
+                                            if ( patternCh == variantCh ) {
+                                                Step2LoopCandidatePosition step2LoopCandidatePosition = candidatePositionsPool.give();
+
+                                                step2LoopCandidatePosition.set(
+                                                        patternCh,
+                                                        iPattern,
+                                                        jVariant,
+                                                        filledPositions.contains(jVariant),
+                                                        isPositionSetAt(iPattern));
+
+                                                step2LoopCandidatePositionsInLoop.add(step2LoopCandidatePosition);
+                                            }
+                                        }
+                                    }
+
+                                    if ( ! step2LoopCandidatePositionsInLoop.isEmpty() ) {
+                                        step2LoopCandidatePositionsInLoopSorting.addAll(step2LoopCandidatePositionsInLoop);
+                                        Step2LoopCandidatePosition lastInPattern;
+                                        Step2LoopCandidatePosition lastInVariant;
+
+                                        step2LoopCandidatePositionsInLoopSorting.sort(FIRST_IS_LAST_IN_VARIANT);
+                                        lastInVariant = step2LoopCandidatePositionsInLoopSorting.get(0);
+
+                                        step2LoopCandidatePositionsInLoopSorting.sort(FIRST_IS_LAST_IN_PATTERN);
+                                        lastInPattern = step2LoopCandidatePositionsInLoopSorting.get(0);
+
+                                        if ( lastInPattern.is(lastInVariant) ) {
+                                            WordInVariant conflictWord = wordOrNullOfPossibleWeakConflict(currentWord, currStepTwoCluster, lastInVariant);
+                                            if ( nonNull(conflictWord) ) {
+                                                step2LoopCandidatePositionsInLoop.remove(lastInPattern);
+                                                data.log.add(POSITIONS_SEARCH, "          [info] positions-in-cluster '%s' pattern:%s, variant:%s, included(variant:%s pattern:%s), %s, candidate:true",
+                                                        lastInVariant.c, lastInVariant.patternPosition, lastInVariant.variantPosition, lastInVariant.isFilledInVariant, lastInVariant.isFilledInPattern, MATCH_TYPO_LOOP);
+                                                data.log.add(POSITIONS_SEARCH, "               [conflict] position stolen to word %s", conflictWord.charsString());
+                                                stolenChars++;
+                                                candidatePositionsPool.takeBack(lastInPattern);
+                                            }
+                                        }
+
+                                        Step2LoopCandidatePosition candidate;
+                                        for ( int i = 0; i < step2LoopCandidatePositionsInLoop.size(); i++ ) {
+                                            candidate = step2LoopCandidatePositionsInLoop.get(i);
                                             matches++;
-                                            currStepTwoCluster.addAsCandidate(
-                                                    patternCh,
-                                                    iPattern,
-                                                    jVariant,
-                                                    filledPositions.contains(jVariant),
-                                                    isPositionSetAt(iPattern),
-                                                    MATCH_TYPO_LOOP);
+                                            currStepTwoCluster.addAsCandidate(candidate);
                                         }
                                     }
                                 }
+                                finally {
+                                    candidatePositionsPool.takeBackAll(step2LoopCandidatePositionsInLoop);
+                                    step2LoopCandidatePositionsInLoopSorting.clear();
+                                    step2LoopCandidatePositionsInLoop.clear();
+                                }
+
                                 currStepTwoCluster.finalizeOrdersEstimate();
 
-                                if ( matches > 1 ) {
+                                if ( matches + stolenChars > 1 ) {
                                     int rejectedCount = currStepTwoCluster.rejectCandidatesBelongingByPatternToOtherWords(currentWord);
-                                    if ( matches - rejectedCount > 1 ) {
+                                    if ( matches + stolenChars - rejectedCount > 1 ) {
                                         if ( currStepTwoCluster.isOrdersEstimateOk() ) {
                                             currStepTwoCluster.approveCandidates();
                                         }
@@ -1755,7 +1806,7 @@ class PositionsAnalyze {
                             }
                         }
                         else {
-                            data.log.add(POSITIONS_SEARCH, "        [POSITIONS - BOT CHLUSTERS HAS NO UNFILLED POSITIONS, IGNORE NEW]");
+                            data.log.add(POSITIONS_SEARCH, "        [POSITIONS - BOT CLUSTERS HAS NO UNFILLED POSITIONS, IGNORE NEW]");
                             log(prevStepTwoCluster, "old");
                             log(currStepTwoCluster, "new");
                             data.log.add(POSITIONS_SEARCH, "          [choice]  ->  old");
@@ -1904,6 +1955,30 @@ class PositionsAnalyze {
         char clusterChar2 = data.variant.charAt(clusterPosition2);
 
         return ( wordChar0 == clusterChar1 && wordChar1 == clusterChar2 );
+    }
+
+    private WordInVariant wordOrNullOfPossibleWeakConflict(
+            WordInVariant currentWord,
+            ClusterStepTwo cluster,
+            Step2LoopCandidatePosition lastInWord) {
+        var foundWords = this.data.wordsInVariant.wordsOfRange(this.filledPositions);
+
+        char lastInWordChar = Character.toLowerCase(lastInWord.c);
+        char firstInFoundWordChar;
+
+        for ( WordInVariant foundWord : foundWords.all() ) {
+            if ( currentWord.index == foundWord.index ) {
+                continue;
+            }
+
+            firstInFoundWordChar = Character.toLowerCase(foundWord.chars[0]);
+
+            if ( lastInWordChar == firstInFoundWordChar ) {
+                return foundWord;
+            }
+        }
+
+        return null;
     }
 
     private boolean isAllowedAsWordEnd(WordInVariant word, int currentPatternCharIndex) {

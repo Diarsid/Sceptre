@@ -124,6 +124,14 @@ public class OrdersEstimator implements StatefulClearable {
             this.accumulate(i, patternPositions.get(i), variantPositions.get(i));
         }
 
+        if ( patternPositions.size() == 1 ) {
+            if ( variantDiffSum == 0 || patternDiffSum == 0 ) {
+                if ( variantDiffBackwardSum == 0 ) {
+                    return 1;
+                }
+            }
+        }
+
         if ( patternDiffSum == 0 ) {
             quality++;
             quality = quality + ((patternPositions.size()-1) / 2);
@@ -144,19 +152,21 @@ public class OrdersEstimator implements StatefulClearable {
         }
 
         int result = quality - variantDiffSum - variantDiffBackwardSum - patternDiffSum - penalty*2 + qualityExternalBonus;
-        logging.add(POSITIONS_SEARCH, "            [orders estimate] result    : %s", result);
 
         return result;
     }
 
     int qualityThreshold() {
         int threshold = -1 * this.patternPositions.size();
-        logging.add(POSITIONS_SEARCH, "            [orders estimate] threshold : %s", threshold);
         return threshold;
     }
 
     boolean isOk() {
-        return qualityTotal() >= qualityThreshold();
+        int quality = qualityTotal();
+        int threshold = qualityThreshold();
+        logging.add(POSITIONS_SEARCH, "            [orders estimate] result    : %s", quality);
+        logging.add(POSITIONS_SEARCH, "            [orders estimate] threshold : %s", threshold);
+        return quality >= threshold;
     }
 
     @Override

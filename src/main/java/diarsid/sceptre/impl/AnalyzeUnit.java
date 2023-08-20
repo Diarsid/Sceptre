@@ -3,7 +3,6 @@ package diarsid.sceptre.impl;
 import java.util.List;
 import java.util.function.IntFunction;
 
-import diarsid.sceptre.api.LogType;
 import diarsid.sceptre.impl.collections.ArrayChar;
 import diarsid.sceptre.impl.collections.CharsCount;
 import diarsid.sceptre.impl.collections.Ints;
@@ -20,7 +19,6 @@ import static java.lang.String.format;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static java.util.stream.Collectors.joining;
-import static java.util.stream.Collectors.toCollection;
 
 import static diarsid.sceptre.api.LogType.BASE;
 import static diarsid.sceptre.api.LogType.POSITIONS_CLUSTERS;
@@ -101,13 +99,15 @@ class AnalyzeUnit extends PooledReusable {
             Logging log,
             GuardedPool<Cluster> clusterPool,
             GuardedPool<WordInVariant> wordPool,
-            GuardedPool<WordsInVariant.WordsInRange> wordsInRangePool) {
+            GuardedPool<WordsInVariant.WordsInRange> wordsInRangePool,
+            GuardedPool<Step2LoopCandidatePosition> candidatePositionsPool) {
         super();
         this.log = log;
         this.positionsAnalyze = new PositionsAnalyze(
                 this, 
                 new Clusters(this, clusterPool), 
-                new PositionCandidate(this));
+                new PositionCandidate(this),
+                candidatePositionsPool);
         this.patternChars = new ArrayCharImpl();
         this.variantSeparators = new SetIntImpl();
         this.variantPathSeparators = new SetIntImpl();

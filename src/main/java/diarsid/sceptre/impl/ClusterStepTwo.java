@@ -15,6 +15,7 @@ import diarsid.support.objects.references.References;
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
 import static java.lang.Math.abs;
+import static java.lang.Math.min;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Objects.isNull;
@@ -487,15 +488,16 @@ class ClusterStepTwo {
         this.addInternal(c, patternPosition, variantPosition, isFilled, isFilledInPattern, matchType, FALSE);
     }
 
-    void addAsCandidate(
-            char c,
-            int patternPosition,
-            int variantPosition,
-            boolean isFilled,
-            boolean isFilledInPattern,
-            MatchType matchType) {
-        this.addInternal(c, patternPosition, variantPosition, isFilled, isFilledInPattern, matchType, TRUE);
-        candidatesOrderEstimator.add(patternPosition, variantPosition);
+    void addAsCandidate(Step2LoopCandidatePosition step2LoopCandidatePosition) {
+        this.addInternal(
+                step2LoopCandidatePosition.c,
+                step2LoopCandidatePosition.patternPosition,
+                step2LoopCandidatePosition.variantPosition,
+                step2LoopCandidatePosition.isFilledInVariant,
+                step2LoopCandidatePosition.isFilledInPattern,
+                MATCH_TYPO_LOOP,
+                TRUE);
+        candidatesOrderEstimator.add(step2LoopCandidatePosition.patternPosition, step2LoopCandidatePosition.variantPosition);
     }
 
     void setCandidatesOrderEstimate(int iPattern, int iVariant) {
@@ -652,9 +654,8 @@ class ClusterStepTwo {
                             POSITIONS_SEARCH,
                             "          [info] positions-in-cluster duplicate: new position rejected");
                 }
-
+                this.mergedDuplicates++;
             }
-            this.mergedDuplicates++;
         }
         else {
             int alreadyExistedInVariant = this.variantPositions.indexOf(variantPosition);
@@ -1394,70 +1395,127 @@ class ClusterStepTwo {
                     int thisDiff = this.calculatedDiff();
                     int otherDiff = other.calculatedDiff();
 
-                    if ( thisDiff < otherDiff ) {
+                    boolean applyDiffCondition = true;
+                    if ( this.chars.size() == 1 ) {
+                        if ( thisDiff != otherDiff ) {
+                            if ( thisDiff > 2 && otherDiff > 2 ) {
+                                if ( absDiff(thisDiff, otherDiff) < 3 ) {
+                                    applyDiffCondition = false;
+                                }
+                            }
+                        }
+                    }
+
+                    if ( applyDiffCondition ) {
+                        if ( thisDiff < otherDiff ) {
+                            return true;
+                        }
+                        else if ( thisDiff > otherDiff ) {
+                            return false;
+                        }
+                    }
+
+                    WordsInVariant.WordsInRange thisPositionsWords = this.analyze.data.wordsInVariant.wordsOfRange(this.variantPositions);
+                    WordsInVariant.WordsInRange otherPositionsWords = other.analyze.data.wordsInVariant.wordsOfRange(other.variantPositions);
+
+                    if ( thisPositionsWords.areNotEmpty() && otherPositionsWords.areEmpty() ) {
                         return true;
                     }
-                    else if ( thisDiff > otherDiff ) {
+                    else if ( thisPositionsWords.areEmpty() && otherPositionsWords.areNotEmpty() ) {
+                        return false;
+                    }
+
+                    int thisIntersections = thisPositionsWords.intersections(this.analyze.filledPositions);
+                    int otherIntersections = otherPositionsWords.intersections(this.analyze.filledPositions);
+
+                    if ( thisIntersections > otherIntersections ) {
+                        return true;
+                    }
+                    else if ( thisIntersections < otherIntersections ) {
                         return false;
                     }
                     else {
-                        WordsInVariant.WordsInRange thisPositionsWords = this.analyze.data.wordsInVariant.wordsOfRange(this.variantPositions);
-                        WordsInVariant.WordsInRange otherPositionsWords = other.analyze.data.wordsInVariant.wordsOfRange(other.variantPositions);
+                        if ( thisType.foundType.is(otherType.foundType) ) {
+                            if ( thisWord.index != otherWord.index ) {
+                                WordsInVariant.WordsInRange wordsBefore;
+                                if ( thisWord.placing.is(INDEPENDENT) && otherWord.placing.is(DEPENDENT) ) {
+                                    wordsBefore = this.analyze.data.wordsInVariant.independentAndDependentWordsBefore(otherWord);
+                                    int intersectionsBefore = wordsBefore.intersections(this.analyze.filledPositions);
+                                    if ( intersectionsBefore > 1 ) {
+                                        return false;
+                                    }
+                                }
+                                else if ( thisWord.placing.is(DEPENDENT) && otherWord.placing.is(INDEPENDENT) ) {
+                                    wordsBefore = this.analyze.data.wordsInVariant.independentAndDependentWordsBefore(thisWord);
+                                    int intersectionsBefore = wordsBefore.intersections(this.analyze.filledPositions);
+                                    if ( intersectionsBefore > 1 ) {
+                                        return true;
+                                    }
+                                }
+                            }
+                        }
 
-                        if ( thisPositionsWords.areNotEmpty() && otherPositionsWords.areEmpty() ) {
+                        if ( thisPositionsWords.independents() > otherPositionsWords.independents() ) {
                             return true;
                         }
-                        else if ( thisPositionsWords.areEmpty() && otherPositionsWords.areNotEmpty() ) {
+                        else if ( thisPositionsWords.independents() < otherPositionsWords.independents() ) {
                             return false;
                         }
                         else {
-                            int thisIntersections = thisPositionsWords.intersections(this.analyze.filledPositions);
-                            int otherIntersections = otherPositionsWords.intersections(this.analyze.filledPositions);
-
-                            if ( thisIntersections > otherIntersections ) {
+                            if ( this.mergedDuplicates > other.mergedDuplicates ) {
                                 return true;
                             }
-                            else if ( thisIntersections < otherIntersections ) {
+                            else if ( this.mergedDuplicates < other.mergedDuplicates ) {
                                 return false;
                             }
                             else {
-                                if ( thisType.foundType.is(otherType.foundType) ) {
-                                    if ( thisWord.index != otherWord.index ) {
-                                        WordsInVariant.WordsInRange wordsBefore;
-                                        if ( thisWord.placing.is(INDEPENDENT) && otherWord.placing.is(DEPENDENT) ) {
-                                            wordsBefore = this.analyze.data.wordsInVariant.independentAndDependentWordsBefore(otherWord);
-                                            int intersectionsBefore = wordsBefore.intersections(this.analyze.filledPositions);
-                                            if ( intersectionsBefore > 1 ) {
-                                                return false;
+                                int thisWordWeight = 0;
+                                int otherWordWeight = 0;
+
+                                int discriminator = this.analyze.data.wordsInVariant.all.size() / 5;
+
+                                if ( discriminator > 0 ) {
+                                    WordsInVariant.WordsInRange foundWords = this.analyze.data.wordsInVariant.wordsOfRange(this.analyze.filledPositions);
+
+                                    int thisWordIndexDiff = wordsIndexesDiff(foundWords, thisWord) / discriminator;
+                                    int otherWordIndexDiff = wordsIndexesDiff(foundWords, otherWord) / discriminator;
+
+                                    if ( thisWordIndexDiff != otherWordIndexDiff ) {
+                                        if ( thisWordIndexDiff > otherWordIndexDiff ) {
+                                            otherWordWeight++;
+                                            if ( otherWordIndexDiff == 0 ) {
+                                                otherWordWeight++;
                                             }
                                         }
-                                        else if ( thisWord.placing.is(DEPENDENT) && otherWord.placing.is(INDEPENDENT) ) {
-                                            wordsBefore = this.analyze.data.wordsInVariant.independentAndDependentWordsBefore(thisWord);
-                                            int intersectionsBefore = wordsBefore.intersections(this.analyze.filledPositions);
-                                            if ( intersectionsBefore > 1 ) {
-                                                return true;
+                                        else {
+                                            thisWordWeight++;
+                                            if ( thisWordIndexDiff == 0 ) {
+                                                thisWordWeight++;
                                             }
                                         }
                                     }
                                 }
 
-                                if ( thisPositionsWords.independents() > otherPositionsWords.independents() ) {
-                                    return true;
-                                }
-                                else if ( thisPositionsWords.independents() < otherPositionsWords.independents() ) {
-                                    return false;
-                                }
-                                else {
-                                    if ( this.mergedDuplicates > other.mergedDuplicates ) {
-                                        return true;
-                                    }
-                                    else if ( this.mergedDuplicates < other.mergedDuplicates ) {
-                                        return false;
+                                int wordsLengthDiff = absDiff(thisWord.length, otherWord.length);
+                                int minWordLength = min(thisWord.length, otherWord.length);
+
+                                if ( minWordLength < 7 && wordsLengthDiff > 2 ) {
+                                    if ( thisWord.length > otherWord.length ) {
+                                        otherWordWeight++;
                                     }
                                     else {
-                                        return true;
+                                        thisWordWeight++;
                                     }
                                 }
+
+                                if ( thisWordWeight > otherWordWeight ) {
+                                    return true;
+                                }
+                                else if ( thisWordWeight < otherWordWeight ) {
+                                    return false;
+                                }
+
+                                return true;
                             }
                         }
                     }
@@ -1515,6 +1573,21 @@ class ClusterStepTwo {
         }
 
         return count;
+    }
+
+    private int wordsIndexesDiff(WordsInVariant.WordsInRange foundWords, WordInVariant word) {
+        WordInVariant foundWord;
+        int diffSum = 0;
+        for ( int i = 0; i < foundWords.all().size(); i++ ) {
+            foundWord = foundWords.get(i);
+            if ( foundWord.index == word.index ) {
+                continue;
+            }
+
+            diffSum = diffSum + absDiff(foundWord.index, word.index);
+        }
+
+        return diffSum;
     }
 
     private int countVariantPositionsWithoutSpaces() {

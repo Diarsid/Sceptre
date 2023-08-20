@@ -70,4 +70,13 @@ public class OrdersEstimatorTest {
 
         mustBe(true);
     }
+
+    @Test
+    public void test5() {
+        estimator.set(4, 9);
+
+        estimator.add(5, 12);
+
+        mustBe(true);
+    }
 }
