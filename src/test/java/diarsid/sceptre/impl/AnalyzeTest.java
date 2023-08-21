@@ -2287,9 +2287,12 @@ public class AnalyzeTest {
     public void test_lasthrsnligh() {
         pattern = "lasthrsnligh";
 
-        variants = asList("The Last Hours of Ancient Sunlight: The Fate of the World and What We Can Do Before It's Too Late by Neale Donald Walsch and Thom Hartmann, and Joseph Chilton Pearce");
+        variants = asList(
+                "Fear and Loathing in Las Vegas by Hunter S. Thompson and Ralph Steadman",
+                "The Last Hours of Ancient Sunlight: The Fate of the World and What We Can Do Before It's Too Late by Neale Donald Walsch and Thom Hartmann, and Joseph Chilton Pearce");
 
-        expectedSameOrderAsVariants();
+        expected = asList(
+                "The Last Hours of Ancient Sunlight: The Fate of the World and What We Can Do Before It's Too Late by Neale Donald Walsch and Thom Hartmann, and Joseph Chilton Pearce");
 
         weightVariantsAndCheckMatching();
     }

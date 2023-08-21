@@ -220,6 +220,19 @@ public class ListIntImpl implements ListInt {
     }
 
     @Override
+    public int removeAll(ListInt otherElements) {
+        int removed = 0;
+        int result;
+        for ( int i = 0; i < otherElements.size(); i++ ) {
+            result = this.removeElement(otherElements.get(i));
+            if ( result != Integer.MIN_VALUE ) {
+                removed++;
+            }
+        }
+        return removed;
+    }
+
+    @Override
     public int indexOf(int element) {
         for ( int i = 0; i < this.size; i++ ) {
             if ( this.array[i] == element ) {

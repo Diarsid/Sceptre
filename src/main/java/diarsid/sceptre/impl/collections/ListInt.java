@@ -33,6 +33,8 @@ public interface ListInt extends Ints {
 
     int removeElement(int element);
 
+    int removeAll(ListInt elements);
+
     int indexOf(int element);
 
     int lastIndexOf(int element);

@@ -229,6 +229,16 @@ public class WordsInVariant implements StatefulClearable {
         return words;
     }
 
+    public WordInVariant wordOrNullOf(int startIndex, int endIndex) {
+        WordInVariant word = this.wordsByCharInVariantIndex.get(startIndex);
+
+        if ( word != null && word.startIndex == startIndex && word.endIndex == endIndex ) {
+            return word;
+        }
+
+        return null;
+    }
+
     public WordInVariant wordOf(int indexInVariant) {
         WordInVariant word = this.wordsByCharInVariantIndex.get(indexInVariant);
         if ( word == null ) {

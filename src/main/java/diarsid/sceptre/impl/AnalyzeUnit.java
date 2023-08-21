@@ -162,6 +162,7 @@ class AnalyzeUnit extends PooledReusable {
             return;
         }
         if ( this.positionsAnalyze.clustersQty > 0 ) {
+            int nonClustered = this.pattern.length() - this.positionsAnalyze.clustered.count();
             switch ( this.pattern.length() ) {
                 case 0 : 
                 case 1 : {
@@ -175,18 +176,18 @@ class AnalyzeUnit extends PooledReusable {
                 }
                 case 3 :
                 case 4 : {
-                    if ( this.positionsAnalyze.missed == 0 && this.positionsAnalyze.nonClustered > 2 ) {
+                    if ( this.positionsAnalyze.missed == 0 && nonClustered > 2 ) {
                         if ( this.allPositionsPresentSortedAndNotPathSeparatorsBetween ) {
                             this.calculateAsSeparatedCharsWithoutClusters();
                             this.calculatedAsUsualClusters = false;
                         } else {
-                            this.positionsAnalyze.badReason = "Too much unclustered positions: " + this.positionsAnalyze.nonClustered;
+                            this.positionsAnalyze.badReason = "Too much unclustered positions: " + nonClustered;
                             return; 
                         }
-                    } else if ( this.positionsAnalyze.missed == 1 && this.positionsAnalyze.nonClustered > 1 ) {
-                        this.positionsAnalyze.badReason = "Too much unclustered and missed positions: " + (this.positionsAnalyze.missed + this.positionsAnalyze.nonClustered);
+                    } else if ( this.positionsAnalyze.missed == 1 && nonClustered > 1 ) {
+                        this.positionsAnalyze.badReason = "Too much unclustered and missed positions: " + (this.positionsAnalyze.missed + nonClustered);
                         return;
-                    } else if ( this.positionsAnalyze.missed == 0 && this.positionsAnalyze.nonClustered > 1 ) {
+                    } else if ( this.positionsAnalyze.missed == 0 && nonClustered > 1 ) {
                         if ( this.positionsAnalyze.clustersFacingStartEdges > 0 ) {
                             this.calculateAsUsualClusters();
                             this.calculatedAsUsualClusters = true;
@@ -212,7 +213,7 @@ class AnalyzeUnit extends PooledReusable {
                         tresholdRatio = 0.4f;
                     }
                     
-                    if ( ratio(this.positionsAnalyze.nonClustered, this.patternChars.size()) > tresholdRatio ) {
+                    if ( ratio(nonClustered, this.patternChars.size()) > tresholdRatio ) {
                         if ( this.allPositionsPresentSortedAndNotPathSeparatorsBetween ) {
                             this.calculateAsSeparatedCharsWithoutClusters();
                             this.calculatedAsUsualClusters = false;
@@ -264,13 +265,13 @@ class AnalyzeUnit extends PooledReusable {
     }
     
     private void calculateAsUsualClusters() {
-        if ( this.positionsAnalyze.nonClustered == 0 && 
+        if ( this.positionsAnalyze.nonClustered() == 0 &&
              this.positionsAnalyze.missed == 0 &&
-             this.variant.length() == this.positionsAnalyze.clustered + 
+             this.variant.length() == this.positionsAnalyze.clustered.count() +
                                           this.variantPathSeparators.size() + 
                                           this.variantTextSeparators.size() ) {
             this.weight.add(-this.positionsAnalyze.clustersImportance, CLUSTERS_IMPORTANCE);
-            this.weight.add(-this.positionsAnalyze.clustered, TOTAL_CLUSTERED_CHARS);
+            this.weight.add(-this.positionsAnalyze.clustered.count(), TOTAL_CLUSTERED_CHARS);
         } else {
             float lengthImportance = lengthImportanceRatio(this.variant.length());
 //            this.lengthDelta = ( this.variant.length() - this.positionsAnalyze.clustered - this.positionsAnalyze.meaningful ) * 0.3f * lengthImportance;
@@ -421,13 +422,13 @@ class AnalyzeUnit extends PooledReusable {
     
     private void logClustersState() {
         log.add(BASE, "    %1$-25s %2$s", "clusters", positionsAnalyze.clustersQty);
-        log.add(BASE, "    %1$-25s %2$s", "clustered", positionsAnalyze.clustered);
+        log.add(BASE, "    %1$-25s %2$s", "clustered", positionsAnalyze.clustered.count());
         log.add(BASE, "    %1$-25s %2$s", "length delta", this.lengthDelta);
         log.add(BASE, "    %1$-25s %2$s", "distance between clusters", positionsAnalyze.clusters.distanceBetweenClusters());
         log.add(BASE, "    %1$-25s %2$s", "separators between clusters", positionsAnalyze.separatorsBetweenClusters);
         log.add(BASE, "    %1$-25s %2$s", "variant text separators ", this.variantTextSeparators.size());
         log.add(BASE, "    %1$-25s %2$s", "variant path separators ", this.variantPathSeparators.size());
-        log.add(BASE, "    %1$-25s %2$s", "nonClustered", positionsAnalyze.nonClustered);
+        log.add(BASE, "    %1$-25s %2$s", "nonClustered", positionsAnalyze.nonClustered());
         log.add(BASE, "    %1$-25s %2$s", "nonClusteredImportance", positionsAnalyze.nonClusteredImportance);
         log.add(BASE, "    %1$-25s %2$s", "clustersImportance", positionsAnalyze.clustersImportance);
         log.add(BASE, "    %1$-25s %2$s", "missed", positionsAnalyze.missed);
