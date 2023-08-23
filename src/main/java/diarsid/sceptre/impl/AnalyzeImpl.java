@@ -25,7 +25,7 @@ import static diarsid.support.strings.StringUtils.lower;
 
 public class AnalyzeImpl implements Analyze {
 
-    public static final Version VERSION = new Version("1.4.13");
+    public static final Version VERSION = new Version("1.4.14");
 
     private final GuardedPool<AnalyzeUnit> analyzeUnitsPool;
 

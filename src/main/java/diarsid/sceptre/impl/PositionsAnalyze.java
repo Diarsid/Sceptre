@@ -60,6 +60,7 @@ import static diarsid.sceptre.impl.Step.STEP_4;
 import static diarsid.sceptre.impl.WordInVariant.Placing.DEPENDENT;
 import static diarsid.sceptre.impl.WordInVariant.Placing.INDEPENDENT;
 import static diarsid.sceptre.impl.collections.Ints.doesExist;
+import static diarsid.sceptre.impl.collections.Ints.doesNotExist;
 import static diarsid.sceptre.impl.collections.Ints.getNearestToValueFromSetExcluding;
 import static diarsid.sceptre.impl.collections.impl.Sort.REVERSE;
 import static diarsid.sceptre.impl.collections.impl.Sort.STRAIGHT;
@@ -4017,6 +4018,9 @@ class PositionsAnalyze {
                 if ( currChar == missChar ) {                        
                     this.missedRepeatedChars.add(missChar);
                     this.missedRepeatedPositions.add(this.currentPosition + 1);
+                    this.patternIndexesByVariantPosition.put(
+                            this.currentPosition + 1,
+                            this.patternIndexesByVariantPosition.get(this.currentPosition));
                     if ( data.log.isEnabled(POSITIONS_CLUSTERS) ) {
                         String log = format(
                                 "    [cluster fix] missed internal repeat detected %s(%s)%s", 
