@@ -2538,7 +2538,42 @@ public class AnalyzeTest {
 
         weightVariantsAndCheckMatching();
     }
-    
+
+    @Test
+    public void test_rrhgtphilpsy() {
+        pattern = "rrhgtphilpsy";
+
+        variants = asList("Philosophy of Right by S.W. Dyde and Georg Wilhelm Friedrich Hegel");
+
+        expectedSameOrderAsVariants();
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_prolins() {
+        pattern = "prolins";
+
+        variants = asList(
+                "Mycoplasma Protocols (Methods in Molecular Biology)",
+                "D:/SOUL/Programs/Links");
+
+        expected = asList("D:/SOUL/Programs/Links");
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_devenigs() {
+        pattern = "devenigs";
+
+        variants = asList("D:\\DEV\\2__LIB\\Engines");
+
+        expectedSameOrderAsVariants();
+
+        weightVariantsAndCheckMatching();
+    }
+
     @Test
     public void test_PriceAPICase_pricapi() {
         pattern = "pricapi";

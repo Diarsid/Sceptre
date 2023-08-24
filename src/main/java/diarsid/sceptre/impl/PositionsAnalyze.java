@@ -3742,7 +3742,7 @@ class PositionsAnalyze {
             for (int i = 1; i < misplacingCheckMergedPositions.size(); i++ ) {
                 currPosition = misplacingCheckMergedPositions.get(i);
                 try {
-                    if ( currPosition == prevPosition + 1 ) {
+                    if ( cluster.contains(currPosition, prevPosition) ) {
                         continue;
                     }
 

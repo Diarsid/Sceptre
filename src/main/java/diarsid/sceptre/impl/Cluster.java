@@ -116,6 +116,15 @@ class Cluster extends PooledReusable implements Comparable<Cluster> {
     boolean contains(int position) {
         return this.firstPosition <= position && position <= this.lastPosition();
     }
+
+    boolean contains(int position0, int position1) {
+        int lastPosition = this.lastPosition();
+        return
+                this.firstPosition <= position0 &&
+                position0 <= lastPosition &&
+                this.firstPosition <= position1 &&
+                position1 <= lastPosition;
+    }
     
     int lastPosition() {
         return this.firstPosition + this.length - 1;
