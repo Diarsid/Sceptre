@@ -60,7 +60,6 @@ import static diarsid.sceptre.impl.Step.STEP_4;
 import static diarsid.sceptre.impl.WordInVariant.Placing.DEPENDENT;
 import static diarsid.sceptre.impl.WordInVariant.Placing.INDEPENDENT;
 import static diarsid.sceptre.impl.collections.Ints.doesExist;
-import static diarsid.sceptre.impl.collections.Ints.doesNotExist;
 import static diarsid.sceptre.impl.collections.Ints.getNearestToValueFromSetExcluding;
 import static diarsid.sceptre.impl.collections.impl.Sort.REVERSE;
 import static diarsid.sceptre.impl.collections.impl.Sort.STRAIGHT;
@@ -262,14 +261,14 @@ class PositionsAnalyze {
     int unsortedPositions;
 
     private final OrdersEstimator singlePositionsOrdersEstimator;
-    // --
-
-    private final ListInt foundWordInVariantQualities = new ListIntImpl();
 
     private final ListInt collectedIntersections = new ListIntImpl();
 
     boolean currentClusterIsRejected;
     boolean currentClusterWordStartFound;
+    boolean currentClusterWordStartFoundIgnore;
+
+    private final List<WordInVariant> wordsAllowedToIgnoreMissedStart = new ArrayList<>();
     
     int previousClusterLastPosition = POS_UNINITIALIZED;
     int previousClusterFirstPosition = POS_UNINITIALIZED;
@@ -1116,7 +1115,7 @@ class PositionsAnalyze {
 
             if ( ! positionAlreadyFilled || ( duplicateChar && findPositionsStep.isBefore(STEP_3) ) ) {
                 
-                if ( gotoBreakpointWhen(stepCharAndPositionAre(STEP_2, 's', 38)) ) {
+                if ( gotoBreakpointWhen(stepCharAndPositionAre(STEP_2, 'r', 11)) ) {
                     breakpoint();
                 }
                 
@@ -1364,13 +1363,22 @@ class PositionsAnalyze {
                                 }
                             }
 
+                            if ( ! canDoLoopSearch ) {
+                                boolean allowLoopAnyway =
+                                        currStepTwoCluster.containsAlreadyFilledPositions() &&
+                                        currStepTwoCluster.foundQty() > 1;
+                                if ( allowLoopAnyway ) {
+                                    canDoLoopSearch = true;
+                                }
+                            }
+
                             if ( canDoLoopSearch ) {
                                 int iPattern = currentPatternCharIndex + 1;
                                 int iVariant = currentPatternCharPositionInVariant + 1;
                                 int limitPattern = data.pattern.length() -1 -iPattern > 4 ? iPattern + 3 : data.pattern.length()-1;
-                                int limitVariant = data.variant.length() -1 -iVariant > 4 ? iVariant + 4 : data.variant.length()-1;
 
                                 WordInVariant currentWord = this.data.wordsInVariant.wordOf(currStepTwoCluster.assessedCharVariantPosition());
+                                int limitVariant = currentWord.endIndex;
                                 int endOfAssessedWord = currentWord.endIndex;
                                 if ( limitVariant > endOfAssessedWord ) {
                                     limitVariant = endOfAssessedWord;
@@ -1887,15 +1895,49 @@ class PositionsAnalyze {
         }
         else if ( positionCandidate.isPresent() ) {
             int position = positionCandidate.position();
-                                                
-            isCurrentCharPositionAddedToPositions = true;
-            fillPosition(
-                    currentPatternCharIndex,
-                    position,
-                    "CANDIDATE");
-            data.log.add(POSITIONS_SEARCH, "        [SAVE] '%s'(%s in variant), %s", currentChar, position, positionCandidate);
-            data.log.add(POSITIONS_SEARCH, "               %s", displayPositions());
-            data.log.add(POSITIONS_SEARCH, "               %s : %s", data.pattern, data.variant);
+
+            WordInVariant word = this.data.wordsInVariant.wordOf(position);
+
+            boolean skip = false;
+            if ( word.length > 2 ) {
+                int intersections = word.intersections(this.filledPositions);
+                if ( intersections == 0 ) {
+                    int otherIntersections = 0;
+                    WordsInVariant.WordsInRange otherWords;
+
+                    if ( word.placing.is(INDEPENDENT) ) {
+                        otherWords = this.data.wordsInVariant.allDependentAfterOrNull(word);
+                    }
+                    else {
+                        otherWords = this.data.wordsInVariant.independentAndDependentWordsBefore(word);
+                    }
+
+                    if ( nonNull(otherWords) ) {
+                        otherIntersections = otherWords.intersections(this.filledPositions);
+                    }
+
+                    if ( otherIntersections == 0 ) {
+                        skip = true;
+                    }
+                }
+            }
+
+            if ( skip ) {
+                isCurrentCharPositionAddedToPositions = false;
+                data.log.add(POSITIONS_SEARCH, "        [SKIP] '%s'(%s in variant), %s - single random letter in word", currentChar, position, positionCandidate);
+                data.log.add(POSITIONS_SEARCH, "               %s", displayPositions());
+                data.log.add(POSITIONS_SEARCH, "               %s : %s", data.pattern, data.variant);
+            }
+            else {
+                isCurrentCharPositionAddedToPositions = true;
+                fillPosition(
+                        currentPatternCharIndex,
+                        position,
+                        "CANDIDATE");
+                data.log.add(POSITIONS_SEARCH, "        [SAVE] '%s'(%s in variant), %s", currentChar, position, positionCandidate);
+                data.log.add(POSITIONS_SEARCH, "               %s", displayPositions());
+                data.log.add(POSITIONS_SEARCH, "               %s : %s", data.pattern, data.variant);
+            }
         }
         positionCandidate.clear();
 
@@ -2429,23 +2471,24 @@ class PositionsAnalyze {
         this.currentClusterLength++;
         this.clusterContinuation = false;
         this.currentClusterWordStartFound = false;
+        this.currentClusterWordStartFoundIgnore = false;
         
         this.processClusterPositionOrderStats();
 
         if ( ! this.data.variantContainsPattern ) {
-            WordsInVariant.WordsInRange wordsInRange = this.data.wordsInVariant.wordsOfRange(this.currentClusterFirstPosition, this.currentClusterLength);
+            WordsInVariant.WordsInRange wordsOfCluster = this.data.wordsInVariant.wordsOfRange(this.currentClusterFirstPosition, this.currentClusterLength);
 
-            if ( wordsInRange.areEmpty() ) {
+            if ( wordsOfCluster.areEmpty() ) {
                 this.currentClusterIsRejected = true;
                 data.log.add(POSITIONS_CLUSTERS, "    [cluster] there are no words for cluster!");
             }
             else {
-                if ( wordsInRange.hasStartIn(this.filledPositions) ) {
+                if ( wordsOfCluster.hasStartIn(this.filledPositions) ) {
                     this.currentClusterWordStartFound = true;
                 }
                 else {
-                    if ( wordsInRange.count() == 1 ) {
-                        WordInVariant word = wordsInRange.first();
+                    if ( wordsOfCluster.count() == 1 ) {
+                        WordInVariant word = wordsOfCluster.first();
                         WordInVariant prevWord = this.data.wordsInVariant.wordBeforeOrNull(word);
                         if ( nonNull(prevWord) ) {
                             char lastCharOfPrevWord = this.data.variant.charAt(prevWord.endIndex);
@@ -2460,8 +2503,44 @@ class PositionsAnalyze {
                     }
 
                     if ( ! this.currentClusterWordStartFound ) {
-                        this.currentClusterIsRejected = true;
-                        data.log.add(POSITIONS_CLUSTERS, "    [cluster] word of cluster has not its start found, cluster is bad!");
+                        int ignoreMissedWordStartConditions = 0;
+
+                        if ( wordsOfCluster.count() == 1 ) {
+                            WordInVariant word = wordsOfCluster.get(0);
+                            if ( word.length > 3 ) {
+                                boolean considerOtherMatchings = false;
+                                int intersections = word.intersections(this.filledPositions);
+
+                                if ( this.filledPositions.contains(word.startIndex + 1) && this.filledPositions.contains(word.startIndex + 2) ) {
+                                    ignoreMissedWordStartConditions++;
+                                    intersections = intersections - 2;
+                                    considerOtherMatchings = true;
+                                }
+
+                                if ( this.filledPositions.contains(word.endIndex) ) {
+                                    ignoreMissedWordStartConditions++;
+                                    intersections--;
+                                    considerOtherMatchings = true;
+                                }
+
+                                if ( considerOtherMatchings ) {
+                                    if ( intersections > 1 ) {
+                                        ignoreMissedWordStartConditions++;
+                                        wordsAllowedToIgnoreMissedStart.add(word);
+                                    }
+                                }
+                            }
+                        }
+
+                        if ( ignoreMissedWordStartConditions < 3 ) {
+                            this.currentClusterIsRejected = true;
+                            data.log.add(POSITIONS_CLUSTERS, "    [cluster] word of cluster has not its start found, cluster is bad!");
+                        }
+                        else {
+                            this.currentClusterIsRejected = false;
+                            this.currentClusterWordStartFoundIgnore = true;
+                            data.log.add(POSITIONS_CLUSTERS, "    [cluster] word of cluster has not its start found, but word is recognizable, allow cluster");
+                        }
                     }
                 }
             }
@@ -2714,7 +2793,7 @@ class PositionsAnalyze {
 
             if ( ! clusterIsLongEnough ) {
 
-                if ( ! this.currentClusterWordStartFound ) {
+                if ( ! this.currentClusterWordStartFoundIgnore && ! this.currentClusterWordStartFound ) {
                     data.log.add(POSITIONS_CLUSTERS,
                             "             [cluster] cluster word has not found start");
                     this.clustered.removeCluster(this.currentClusterFirstPosition, this.currentClusterLength);
@@ -2727,10 +2806,12 @@ class PositionsAnalyze {
         if ( this.data.wordsInVariant.all.size() > 1 ) {
             if ( ! this.data.variantContainsPattern ) {
                 int firstFoundPosition = this.findFirstPosition();
-                WordInVariant word = this.data.wordsInVariant.wordOf(firstFoundPosition);
+                if ( firstFoundPosition > -1 ) {
+                    WordInVariant word = this.data.wordsInVariant.wordOf(firstFoundPosition);
 
-                if ( ! this.filledPositions.contains(word.startIndex) ) {
-                    this.weight.add(FIRST_CLUSTER_HAS_MISSED_WORD_START);
+                    if ( ! this.filledPositions.contains(word.startIndex) ) {
+                        this.weight.add(FIRST_CLUSTER_HAS_MISSED_WORD_START);
+                    }
                 }
             }
         }
@@ -2869,7 +2950,14 @@ class PositionsAnalyze {
                                             if ( this.nextDependentWordsHasFoundPositions(word) ) {
                                                 importantWord = true;
                                                 wordQuality = wordQuality + 2;
-                                                data.log.add(POSITIONS_CLUSTERS, "          +2 no cluster, single positions count == 1, independent word havin positions in further dependent");
+                                                data.log.add(POSITIONS_CLUSTERS, "          +2 no cluster, single positions count == 1, independent word having positions in further dependent");
+                                            }
+                                        }
+                                        else {
+                                            if ( this.previousIndependentWordHasQuality(word) ) {
+                                                importantWord = true;
+                                                wordQuality = wordQuality + 2;
+                                                data.log.add(POSITIONS_CLUSTERS, "          +2 no cluster, single positions count == 1, dependent word having it's main word some quality");
                                             }
                                         }
 
@@ -2919,10 +3007,10 @@ class PositionsAnalyze {
                                 }
                             }
                             else {
-//                                if ( ! importantWord ) {
-//                                    wordQuality = wordQuality - 1;
-//                                    data.log.add(POSITIONS_CLUSTERS, "          -1 senseless word match");
-//                                }
+                                if ( ! importantWord ) {
+                                    wordQuality = wordQuality - 1;
+                                    data.log.add(POSITIONS_CLUSTERS, "          -1 senseless word match");
+                                }
                             }
                         }
                         else {
@@ -3154,9 +3242,16 @@ class PositionsAnalyze {
                         }
                         else if ( this.singlePositions.contains(word.endIndex) ) {
                             if ( singlePositionsInWordCount > 1 ) {
-                                // word: __bcd_e_f
-                                data.log.add(POSITIONS_CLUSTERS, "          -2 word: __bcd_e_f");
-                                wordQuality = wordQuality - 2;
+                                if ( this.wordsAllowedToIgnoreMissedStart.contains(word) ) {
+                                    // word: _bcd_e_f
+                                    data.log.add(POSITIONS_CLUSTERS, "          +5 word: _bcd_e_f  (ignore missed start)");
+                                    wordQuality = wordQuality + 5;
+                                }
+                                else {
+                                    // word: __bcd_e_f
+                                    data.log.add(POSITIONS_CLUSTERS, "          -2 word: __bcd_e_f");
+                                    wordQuality = wordQuality - 2;
+                                }
                             }
                             else {
                                 // word: __bcd___f
@@ -3423,7 +3518,7 @@ class PositionsAnalyze {
                     WordInVariant firstIndependentWord = this.data.wordsInVariant.firstIndependentBefore(word);
                     int i = all.indexOf(firstIndependentWord);
                     if ( i > -1 ) {
-                        int quality = this.foundWordInVariantQualities.get(i);
+                        int quality = this.data.wordsInVariant.qualities.qualityOf(word);
                         if ( quality > 2 ) {
                             wordQuality = wordQuality + 1;
                             data.log.add(POSITIONS_CLUSTERS, "          +1 first independent word is found and has quality > 2");
@@ -3453,7 +3548,7 @@ class PositionsAnalyze {
                 weightValue = 0;
             }
 
-            this.foundWordInVariantQualities.add(wordQuality);
+            this.data.wordsInVariant.qualities.add(word, wordQuality);
             if ( weightValue != 0 ) {
                 if ( weightValue == 24 ) {
                     this.weight.add(weightValue, WORD_QUALITY);
@@ -4116,6 +4211,13 @@ class PositionsAnalyze {
 
         return false;
     }
+
+    private boolean previousIndependentWordHasQuality(WordInVariant word) {
+        WordInVariant independentBefore = this.data.wordsInVariant.firstIndependentBefore(word);
+        int qualityOfIndependentWord = this.data.wordsInVariant.qualities.qualityOf(independentBefore);
+
+        return qualityOfIndependentWord > 0;
+    }
     
     void calculateImportance() {
         int clustered = this.clustered.count();
@@ -4217,7 +4319,6 @@ class PositionsAnalyze {
         this.previousClusterOrdersIsConsistent = false;
         this.currentClusterOrdersHaveDiffCompensations = false;
         this.unsortedPositions = 0;
-        this.foundWordInVariantQualities.clear();
         this.collectedIntersections.clear();
         this.missedRepeatedChars.clear();
         this.missedRepeatedPositions.clear();
@@ -4225,6 +4326,8 @@ class PositionsAnalyze {
         this.garbagePatternPositions.clear();
         this.currentClusterIsRejected = false;
         this.currentClusterWordStartFound = false;
+        this.currentClusterWordStartFoundIgnore = false;
+        this.wordsAllowedToIgnoreMissedStart.clear();
         this.misplacingCheckVariantPositionsInPatternGap.clear();
         this.misplacingCheckClustersInPatternGap.clear();
         this.misplacingCheckMergedPositions.clear();

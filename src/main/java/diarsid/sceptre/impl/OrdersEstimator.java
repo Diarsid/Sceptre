@@ -22,6 +22,7 @@ public class OrdersEstimator implements StatefulClearable {
 
     private int patternDiffSum;
     private int patternDiffCount;
+    private int patternDiffBackwardSum;
 
     private int variantDiffSum;
     private int variantDiffCount;
@@ -30,6 +31,8 @@ public class OrdersEstimator implements StatefulClearable {
     private int qualityExternalBonus;
     private int quality;
     private int penalty;
+
+    private boolean prevIsBackward;
 
     public OrdersEstimator(Logging logging) {
         this.logging = logging;
@@ -45,7 +48,23 @@ public class OrdersEstimator implements StatefulClearable {
         this.variantPositions.add(variant);
     }
 
+    void change(int oldPattern, int oldVariant, int newPattern, int newVariant) {
+        int iPattern = this.patternPositions.indexOf(oldPattern);
+        int iVariant = this.variantPositions.indexOf(oldVariant);
+
+        if ( iPattern != iVariant ) {
+            throw new IllegalStateException();
+        }
+
+        this.patternPositions.set(iPattern, newPattern);
+        this.variantPositions.set(iVariant, newVariant);
+    }
+
     private void accumulate(int i, int pattern, int variant) {
+        if ( i == 0 ) {
+            this.prevIsBackward = false;
+        }
+
         int prevPattern;
         if ( i > 0 ) {
             prevPattern = this.patternPositions.get(i - 1);
@@ -54,10 +73,18 @@ public class OrdersEstimator implements StatefulClearable {
             prevPattern = this.patternPosition;
         }
 
-        int patternDiff = (pattern - prevPattern - 1);
+        int patternDiffRaw = pattern - prevPattern;
+        boolean isBackward = patternDiffRaw < 0;
+        int patternDiff = abs(patternDiffRaw) - 1;
+        if ( isBackward && patternDiff == 0 ) {
+            patternDiff = 1;
+        }
         if ( patternDiff > 0 ) {
             this.patternDiffSum = this.patternDiffSum + patternDiff;
             this.patternDiffCount++;
+            if ( isBackward ) {
+                this.patternDiffBackwardSum = this.patternDiffBackwardSum + patternDiff;
+            }
         }
 
         int prevVariant;
@@ -69,7 +96,13 @@ public class OrdersEstimator implements StatefulClearable {
         }
 
         int variantDiffRaw = variant - prevVariant;
-        boolean isBackward = variantDiffRaw < 0;
+
+        if ( ! isBackward ) {
+            if ( variantDiffRaw < 0 ) {
+                isBackward = true;
+            }
+        }
+
         int variantDiff = abs(variantDiffRaw) - 1;
         if ( isBackward && variantDiff == 0 ) {
             variantDiff = 1;
@@ -87,6 +120,10 @@ public class OrdersEstimator implements StatefulClearable {
                 quality++;
             }
             quality++;
+            quality++;
+        }
+        else if ( (patternDiff == 0 && variantDiff == 1) ) {
+            quality++;
         }
         else {
             if ( i == 0 ) {
@@ -102,7 +139,18 @@ public class OrdersEstimator implements StatefulClearable {
                     }
                 }
             }
+
+            if ( patternDiff == variantDiff && patternDiff < 3 ) {
+                quality++;
+            }
         }
+
+        if ( isBackward && this.prevIsBackward ) {
+            quality--;
+            penalty++;
+        }
+
+        this.prevIsBackward = isBackward;
     }
 
     void remove(int patternPosition) {
@@ -151,7 +199,11 @@ public class OrdersEstimator implements StatefulClearable {
             penalty = 0;
         }
 
-        int result = quality - variantDiffSum - variantDiffBackwardSum - patternDiffSum - penalty*2 + qualityExternalBonus;
+        int result = quality - variantDiffSum - variantDiffBackwardSum - patternDiffBackwardSum - patternDiffSum - penalty*2 + qualityExternalBonus;
+
+        if ( variantDiffBackwardSum == 0 && patternDiffBackwardSum == 0 ) {
+            result++;
+        }
 
         return result;
     }
@@ -164,6 +216,8 @@ public class OrdersEstimator implements StatefulClearable {
     boolean isOk() {
         int quality = qualityTotal();
         int threshold = qualityThreshold();
+        logging.add(POSITIONS_SEARCH, "            [orders estimate] pattern   : %s %s", patternPosition, patternPositions);
+        logging.add(POSITIONS_SEARCH, "            [orders estimate] variant   : %s %s", variantPosition, variantPositions);
         logging.add(POSITIONS_SEARCH, "            [orders estimate] result    : %s", quality);
         logging.add(POSITIONS_SEARCH, "            [orders estimate] threshold : %s", threshold);
         return quality >= threshold;
@@ -179,6 +233,7 @@ public class OrdersEstimator implements StatefulClearable {
 
         this.patternDiffSum = 0;
         this.patternDiffCount = 0;
+        this.patternDiffBackwardSum = 0;
 
         this.variantDiffSum = 0;
         this.variantDiffCount = 0;

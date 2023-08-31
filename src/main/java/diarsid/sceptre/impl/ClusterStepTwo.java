@@ -197,7 +197,11 @@ class ClusterStepTwo {
                     .matches
                     .set(this.i, this.matchType);
             
-            this.cluster.matchStrength = this.cluster.matchStrength + this.matchType.strength();            
+            this.cluster.matchStrength = this.cluster.matchStrength + this.matchType.strength();
+
+            this.cluster.candidatesOrderEstimator.change(
+                    other.patternPosition, other.variantPosition,
+                    this.patternPosition, this.variantPosition);
         }
 
         private StepTwoClusterPositionView fillFromSubcluster(int i) {
@@ -462,6 +466,14 @@ class ClusterStepTwo {
         return hasChars;
     }
 
+    boolean containsAlreadyFilledPositions() {
+        return this.fillingsInPattern.contains(true);
+    }
+
+    int foundQty() {
+        return this.variantPositions.size();
+    }
+
     boolean containsOnlyInClustered(int variantPosition) {
         return this.variantPositions.contains(variantPosition);
     }
@@ -497,7 +509,6 @@ class ClusterStepTwo {
                 step2LoopCandidatePosition.isFilledInPattern,
                 MATCH_TYPO_LOOP,
                 TRUE);
-        candidatesOrderEstimator.add(step2LoopCandidatePosition.patternPosition, step2LoopCandidatePosition.variantPosition);
     }
 
     void setCandidatesOrderEstimate(int iPattern, int iVariant) {
@@ -748,6 +759,7 @@ class ClusterStepTwo {
                         POSITIONS_SEARCH,
                         "          [info] positions-in-cluster '%s' pattern:%s, variant:%s, included(variant:%s pattern:%s), %s, candidate:%s",
                         c, patternPosition, variantPosition, isFilledInVariant, isFilledInPattern, matchType.name(), isCandidate);
+                this.candidatesOrderEstimator.add(patternPosition, variantPosition);
             }
         }        
     }

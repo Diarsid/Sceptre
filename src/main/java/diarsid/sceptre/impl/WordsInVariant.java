@@ -1,13 +1,13 @@
 package diarsid.sceptre.impl;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 import diarsid.sceptre.impl.collections.ArrayInt;
 import diarsid.sceptre.impl.collections.Ints;
 import diarsid.sceptre.impl.collections.ListInt;
+import diarsid.sceptre.impl.collections.MapIntInt;
+import diarsid.sceptre.impl.collections.impl.MapIntIntImpl;
 import diarsid.support.objects.GuardedPool;
 import diarsid.support.objects.PooledReusable;
 import diarsid.support.objects.StatefulClearable;
@@ -140,11 +140,36 @@ public class WordsInVariant implements StatefulClearable {
         }
     }
 
+    public static class Qualities implements StatefulClearable {
+
+        private final WordsInVariant wordsInVariant;
+        private final MapIntInt qualitiesByWordIndex;
+
+        public Qualities(WordsInVariant wordsInVariant) {
+            this.wordsInVariant = wordsInVariant;
+            this.qualitiesByWordIndex = new MapIntIntImpl();
+        }
+
+        @Override
+        public void clear() {
+            this.qualitiesByWordIndex.clear();
+        }
+
+        public int qualityOf(WordInVariant word) {
+            return this.qualitiesByWordIndex.get(word.index);
+        }
+
+        public void add(WordInVariant word, int quality) {
+            this.qualitiesByWordIndex.put(word.index, quality);
+        }
+    }
+
     private final GuardedPool<WordInVariant> wordsPool;
     private final GuardedPool<WordsInRange> wordsInRangePool;
     private final List<WordsInRange> usedWordsInRanges;
     private final List<WordInVariant> wordsByCharInVariantIndex;
     final List<WordInVariant> all;
+    final Qualities qualities;
     int variantLength;
 
     public WordsInVariant(GuardedPool<WordInVariant> wordsPool, GuardedPool<WordsInRange> wordsInRangePool) {
@@ -153,6 +178,7 @@ public class WordsInVariant implements StatefulClearable {
         this.all = new ArrayList<>();
         this.usedWordsInRanges = new ArrayList<>();
         this.wordsByCharInVariantIndex = new ArrayList<>(128);
+        this.qualities = new Qualities(this);
     }
 
     public WordInVariant next(WordInVariant.Placing placing) {
@@ -165,6 +191,7 @@ public class WordsInVariant implements StatefulClearable {
 
     @Override
     public void clear() {
+        this.qualities.clear();
         this.wordsByCharInVariantIndex.clear();
         this.wordsPool.takeBackAll(this.all);
         this.wordsInRangePool.takeBackAll(usedWordsInRanges);

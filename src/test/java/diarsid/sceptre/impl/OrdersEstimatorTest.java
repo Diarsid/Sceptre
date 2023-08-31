@@ -79,4 +79,25 @@ public class OrdersEstimatorTest {
 
         mustBe(true);
     }
+
+    @Test
+    public void test6() {
+        estimator.set(0, 19);
+
+        estimator.add(2, 22);
+        estimator.add(3, 23);
+        estimator.add(4, 25);
+
+        mustBe(true);
+    }
+
+    @Test
+    public void test7() {
+        estimator.set(0, 0);
+
+        estimator.add(2, 1);
+        estimator.add(1, 3);
+
+        mustBe(false);
+    }
 }

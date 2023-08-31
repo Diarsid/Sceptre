@@ -2540,6 +2540,17 @@ public class AnalyzeTest {
     }
 
     @Test
+    public void urbrsedssn() {
+        pattern = "urbrsedssn";
+
+        variants = asList("The Worm Ouroboros by E.R. Eddison and Keith Henderson");
+
+        expectedSameOrderAsVariants();
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
     public void test_rrhgtphilpsy() {
         pattern = "rrhgtphilpsy";
 
@@ -3288,7 +3299,8 @@ public class AnalyzeTest {
                 "The Wars of Gods and Men: Book III of the Earth Chronicles (The Earth Chronicles) by Zecharia Sitchin",
                 "On Killing: The Psychological Cost of Learning to Kill in War and Society by Dave Grossman");
 
-        expectedSameOrderAsVariants();
+        expected = asList(
+                "The Wars of Gods and Men: Book III of the Earth Chronicles (The Earth Chronicles) by Zecharia Sitchin");
 
         weightVariantsAndCheckMatching();
     }
