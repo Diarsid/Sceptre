@@ -1,23 +1,28 @@
 package diarsid.sceptre.impl;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
 import diarsid.sceptre.api.Analyze;
 import diarsid.sceptre.api.LogSink;
 import diarsid.sceptre.api.LogType;
-import diarsid.sceptre.api.util.LineByLineLogSink;
+import diarsid.sceptre.api.impl.logsinks.LogSinkLineByLine;
+import diarsid.sceptre.api.model.Output;
 import diarsid.support.objects.Pools;
 
 import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
 
 public class AnalyzeBuilder implements Analyze.Builder {
 
-    private Pools pools;
-    private LogSink logSink;
-    private boolean logEnabled;
-    private Map<LogType, Boolean> enabledByLogType;
+    public Pools pools;
+    public LogSink logSink;
+    public boolean logEnabled;
+    public Map<LogType, Boolean> enabledByLogType;
+    public List<Output.AdditionalData> additionalData;
 
     public AnalyzeBuilder() {
     }
@@ -35,7 +40,7 @@ public class AnalyzeBuilder implements Analyze.Builder {
 
     @Override
     public AnalyzeBuilder withLogSink(Consumer<String> lineByLineLogConsume) {
-        this.logSink = new LineByLineLogSink(lineByLineLogConsume);
+        this.logSink = new LogSinkLineByLine(lineByLineLogConsume);
         return this;
     }
 
@@ -69,6 +74,17 @@ public class AnalyzeBuilder implements Analyze.Builder {
     }
 
     @Override
+    public Analyze.Builder withAdditionalDataInOutput(Output.AdditionalData additionalData) {
+        if ( isNull(this.additionalData) ) {
+            this.additionalData = new ArrayList<>();
+        }
+
+        this.additionalData.add(additionalData);
+
+        return this;
+    }
+
+    @Override
     public Analyze build() {
         if ( isNull(this.pools) ) {
             this.pools = Pools.pools();
@@ -93,19 +109,7 @@ public class AnalyzeBuilder implements Analyze.Builder {
         return new AnalyzeImpl(this);
     }
 
-    public Pools pools() {
-        return this.pools;
-    }
-
-    public LogSink logSink() {
-        return this.logSink;
-    }
-
-    public boolean isLogEnabled() {
-        return this.logEnabled;
-    }
-
-    public Map<LogType, Boolean> enabledByLogType() {
-        return this.enabledByLogType;
+    public boolean isDeclaringAdditionalData() {
+        return nonNull(this.additionalData);
     }
 }

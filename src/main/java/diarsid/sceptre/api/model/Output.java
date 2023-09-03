@@ -1,18 +1,23 @@
 package diarsid.sceptre.api.model;
 
+import java.util.Map;
+
 import static java.util.Objects.nonNull;
 
 public interface Output extends Weighted {
 
-    String input();
+    public static enum AdditionalData {
+        WORDS
+    }
+
+    Input input();
 
     int index();
 
-    int originalIndex();
+    Map<AdditionalData, Object> additionalData();
 
-    Object metadata();
-
-    default boolean hasMetadata() {
-        return nonNull(this.metadata());
+    default boolean hasAdditionalData() {
+        return nonNull(this.additionalData());
     }
+
 }

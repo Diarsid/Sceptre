@@ -1,4 +1,4 @@
-package diarsid.sceptre.api.util;
+package diarsid.sceptre.api.impl.logsinks;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -6,17 +6,17 @@ import java.util.function.Supplier;
 import diarsid.sceptre.api.LogSink;
 import diarsid.support.strings.MultilineMessage;
 
-public class MultilineMessageLogSink implements LogSink {
+public class LogSinkMultilineMessage implements LogSink {
 
     private final ThreadLocal<MultilineMessage> multilineMessagePerThread;
     private final Supplier<MultilineMessage> newMessageCreator;
     private final Consumer<MultilineMessage> messageConsumer;
 
-    public MultilineMessageLogSink() {
+    public LogSinkMultilineMessage() {
         this("[ANALYZE]");
     }
 
-    public MultilineMessageLogSink(String linePrefix) {
+    public LogSinkMultilineMessage(String linePrefix) {
         this.multilineMessagePerThread = new ThreadLocal<>();
 
         this.newMessageCreator = () -> {
@@ -29,7 +29,7 @@ public class MultilineMessageLogSink implements LogSink {
         };
     }
 
-    public MultilineMessageLogSink(String linePrefix, Consumer<String> logLinesConsumer) {
+    public LogSinkMultilineMessage(String linePrefix, Consumer<String> logLinesConsumer) {
         this.multilineMessagePerThread = new ThreadLocal<>();
 
         this.newMessageCreator = () -> {
@@ -42,7 +42,7 @@ public class MultilineMessageLogSink implements LogSink {
         };
     }
 
-    public MultilineMessageLogSink(
+    public LogSinkMultilineMessage(
             Supplier<MultilineMessage> newMessageCreator,
             Consumer<MultilineMessage> messageConsumer) {
         this.multilineMessagePerThread = new ThreadLocal<>();

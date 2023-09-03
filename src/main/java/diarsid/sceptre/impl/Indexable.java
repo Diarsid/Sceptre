@@ -10,7 +10,7 @@ public abstract class Indexable {
         this.index = INDEX_NOT_SET;
     }
 
-    int index() {
+    public int index() {
         return this.index;
     }
 

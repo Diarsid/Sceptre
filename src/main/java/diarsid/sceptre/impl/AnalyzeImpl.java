@@ -8,7 +8,6 @@ import diarsid.sceptre.api.Analyze;
 import diarsid.sceptre.api.WeightEstimate;
 import diarsid.sceptre.api.model.Input;
 import diarsid.sceptre.api.model.Output;
-import diarsid.sceptre.api.model.Outputs;
 import diarsid.sceptre.impl.logs.Logging;
 import diarsid.support.model.versioning.Version;
 import diarsid.support.objects.GuardedPool;
@@ -25,35 +24,38 @@ import static diarsid.support.strings.StringUtils.lower;
 
 public class AnalyzeImpl implements Analyze {
 
-    public static final Version VERSION = new Version("1.4.16");
+    public static final Version VERSION = new Version("1.5.0");
 
     private final GuardedPool<AnalyzeUnit> analyzeUnitsPool;
 
     private final Logging log;
+    private final AnalyzeBuilder builder;
     
     public AnalyzeImpl(AnalyzeBuilder builder) {
-        Pools pools = builder.pools();
+        Pools pools = builder.pools;
         this.log = new Logging(builder);
 
         GuardedPool<Cluster> clusterPool = pools.createPool(
                 Cluster.class, 
                 () -> new Cluster(this.log));
 
-        GuardedPool<WordInVariant> wordPool = pools.createPool(
-                WordInVariant.class,
-                () -> new WordInVariant());
+        GuardedPool<WordInInput> wordPool = pools.createPool(
+                WordInInput.class,
+                () -> new WordInInput());
 
-        GuardedPool<WordsInVariant.WordsInRange> wordsInRangePool = pools.createPool(
-                WordsInVariant.WordsInRange.class,
-                () -> new WordsInVariant.WordsInRange());
+        GuardedPool<WordsInInput.WordsInRange> wordsInRangePool = pools.createPool(
+                WordsInInput.WordsInRange.class,
+                () -> new WordsInInput.WordsInRange());
 
         GuardedPool<Step2LoopCandidatePosition> step2LoopCandidatePositionsPool = pools.createPool(
                 Step2LoopCandidatePosition.class,
                 () -> new Step2LoopCandidatePosition());
 
         this.analyzeUnitsPool = pools.createPool(
-                AnalyzeUnit.class, 
+                AnalyzeUnit.class,
                 () -> new AnalyzeUnit(this.log, clusterPool, wordPool, wordsInRangePool, step2LoopCandidatePositionsPool));
+
+        this.builder = builder;
     }
 
     @Override
@@ -74,16 +76,6 @@ public class AnalyzeImpl implements Analyze {
     }
     
     @Override
-    public Outputs processStrings(String pattern, List<String> strings) {
-        return this.processInputs(pattern, stringsToInputs(strings));
-    }
-    
-    @Override
-    public Outputs processStrings(String pattern, String noWorseThan, List<String> variants) {
-        return this.processInputs(pattern, noWorseThan, stringsToInputs(variants));
-    }
-    
-    @Override
     public Optional<Output> process(String pattern, Input input) {
         return this.weightInputInternally(pattern, input);
     }
@@ -94,10 +86,10 @@ public class AnalyzeImpl implements Analyze {
     }
 
     private Optional<Output> weightInputInternally(
-            String pattern, InputIndexable input) {
-        Float weight = this.weightStringInternally(pattern, input.string());
+            String pattern, Input input) {
+        float weight = this.weightStringInternally(pattern, input.string());
         if ( WeightEstimate.of(weight).isBetterThan(BAD) ) {
-            Output output = new RealOutput(input, 0, weight);
+            Output output = new OutputImpl(input, 0, weight);
             return Optional.of(output);
         } else {
             return Optional.empty();
@@ -105,44 +97,32 @@ public class AnalyzeImpl implements Analyze {
     }
     
     @Override
-    public Outputs processInputs(String pattern, List<Input> inputs) {
-        List<Output> weightedVariants = this.processInputsToList(pattern, inputs);
-        return new OutputsImpl(weightedVariants);
-    }
-    
-    @Override
-    public Outputs processInputs(String pattern, String noWorseThan, List<Input> inputs) {
-        List<Output> weightedVariants = this.processInputsToList(pattern, noWorseThan, inputs);
-        return new OutputsImpl(weightedVariants);
-    }
-    
-    @Override
-    public List<Output> processInputsToList(String pattern, List<Input> inputs) {
+    public List<Output> processInputs(String pattern, List<Input> inputs) {
         return this.weightInputsListInternally(
                 pattern, null, inputs);
     }
     
     @Override
-    public List<Output> processInputsToList(
+    public List<Output> processInputs(
             String pattern, String noWorseThan, List<Input> inputs) {
         return this.weightInputsListInternally(
                 pattern, noWorseThan, inputs);
     }
     
     @Override
-    public List<Output> processStringsToList(String pattern, List<String> strings) {
+    public List<Output> processStrings(String pattern, List<String> strings) {
         return this.weightInputsListInternally(
                 pattern, null, stringsToInputs(strings));
     }
     
     @Override
-    public List<Output> processStringsToList(
+    public List<Output> processStrings(
             String pattern, String noWorseThan, List<String> strings) {
         return this.weightInputsListInternally(
                 pattern, noWorseThan, stringsToInputs(strings));
     }
 
-    private Float weightStringInternally(
+    private float weightStringInternally(
             String pattern, String target) {
 
         AnalyzeUnit analyze = this.analyzeUnitsPool.give();
@@ -212,7 +192,7 @@ public class AnalyzeImpl implements Analyze {
         indexing(inputs);
 
         boolean weightLimitPresent;
-        Float weightLimit = 0.0f;
+        float weightLimit = 0.0f;
         if ( nonNull(noWorseThan) ) {
             weightLimit = weightStringInternally(pattern, noWorseThan);
             weightLimitPresent = WeightEstimate.of(weightLimit).isBetterThan(BAD);
@@ -221,12 +201,10 @@ public class AnalyzeImpl implements Analyze {
         }
         
         pattern = lower(pattern);
-        
-//        sort(inputs); ????
 
-        String variantText;
+        String inputString;
         
-        List<RealOutput> weightedOutputs = new ArrayList<>();
+        List<OutputImpl> weightedOutputs = new ArrayList<>();
         AnalyzeUnit analyzeUnit = this.analyzeUnitsPool.give();
         
         float minWeight = MAX_VALUE;
@@ -234,14 +212,14 @@ public class AnalyzeImpl implements Analyze {
 
         this.log.begins();
         try {
-            RealOutput output;
-            variantsWeighting: for (InputIndexable input : inputs) {
-                variantText = input.string();
+            OutputImpl output;
+            inputsWeighting: for (Input input : inputs) {
+                inputString = input.string();
                 
                 log.add(BASE, "");
-                log.add(BASE, "===== Pattern:'%s' Input:'%s' ===== ", pattern, variantText);
+                log.add(BASE, "===== Pattern:'%s' Input:'%s' ===== ", pattern, inputString);
 
-                analyzeUnit.set(pattern, variantText);
+                analyzeUnit.set(pattern, inputString);
 
                 if ( analyzeUnit.isVariantNotEqualsPattern() ) {
                     analyzeUnit.checkIfVariantTextContainsPatternDirectly();
@@ -258,13 +236,13 @@ public class AnalyzeImpl implements Analyze {
                         log.add(BASE, "  %s is too bad.", analyzeUnit.variant);
                         
                         analyzeUnit.clearForReuse();
-                        continue variantsWeighting;
+                        continue inputsWeighting;
                     }
 
                     if ( analyzeUnit.areTooMuchPositionsMissed() ) {
                         
                         analyzeUnit.clearForReuse();
-                        continue variantsWeighting;
+                        continue inputsWeighting;
                     }
 
                     analyzeUnit.calculateClustersImportance();
@@ -276,7 +254,7 @@ public class AnalyzeImpl implements Analyze {
                         log.add(BASE, "  %s is too bad.", analyzeUnit.variant);
                         
                         analyzeUnit.clearForReuse();                        
-                        continue variantsWeighting;
+                        continue inputsWeighting;
                     }
 
                     if ( analyzeUnit.weight.sum() < minWeight ) {
@@ -288,13 +266,21 @@ public class AnalyzeImpl implements Analyze {
                     }                
                 }
 
-                output = new RealOutput(input, analyzeUnit.weight.sum()); //analyzeUnit.variantEqualsToPattern
+                if ( this.builder.isDeclaringAdditionalData() ) {
+                    output = new OutputImpl(
+                            input,
+                            analyzeUnit.weight.sum(),
+                            analyzeUnit.produceAdditionalData(this.builder.additionalData));
+                }
+                else {
+                    output = new OutputImpl(input, analyzeUnit.weight.sum());
+                }
 
                 if ( weightLimitPresent ) {
                     if ( output.weight() <= weightLimit ) {
                         weightedOutputs.add(output);
                     } else {
-                        log.add(BASE, "%s is worse than: %s", variantText, noWorseThan);
+                        log.add(BASE, "%s is worse than: %s", inputString, noWorseThan);
                     }
                 } else {
                     weightedOutputs.add(output);

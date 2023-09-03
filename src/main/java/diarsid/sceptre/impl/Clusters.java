@@ -66,14 +66,14 @@ class Clusters implements StatefulClearable {
     private final List<Cluster> chosenByWord;
 
     Clusters(
-            AnalyzeUnit analyzeData, 
+            AnalyzeUnit analyzeUnit,
             GuardedPool<Cluster> clusterPool) {
         this.clusterPool = clusterPool;
         
         this.clustersMarkedTeardown = new ArrayList<>();
         this.clustersMarkedTeardownRejected = new ArrayList<>();
         
-        this.data = analyzeData;
+        this.data = analyzeUnit;
         this.clusters = new ArrayList<>();
         this.clustersTakenFromPool = new ArrayList<>();
         this.lastAdded = simplePossibleButEmpty();
@@ -158,7 +158,7 @@ class Clusters implements StatefulClearable {
         return this.distanceBetweenClusters;
     }
 
-    void chooseAllOf(WordInVariant word) {
+    void chooseAllOf(WordInInput word) {
         this.chosenByWord.clear();
 
         for ( Cluster cluster : this.clusters ) {

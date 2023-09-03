@@ -3,7 +3,7 @@ package diarsid.sceptre.impl.logs;
 import java.util.HashMap;
 import java.util.Map;
 
-import diarsid.sceptre.api.util.LineByLineLogSink;
+import diarsid.sceptre.api.impl.logsinks.LogSinkLineByLine;
 import diarsid.sceptre.impl.AnalyzeBuilder;
 import diarsid.sceptre.api.LogSink;
 import diarsid.sceptre.api.LogType;
@@ -20,13 +20,13 @@ public class Logging {
     private final boolean enabled;
 
     public Logging(AnalyzeBuilder builder) {
-        this.logSink = builder.logSink();
-        this.enabledByLogType = builder.enabledByLogType();
-        this.enabled = builder.isLogEnabled() && nonNull(this.logSink);
+        this.logSink = builder.logSink;
+        this.enabledByLogType = builder.enabledByLogType;
+        this.enabled = builder.logEnabled && nonNull(this.logSink);
     }
 
     public Logging() {
-        this.logSink = new LineByLineLogSink(System.out::println);
+        this.logSink = new LogSinkLineByLine(System.out::println);
         this.enabled = true;
         this.enabledByLogType = new HashMap<>();
 

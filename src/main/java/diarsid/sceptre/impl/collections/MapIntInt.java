@@ -9,6 +9,11 @@ public interface MapIntInt {
 
     public static interface Entries {
 
+        public static interface KeyValueConsumer {
+
+            void accept(int key, int value);
+        }
+
         boolean hasNext();
 
         void next();
@@ -16,6 +21,13 @@ public interface MapIntInt {
         int currentKey();
 
         int currentValue();
+
+        default void forEach(KeyValueConsumer consumer) {
+            while ( this.hasNext() ) {
+                this.next();
+                consumer.accept(this.currentKey(), this.currentValue());
+            }
+        }
 
         /*
          *  MapIntInt.Entries entries = map.entries(); <-- call .entries() clears an iterator

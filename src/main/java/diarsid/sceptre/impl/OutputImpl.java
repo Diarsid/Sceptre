@@ -1,43 +1,42 @@
 package diarsid.sceptre.impl;
 
+import java.util.Map;
+
+import diarsid.sceptre.api.model.Input;
 import diarsid.sceptre.api.model.Output;
 import diarsid.sceptre.api.model.Weighted;
 
-public class RealOutput extends Indexable implements Output {
+public class OutputImpl extends Indexable implements Output {
 
     private static final int INDEX_NOT_SET = -1;
 
-    private final String input;
+    private final Input input;
     private final float weight;
-    private final int originalIndex;
-    private final Object metadata;
+    private final Map<AdditionalData, Object> additionalData;
 
-    public RealOutput(String input, int index, int originalIndex, float weight, Object metadata) {
+    public OutputImpl(Input input, int index, float weight) {
         this.input = input;
         this.index = index;
-        this.originalIndex = originalIndex;
         this.weight = weight;
-        this.metadata = metadata;
+        this.additionalData = null;
     }
 
-    public RealOutput(InputIndexable input, int index, float weight) {
-        this.input = input.string();
-        this.index = index;
-        this.originalIndex = input.index();
-        this.weight = weight;
-        this.metadata = input.metadata();
-    }
-
-    public RealOutput(InputIndexable input, float weight) {
-        this.input = input.string();
+    public OutputImpl(Input input, float weight) {
+        this.input = input;
         this.index = INDEX_NOT_SET;
-        this.originalIndex = input.index();
         this.weight = weight;
-        this.metadata = input.metadata();
+        this.additionalData = null;
+    }
+
+    public OutputImpl(Input input, float weight, Map<AdditionalData, Object> additionalData) {
+        this.input = input;
+        this.index = INDEX_NOT_SET;
+        this.weight = weight;
+        this.additionalData = additionalData;
     }
 
     @Override
-    public String input() {
+    public Input input() {
         return this.input;
     }
 
@@ -47,18 +46,8 @@ public class RealOutput extends Indexable implements Output {
     }
 
     @Override
-    public void setIndex(int index) {
+    void setIndex(int index) {
         this.index = index;
-    }
-
-    @Override
-    public int originalIndex() {
-        return this.originalIndex;
-    }
-
-    @Override
-    public Object metadata() {
-        return this.metadata;
     }
 
     @Override
@@ -69,6 +58,11 @@ public class RealOutput extends Indexable implements Output {
     @Override
     public boolean isBetterThan(Weighted other) {
         return this.weight < other.weight();
+    }
+
+    @Override
+    public Map<AdditionalData, Object> additionalData() {
+        return this.additionalData;
     }
 
     @Override

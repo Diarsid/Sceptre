@@ -98,8 +98,8 @@ class PositionCandidate {
             return CURRENT_IS_WORSE;
         }
 
-        WordInVariant thisWord = this.data.wordsInVariant.wordOf(this.position);
-        WordInVariant otherWord = this.data.wordsInVariant.wordOf(otherPosition);
+        WordInInput thisWord = this.data.wordsInInput.wordOf(this.position);
+        WordInInput otherWord = this.data.wordsInInput.wordOf(otherPosition);
 
         int thisIntersections = thisWord.intersections(this.data.positionsAnalyze.filledPositions, this.position);
         int otherIntersections = otherWord.intersections(this.data.positionsAnalyze.filledPositions, otherPosition);

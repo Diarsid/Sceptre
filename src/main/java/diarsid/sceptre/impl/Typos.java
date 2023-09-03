@@ -135,7 +135,7 @@ class Typos implements StatefulClearable, AutoCloseable {
         return hasIndexInTypos(variantIndex, this.typosAfter);
     }
 
-    boolean areBeforeIn(WordInVariant word) {
+    boolean areBeforeIn(WordInInput word) {
         for ( Typo typo : this.typosBefore ) {
             if ( typo.variantIndex() < word.startIndex || word.endIndex < typo.variantIndex() ) {
                 return false;

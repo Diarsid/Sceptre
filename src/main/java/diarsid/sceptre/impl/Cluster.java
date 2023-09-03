@@ -202,13 +202,13 @@ class Cluster extends PooledReusable implements Comparable<Cluster> {
         this.misplaced = true;
     }
 
-    boolean isStartOf(WordInVariant word) {
+    boolean isStartOf(WordInInput word) {
         int lastPosition = this.lastPosition();
 
         return this.firstPosition == word.startIndex && lastPosition < word.endIndex;
     }
 
-    boolean intersectsWith(WordInVariant word) {
+    boolean intersectsWith(WordInInput word) {
         int lastPosition = this.lastPosition();
 
         boolean isCompletelyInWord =

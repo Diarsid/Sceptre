@@ -1,14 +1,14 @@
-package diarsid.sceptre.api.util;
+package diarsid.sceptre.api.impl.logsinks;
 
 import java.util.function.Consumer;
 
 import diarsid.sceptre.api.LogSink;
 
-public class LineByLineLogSink implements LogSink {
+public class LogSinkLineByLine implements LogSink {
 
     private final Consumer<String> lineConsumer;
 
-    public LineByLineLogSink(Consumer<String> lineConsumer) {
+    public LogSinkLineByLine(Consumer<String> lineConsumer) {
         this.lineConsumer = lineConsumer;
     }
 

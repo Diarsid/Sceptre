@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import diarsid.sceptre.api.Analyze;
 import diarsid.sceptre.api.model.Output;
 import diarsid.sceptre.api.model.Outputs;
+import diarsid.sceptre.api.model.Word;
 import diarsid.support.objects.GuardedPool;
 
 import static java.lang.String.format;
@@ -31,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 import static diarsid.sceptre.api.LogType.BASE;
 import static diarsid.sceptre.api.LogType.POSITIONS_CLUSTERS;
 import static diarsid.sceptre.api.LogType.POSITIONS_SEARCH;
+import static diarsid.sceptre.api.model.Output.AdditionalData.WORDS;
 import static diarsid.support.objects.Pools.pools;
 import static diarsid.support.objects.collections.CollectionUtils.nonEmpty;
 
@@ -59,10 +61,10 @@ public class AnalyzeTest {
         analyzeInstance = Analyze.Builder
                 .newInstance()
                 .withLogEnabled(true)
-//                .withLogSink(new LineByLineLogSink(System.out::println))
                 .withLogTypeEnabled(BASE, true)
                 .withLogTypeEnabled(POSITIONS_SEARCH, true)
                 .withLogTypeEnabled(POSITIONS_CLUSTERS, true)
+                .withAdditionalDataInOutput(WORDS)
                 .build();
 
         start = currentTimeMillis();
@@ -84,7 +86,7 @@ public class AnalyzeTest {
         Optional<GuardedPool<AnalyzeUnit>> pool = pools().poolOf(AnalyzeUnit.class);
         if ( pool.isPresent() ) {
             GuardedPool<AnalyzeUnit> c = pool.get();
-            AnalyzeUnit analyzeData = c.give();
+            AnalyzeUnit analyzeUnit = c.give();
         }
     }
     
@@ -3637,7 +3639,7 @@ public class AnalyzeTest {
         boolean failed;
         try {
             totalVariantsQuantity = totalVariantsQuantity + variants.size();
-            weightVariantsAndCheckMatchingInternally();
+            analayzeAndCheckMatchingInternally();
             failed = false;
         } catch (AssertionError e) {
             failed = true;
@@ -3654,17 +3656,27 @@ public class AnalyzeTest {
         notExpectedAreCritical = false;
     }
     
-    private void weightVariantsAndCheckMatchingInternally() {
+    private void analayzeAndCheckMatchingInternally() {
         if ( isNull(this.noWorseThan) ) {
-            outputs = this.analyze.processStrings(pattern, variants);
+            outputs = new OutputsImpl(this.analyze.processStrings(pattern, variants));
         } else {
-            outputs = this.analyze.processStrings(pattern, noWorseThan, variants);
-        }        
+            outputs = new OutputsImpl(this.analyze.processStrings(pattern, noWorseThan, variants));
+        }
+
+        List<Word> words;
+        for ( Output output : outputs.all() ) {
+            System.out.println(output.input().string);
+            words = (List<Word>) output.additionalData().get(WORDS);
+            words.sort(Word.FIRST_IS_BY_NATURAL_ORDER);
+            for ( Word word : words ) {
+                System.out.println(format("   %s: %s (quality: %s)", word.index, word.string, word.quality));
+            }
+        }
         
-        String expectedVariant;
-        String actualVariant;
+        String expected;
+        String actual;
         String presentButNotExpectedLine;
-        List<Output> nextSimilarVariants;
+        List<Output> nextSimilarOutputs;
         
         List<String> reports = new ArrayList<>();
         List<String> presentButNotExpected = new ArrayList<>();        
@@ -3672,45 +3684,47 @@ public class AnalyzeTest {
         AtomicInteger counter = new AtomicInteger(0);
         int mismatches = 0;
         
-        if ( expected.isEmpty() && outputs.size() > 0 ) {
+        if ( this.expected.isEmpty() && outputs.size() > 0 ) {
             fail("No variants expected!");
         }
+
+        Outputs.Iteration outputsIteration = outputs.iteration();
         
-        while ( outputs.next() && ( counter.get() < expected.size() ) ) {
+        while ( outputsIteration.next() && ( counter.get() < this.expected.size() ) ) {
             
-            if ( outputs.isCurrentMuchBetterThanNext() ) {
+            if ( outputsIteration.isCurrentMuchBetterThanNext() ) {
                 
-                expectedVariant = expected.get(counter.getAndIncrement());
-                actualVariant = outputs.current().input();
+                expected = this.expected.get(counter.getAndIncrement());
+                actual = outputsIteration.current().input().string;
                 
-                if ( actualVariant.equalsIgnoreCase(expectedVariant) ) {
-                    reports.add(format("\n%s variant matches expected: %s", counter.get() - 1, expectedVariant));
+                if ( actual.equalsIgnoreCase(expected) ) {
+                    reports.add(format("\n%s variant matches expected: %s", counter.get() - 1, expected));
                 } else {
                     mismatches++;
                     reports.add(format(
                             "\n%s variant does not match expected: " +
                             "\n    expected : %s" +
-                            "\n    actual   : %s", counter.get() - 1, expectedVariant, actualVariant));
+                            "\n    actual   : %s", counter.get() - 1, expected, actual));
                 }
             } else {            
-                nextSimilarVariants = outputs.nextSimilarSublist();
-                for (Output weightedVariant : nextSimilarVariants) {
-                    actualVariant = weightedVariant.input();
+                nextSimilarOutputs = outputsIteration.nextSimilarSublist();
+                for (Output output : nextSimilarOutputs) {
+                    actual = output.input().string;
                     
-                    if ( counter.get() < expected.size() ) {
-                        expectedVariant = expected.get(counter.getAndIncrement());
+                    if ( counter.get() < this.expected.size() ) {
+                        expected = this.expected.get(counter.getAndIncrement());
 
-                        if ( actualVariant.equalsIgnoreCase(expectedVariant) ) {
-                            reports.add(format("\n%s variant matches expected: %s", counter.get() - 1, expectedVariant));
+                        if ( actual.equalsIgnoreCase(expected) ) {
+                            reports.add(format("\n%s variant matches expected: %s", counter.get() - 1, expected));
                         } else {
                             mismatches++;
                             reports.add(format(
                                 "\n%s variant does not match expected: " +
                                 "\n    expected : %s" +
-                                "\n    actual   : %s", counter.get() - 1, expectedVariant, actualVariant));
+                                "\n    actual   : %s", counter.get() - 1, expected, actual));
                         }
                     } else {
-                        presentButNotExpectedLine = format("\n %s", actualVariant);
+                        presentButNotExpectedLine = format("\n %s", actual);
                         if ( ! presentButNotExpected.contains(presentButNotExpectedLine) ) {
                             presentButNotExpected.add(presentButNotExpectedLine);
                         }
@@ -3723,11 +3737,11 @@ public class AnalyzeTest {
             reports.add("\n === Diff with expected === ");
         }
         
-        if ( outputs.size() > expected.size() ) {
-            int offset = expected.size();
+        if ( outputs.size() > this.expected.size() ) {
+            int offset = this.expected.size();
             String presentButNotExpectedVariant;
             for (int i = offset; i < outputs.size(); i++) {
-                presentButNotExpectedVariant = outputs.get(i).input();
+                presentButNotExpectedVariant = outputs.get(i).input().string;
                 presentButNotExpectedLine = format("\n %s", presentButNotExpectedVariant);
                 if ( ! presentButNotExpected.contains(presentButNotExpectedLine) ) {
                     presentButNotExpected.add(presentButNotExpectedLine);
@@ -3740,13 +3754,13 @@ public class AnalyzeTest {
             presentButNotExpected.add(0, "\n === Present but not expected === ");
         }
         
-        boolean hasMissed = counter.get() < expected.size();
+        boolean hasMissed = counter.get() < this.expected.size();
         List<String> expectedButMissed = new ArrayList<>();
         if ( hasMissed ) {            
             expectedButMissed.add("\n === Expected but missed === ");
             
-            while ( counter.get() < expected.size() ) {                
-                expectedButMissed.add(format("\n%s variant missed: %s", counter.get(), expected.get(counter.getAndIncrement())));
+            while ( counter.get() < this.expected.size() ) {
+                expectedButMissed.add(format("\n%s variant missed: %s", counter.get(), this.expected.get(counter.getAndIncrement())));
             }
         }
 
@@ -3768,17 +3782,18 @@ public class AnalyzeTest {
     
     private String collectVariantsToReport() {
         List<String> variantsWithWeight = new ArrayList<>();
-        outputs.resetTraversing();
+        Outputs.Iteration outputsIteration = outputs.iteration();
+        outputsIteration.reset();
 
-        while ( outputs.next() ) {
-            if ( outputs.isCurrentMuchBetterThanNext() ) {
-                variantsWithWeight.add("\n" + outputs.current().input() + " is much better than next: " + outputs.current().weight());
+        while ( outputsIteration.next() ) {
+            if ( outputsIteration.isCurrentMuchBetterThanNext() ) {
+                variantsWithWeight.add("\n" + outputsIteration.current().input() + " is much better than next: " + outputsIteration.current().weight());
             } else {
-                variantsWithWeight.add("\nnext candidates are similar: ");                
-                outputs
+                variantsWithWeight.add("\nnext candidates are similar: ");
+                outputsIteration
                         .nextSimilarSublist()
                         .forEach(output -> {
-                            variantsWithWeight.add("\n  - " + output.input() + " : " + output.weight());
+                            variantsWithWeight.add("\n   " + output.weight() + " : " + output.input().string);
                         });
             }
         }

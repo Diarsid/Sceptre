@@ -1,19 +1,15 @@
 package diarsid.sceptre.impl;
 
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 
 import diarsid.sceptre.impl.collections.ArrayInt;
 import diarsid.sceptre.impl.collections.Ints;
 import diarsid.sceptre.impl.collections.ListInt;
-import diarsid.sceptre.impl.collections.SetInt;
 import diarsid.support.objects.CommonEnum;
 import diarsid.support.objects.PooledReusable;
 
-public class WordInVariant extends PooledReusable {
+public class WordInInput extends PooledReusable {
 
     public static enum Placing implements CommonEnum<Placing> {
         INDEPENDENT,
@@ -34,7 +30,7 @@ public class WordInVariant extends PooledReusable {
     boolean completed;
     Placing placing;
 
-    WordInVariant() {
+    WordInInput() {
         chars = new char[INITIAL_LENGTH];
         Arrays.fill(chars, EMPTY);
         charsInVariant = new char[INITIAL_LENGTH];
@@ -107,7 +103,7 @@ public class WordInVariant extends PooledReusable {
         return this.startIndex == cluster.firstPosition() && this.length == cluster.length();
     }
 
-    public boolean hasSameWord(WordInVariant other) {
+    public boolean hasSameWord(WordInInput other) {
         if ( this.length == other.length ) {
             for ( int i = 0; i < this.length; i++ ) {
                 if ( this.chars[i] != other.chars[i] ) {
@@ -435,8 +431,8 @@ public class WordInVariant extends PooledReusable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof WordInVariant)) return false;
-        WordInVariant word = (WordInVariant) o;
+        if (!(o instanceof WordInInput)) return false;
+        WordInInput word = (WordInInput) o;
         return index == word.index &&
                 startIndex == word.startIndex &&
                 endIndex == word.endIndex &&

@@ -1,6 +1,6 @@
 package diarsid.sceptre.api;
 
-import diarsid.sceptre.api.model.Variant;
+import diarsid.sceptre.api.model.Weighted;
 import diarsid.support.objects.CommonEnum;
 
 public enum WeightEstimate implements CommonEnum<WeightEstimate> {
@@ -21,8 +21,8 @@ public enum WeightEstimate implements CommonEnum<WeightEstimate> {
     public static final float MODERATE_VS_GOOD_BOUND = -36;
     public static final float GOOD_VS_PERFECT_BOUND = -75;
 
-    public static WeightEstimate of(Variant variant) {
-        return of(variant.weight());
+    public static WeightEstimate of(Weighted weighted) {
+        return of(weighted.weight());
     }
 
     public static WeightEstimate preliminarilyOf(float weight) {

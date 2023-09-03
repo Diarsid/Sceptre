@@ -1,11 +1,17 @@
 package diarsid.sceptre.impl;
 
+import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.IntFunction;
 
+import diarsid.sceptre.api.model.Output;
+import diarsid.sceptre.api.model.Word;
 import diarsid.sceptre.impl.collections.ArrayChar;
 import diarsid.sceptre.impl.collections.CharsCount;
 import diarsid.sceptre.impl.collections.Ints;
+import diarsid.sceptre.impl.collections.MapIntInt;
 import diarsid.sceptre.impl.collections.SetInt;
 import diarsid.sceptre.impl.collections.impl.ArrayCharImpl;
 import diarsid.sceptre.impl.collections.impl.CharsCountImpl;
@@ -25,12 +31,13 @@ import static diarsid.sceptre.api.LogType.POSITIONS_CLUSTERS;
 import static diarsid.sceptre.api.WeightEstimate.BAD;
 import static diarsid.sceptre.api.WeightEstimate.of;
 import static diarsid.sceptre.api.WeightEstimate.preliminarilyOf;
+import static diarsid.sceptre.api.model.Output.AdditionalData.WORDS;
 import static diarsid.sceptre.impl.AnalyzeUtil.lengthImportanceRatio;
 import static diarsid.sceptre.impl.AnalyzeUtil.missedTooMuch;
 import static diarsid.sceptre.impl.PositionsAnalyze.POS_NOT_FOUND;
 import static diarsid.sceptre.impl.PositionsAnalyze.POS_UNINITIALIZED;
-import static diarsid.sceptre.impl.WordInVariant.Placing.DEPENDENT;
-import static diarsid.sceptre.impl.WordInVariant.Placing.INDEPENDENT;
+import static diarsid.sceptre.impl.WordInInput.Placing.DEPENDENT;
+import static diarsid.sceptre.impl.WordInInput.Placing.INDEPENDENT;
 import static diarsid.sceptre.impl.weight.WeightElement.CLUSTERS_IMPORTANCE;
 import static diarsid.sceptre.impl.weight.WeightElement.LENGTH_DELTA;
 import static diarsid.sceptre.impl.weight.WeightElement.NO_CLUSTERS_ALL_SEPARATED_POSITIONS_MEANINGFUL;
@@ -71,7 +78,7 @@ class AnalyzeUnit extends PooledReusable {
     final Logging log;
 
     final PositionsAnalyze positionsAnalyze;
-    final WordsInVariant wordsInVariant;
+    final WordsInInput wordsInInput;
 
     final SetInt variantSeparators;
     final SetInt variantPathSeparators;
@@ -98,8 +105,8 @@ class AnalyzeUnit extends PooledReusable {
     AnalyzeUnit(
             Logging log,
             GuardedPool<Cluster> clusterPool,
-            GuardedPool<WordInVariant> wordPool,
-            GuardedPool<WordsInVariant.WordsInRange> wordsInRangePool,
+            GuardedPool<WordInInput> wordPool,
+            GuardedPool<WordsInInput.WordsInRange> wordsInRangePool,
             GuardedPool<Step2LoopCandidatePosition> candidatePositionsPool) {
         super();
         this.log = log;
@@ -112,7 +119,7 @@ class AnalyzeUnit extends PooledReusable {
         this.variantSeparators = new SetIntImpl();
         this.variantPathSeparators = new SetIntImpl();
         this.variantTextSeparators = new SetIntImpl();
-        this.wordsInVariant = new WordsInVariant(wordPool, wordsInRangePool);
+        this.wordsInInput = new WordsInInput(wordPool, wordsInRangePool);
         this.weight = new Weight(this.log);
         this.patternCharsCount = new CharsCountImpl();
     }
@@ -149,7 +156,7 @@ class AnalyzeUnit extends PooledReusable {
         this.canClustersBeBad = true;
         this.allPositionsPresentSortedAndNotPathSeparatorsBetween = false;
         this.notMissedPercent = 0;
-        this.wordsInVariant.clear();
+        this.wordsInInput.clear();
         this.patternCharsCount.clear();
     }
 
@@ -508,7 +515,7 @@ class AnalyzeUnit extends PooledReusable {
     }
     
     void findWordsAndPathAndTextSeparators() {
-        WordInVariant wordInVariant = null;
+        WordInInput wordInInput = null;
 
         char c;
         int sLength = this.variantOriginal.length();
@@ -522,7 +529,7 @@ class AnalyzeUnit extends PooledReusable {
         boolean previousIsDigit = false;
         boolean previousIsSeparator = true;
 
-        wordsInVariant.variantLength = sLength;
+        wordsInInput.variantLength = sLength;
 
         for (int i = 0; i < sLength; i++) {
             current = i;
@@ -541,20 +548,20 @@ class AnalyzeUnit extends PooledReusable {
 
             if ( currentIsSeparator ) {
                 if ( ! previousIsSeparator ) {
-                    if ( nonNull(wordInVariant) ) {
-                        if ( wordInVariant.length > 0 ) {
-                            wordInVariant.complete();
-                            wordInVariant = wordsInVariant.next(INDEPENDENT);
+                    if ( nonNull(wordInInput) ) {
+                        if ( wordInInput.length > 0 ) {
+                            wordInInput.complete();
+                            wordInInput = wordsInInput.next(INDEPENDENT);
                         }
                     }
                     else {
-                        wordInVariant = wordsInVariant.next(INDEPENDENT);
+                        wordInInput = wordsInInput.next(INDEPENDENT);
                     }
                 }
             }
             else {
                 if ( current == 0 ) {
-                    wordInVariant = wordsInVariant.next(INDEPENDENT);
+                    wordInInput = wordsInInput.next(INDEPENDENT);
                 }
 
                 currentIsUpper = Character.isUpperCase(c);
@@ -583,21 +590,21 @@ class AnalyzeUnit extends PooledReusable {
                 }
 
                 if ( isNewWordStart ) {
-                    if ( isNull(wordInVariant) ) {
-                        wordInVariant = wordsInVariant.next(INDEPENDENT);
+                    if ( isNull(wordInInput) ) {
+                        wordInInput = wordsInInput.next(INDEPENDENT);
                     }
 
-                    if ( wordInVariant.length > 0 ) {
-                        wordInVariant.complete();
-                        wordInVariant = wordsInVariant.next(DEPENDENT);
+                    if ( wordInInput.length > 0 ) {
+                        wordInInput.complete();
+                        wordInInput = wordsInInput.next(DEPENDENT);
                     }
                 }
 
-                if ( isNull(wordInVariant) ) {
+                if ( isNull(wordInInput) ) {
                     throw new IllegalStateException();
                 }
 
-                wordInVariant.set(current, c);
+                wordInInput.set(current, c);
 
                 previousIsUpper = currentIsUpper;
                 previousIsDigit = currentIsDigit;
@@ -606,11 +613,11 @@ class AnalyzeUnit extends PooledReusable {
             previousIsSeparator = currentIsSeparator;
         }
 
-        if ( nonNull(wordInVariant) && wordInVariant.length > 0 ) {
-            wordInVariant.complete();
+        if ( nonNull(wordInInput) && wordInInput.length > 0 ) {
+            wordInInput.complete();
         }
 
-        wordsInVariant.complete();
+        wordsInInput.complete();
 
         if ( this.variantPathSeparators.isNotEmpty() ) {
             this.variantSeparators.addAll(this.variantPathSeparators);
@@ -664,5 +671,22 @@ class AnalyzeUnit extends PooledReusable {
         }
 
         return c == this.patternChars.i(patternIndexExcl + 1);
+    }
+
+    Map<Output.AdditionalData, Object> produceAdditionalData(List<Output.AdditionalData> additionalData) {
+        Map<Output.AdditionalData, Object> additionalDataMap = new EnumMap<>(Output.AdditionalData.class);
+
+        if ( additionalData.contains(WORDS) ) {
+            List<Word> words = new ArrayList<>();
+
+            this.wordsInInput.qualities.qualitiesByWordIndex.entries().forEach((wordIndex, wordQuality) -> {
+                WordInInput wordInInput = this.wordsInInput.all.get(wordIndex);
+                words.add(new Word(this.variantOriginal.substring(wordInInput.startIndex, wordInInput.endIndex+1), wordInInput.index, wordQuality));
+            });
+
+            additionalDataMap.put(WORDS, words);
+        }
+
+        return additionalDataMap;
     }
 }

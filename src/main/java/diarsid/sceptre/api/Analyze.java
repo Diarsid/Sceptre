@@ -7,7 +7,6 @@ import java.util.function.Consumer;
 
 import diarsid.sceptre.api.model.Input;
 import diarsid.sceptre.api.model.Output;
-import diarsid.sceptre.api.model.Outputs;
 import diarsid.sceptre.impl.AnalyzeBuilder;
 import diarsid.support.model.versioning.Version;
 import diarsid.support.objects.Pools;
@@ -32,26 +31,20 @@ public interface Analyze {
 
         Analyze.Builder withLogTypeEnabled(LogType logType, boolean enabled);
 
+        Analyze.Builder withAdditionalDataInOutput(Output.AdditionalData additionalData);
+
         Analyze build();
     }
 
     Version version();
 
-    Outputs processStrings(String pattern, List<String> strings);
+    List<Output> processStrings(String pattern, List<String> strings);
 
-    Outputs processInputs(String pattern, List<Input> inputs);
+    List<Output> processStrings(String pattern, String noWorseThan, List<String> strings);
 
-    Outputs processStrings(String pattern, String noWorseThan, List<String> strings);
+    List<Output> processInputs(String pattern, List<Input> variants);
 
-    Outputs processInputs(String pattern, String noWorseThan, List<Input> inputs);
-
-    List<Output> processStringsToList(String pattern, List<String> strings);
-
-    List<Output> processStringsToList(String pattern, String noWorseThan, List<String> strings);
-
-    List<Output> processInputsToList(String pattern, List<Input> variants);
-
-    List<Output> processInputsToList(String pattern, String noWorseThan, List<Input> strings);
+    List<Output> processInputs(String pattern, String noWorseThan, List<Input> inputs);
 
     Optional<Output> process(String pattern, Input input);
 

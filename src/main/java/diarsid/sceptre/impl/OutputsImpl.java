@@ -2,11 +2,9 @@ package diarsid.sceptre.impl;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import diarsid.sceptre.api.model.Output;
 import diarsid.sceptre.api.model.Outputs;
-import diarsid.sceptre.api.model.Variant;
 
 import static java.lang.String.format;
 import static java.util.Collections.sort;
@@ -18,7 +16,7 @@ import static diarsid.support.objects.collections.CollectionUtils.nonEmpty;
 import static diarsid.support.objects.collections.Lists.lastFrom;
 import static diarsid.support.strings.StringIgnoreCaseUtil.startsIgnoreCase;
 
-public class OutputsImpl implements Outputs {
+public class OutputsImpl implements Outputs, Outputs.Iteration {
     
     private static final int FEED_ALGORITHM_VERSION = 2;
     
@@ -30,7 +28,7 @@ public class OutputsImpl implements Outputs {
     private List<Output> currentSimilarVariants;
     private int currentVariantIndex;
 
-    OutputsImpl(List<Output> outputs) {
+    public OutputsImpl(List<Output> outputs) {
         sort(outputs);
         this.outputs = unmodifiableList(outputs);
         if ( nonEmpty(this.outputs) ) {
@@ -54,7 +52,7 @@ public class OutputsImpl implements Outputs {
     }
     
     @Override
-    public void resetTraversing() {
+    public void reset() {
         this.currentVariantIndex = -1;
         if ( nonNull(this.currentSimilarVariants) ) {
             this.currentSimilarVariants.clear();
@@ -62,18 +60,18 @@ public class OutputsImpl implements Outputs {
     }
     
     @Override
-    public void setTraversingToPositionBefore(int variantIndex) {
-        if ( variantIndex > -1 ) {
-            variantIndex--; // adjust for subsequent .next() call
+    public void toPositionBefore(int outputIndex) {
+        if ( outputIndex > -1 ) {
+            outputIndex--; // adjust for subsequent .next() call
         }
-        this.currentVariantIndex = variantIndex;
+        this.currentVariantIndex = outputIndex;
         if ( nonNull(this.currentSimilarVariants) ) {
             this.currentSimilarVariants.clear();
         }
     } 
     
     @Override
-    public int currentTraverseIndex() {
+    public int currentIndex() {
         if ( nonEmpty(this.currentSimilarVariants) ) {
             // +1 is used in orded to balance subsequent index-- when .next() will be called.
             return this.currentVariantIndex - this.currentSimilarVariants.size() + 1;
@@ -104,7 +102,7 @@ public class OutputsImpl implements Outputs {
         for (int i = 0; i < newOutputs.size(); i++) {
             current = newOutputs.get(i);
             
-            if ( startsIgnoreCase(current.input(), start) ) {
+            if ( startsIgnoreCase(current.input().string, start) ) {
                 newOutputs.remove(i);
                 i--;
             }
@@ -128,7 +126,7 @@ public class OutputsImpl implements Outputs {
                 continue;
             }
 
-            if ( output.input().equalsIgnoreCase(input) ) {
+            if ( output.input().string.equalsIgnoreCase(input) ) {
                 needToRemove = true;
             }
         }
@@ -293,5 +291,15 @@ public class OutputsImpl implements Outputs {
     @Override
     public int indexOf(Output output) {
         return this.outputs.indexOf(output);
+    }
+
+    @Override
+    public Iteration iteration() {
+        return this;
+    }
+
+    @Override
+    public List<Output> all() {
+        return this.outputs;
     }
 }

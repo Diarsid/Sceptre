@@ -2,7 +2,6 @@ package diarsid.sceptre.impl;
 
 import java.util.Objects;
 
-import diarsid.sceptre.api.LogType;
 import diarsid.sceptre.impl.collections.ListInt;
 import diarsid.sceptre.impl.collections.impl.ListIntImpl;
 import diarsid.sceptre.impl.logs.Logging;
@@ -292,15 +291,15 @@ class ClusterStepOne {
         return this.endsBeforeSeparator;
     }
 
-    WordsInVariant.WordsInRange findWords(AnalyzeUnit unit) {
-        return unit.wordsInVariant.wordsOfRange(this.allVariantPositions);
+    WordsInInput.WordsInRange findWords(AnalyzeUnit unit) {
+        return unit.wordsInInput.wordsOfRange(this.allVariantPositions);
     }
 
-    boolean  isPositionsAtStartOf(WordInVariant word) {
+    boolean  isPositionsAtStartOf(WordInInput word) {
         return word.startIndex == this.allVariantPositions.get(0);
     }
 
-    boolean  isPositionsAtEndOf(WordInVariant word) {
+    boolean  isPositionsAtEndOf(WordInInput word) {
         return word.endIndex == this.allVariantPositions.get(this.allVariantPositions.size()-1);
     }
 
@@ -308,7 +307,7 @@ class ClusterStepOne {
         return this.typos.hasBefore();
     }
 
-    boolean areTyposBeforeIn(WordInVariant word) {
+    boolean areTyposBeforeIn(WordInInput word) {
         return this.typos.areBeforeIn(word);
     }
 
@@ -324,7 +323,7 @@ class ClusterStepOne {
         return position;
     }
 
-    void tryToMergeTyposBeforeIntoPositions(WordInVariant word) {
+    void tryToMergeTyposBeforeIntoPositions(WordInInput word) {
         this.log.add(POSITIONS_SEARCH, "          [info] typo merging attempt... ", "");
         Typo typo;
         int pointer = this.firstVariantPosition() - 1; // place pointer on a char in word before added in cluster
@@ -780,7 +779,7 @@ class ClusterStepOne {
         return this.prevsVariantPositions.size() + 3 + this.nextsVariantPositions.size();
     }
     
-    boolean isBetterThan(ClusterStepOne other, WordsInVariant wordsInVariant) {
+    boolean isBetterThan(ClusterStepOne other, WordsInInput wordsInInput) {
         int thisLengthWithNearTypos = this.lengthWithNearTypos();
         int otherLengthWithNearTypos = other.lengthWithNearTypos();
         
@@ -805,8 +804,8 @@ class ClusterStepOne {
                 return false;
             }
             else {
-                WordsInVariant.WordsInRange thisWords = wordsInVariant.wordsOfRange(this.allVariantPositions);
-                WordsInVariant.WordsInRange otherWords = wordsInVariant.wordsOfRange(other.allVariantPositions);
+                WordsInInput.WordsInRange thisWords = wordsInInput.wordsOfRange(this.allVariantPositions);
+                WordsInInput.WordsInRange otherWords = wordsInInput.wordsOfRange(other.allVariantPositions);
 
                 if ( thisWords.hasStartIn(this.allVariantPositions) ) {
                     return true;

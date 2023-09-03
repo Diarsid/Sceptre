@@ -57,8 +57,8 @@ import static diarsid.sceptre.impl.Step.STEP_1;
 import static diarsid.sceptre.impl.Step.STEP_2;
 import static diarsid.sceptre.impl.Step.STEP_3;
 import static diarsid.sceptre.impl.Step.STEP_4;
-import static diarsid.sceptre.impl.WordInVariant.Placing.DEPENDENT;
-import static diarsid.sceptre.impl.WordInVariant.Placing.INDEPENDENT;
+import static diarsid.sceptre.impl.WordInInput.Placing.DEPENDENT;
+import static diarsid.sceptre.impl.WordInInput.Placing.INDEPENDENT;
 import static diarsid.sceptre.impl.collections.Ints.doesExist;
 import static diarsid.sceptre.impl.collections.Ints.getNearestToValueFromSetExcluding;
 import static diarsid.sceptre.impl.collections.impl.Sort.REVERSE;
@@ -268,7 +268,7 @@ class PositionsAnalyze {
     boolean currentClusterWordStartFound;
     boolean currentClusterWordStartFoundIgnore;
 
-    private final List<WordInVariant> wordsAllowedToIgnoreMissedStart = new ArrayList<>();
+    private final List<WordInInput> wordsAllowedToIgnoreMissedStart = new ArrayList<>();
     
     int previousClusterLastPosition = POS_UNINITIALIZED;
     int previousClusterFirstPosition = POS_UNINITIALIZED;
@@ -292,7 +292,7 @@ class PositionsAnalyze {
     final Weight weight;
     
     PositionsAnalyze(
-            AnalyzeUnit data, 
+            AnalyzeUnit data,
             Clusters clusters, 
             PositionCandidate positionCandidate,
             GuardedPool<Step2LoopCandidatePosition> candidatePositionsPool) {
@@ -513,8 +513,8 @@ class PositionsAnalyze {
                             this.doWhenOnlyNextCharacterIsSeparator();
                         }
 
-                        if ( this.data.wordsInVariant.all.size() > 1 ) {
-                            WordInVariant word = this.data.wordsInVariant.wordOf(this.currentPosition);
+                        if ( this.data.wordsInInput.all.size() > 1 ) {
+                            WordInInput word = this.data.wordsInInput.wordOf(this.currentPosition);
 
                             boolean isEnclosedByFoundInWord = word.isEnclosedByFound(this.filledPositions, this.currentPosition);
                             if ( isEnclosedByFoundInWord ) {
@@ -524,7 +524,7 @@ class PositionsAnalyze {
                                 boolean addToClustered = false;
                                 if ( word.placing.is(DEPENDENT) ) {
                                     if ( this.currentPosition == word.startIndex || word.hasStartIn(this.filledPositions) ) {
-                                        WordInVariant firstIndependentWordBefore = this.data.wordsInVariant.firstIndependentBefore(word);
+                                        WordInInput firstIndependentWordBefore = this.data.wordsInInput.firstIndependentBefore(word);
                                         if ( firstIndependentWordBefore.hasStartIn(this.filledPositions) ) {
                                             addToClustered = true;
                                         }
@@ -536,7 +536,7 @@ class PositionsAnalyze {
                                             addToClustered = true;
                                         }
                                         else {
-                                            WordsInVariant.WordsInRange dependentWords = this.data.wordsInVariant.allDependentAfterOrNull(word);
+                                            WordsInInput.WordsInRange dependentWords = this.data.wordsInInput.allDependentAfterOrNull(word);
                                             if ( nonNull(dependentWords) ) {
                                                 if ( dependentWords.intersections(this.filledPositions) > 2 ) {
                                                     addToClustered = true;
@@ -581,7 +581,7 @@ class PositionsAnalyze {
 
         if ( this.positionsPossibleToAddToClustered.isNotEmpty() ) {
             int position;
-            WordInVariant word;
+            WordInInput word;
             Cluster cluster;
             Ints.Elements elements = this.positionsPossibleToAddToClustered.elements();
             boolean addToClustered;
@@ -589,7 +589,7 @@ class PositionsAnalyze {
                 addToClustered = false;
                 elements.next();
                 position = elements.current();
-                word = this.data.wordsInVariant.wordOf(position);
+                word = this.data.wordsInInput.wordOf(position);
                 this.clusters.chooseAllOf(word);
 
                 if ( this.clusters.chosenInWord().isEmpty() ) {
@@ -669,7 +669,7 @@ class PositionsAnalyze {
                 int firstPosition = uninterruptedPositions.get(0);
                 int lastPosition = uninterruptedPositions.last();
 
-                WordInVariant word = this.data.wordsInVariant.wordOrNullOf(firstPosition, lastPosition);
+                WordInInput word = this.data.wordsInInput.wordOrNullOf(firstPosition, lastPosition);
 
                 if ( isNull(word) ) {
                     return;
@@ -725,8 +725,8 @@ class PositionsAnalyze {
             this.keyChars.add(this.currentPosition);
             this.weight.add(PREVIOUS_CHAR_IS_SEPARATOR_CURRENT_CHAR_AT_PATTERN_START);
 
-            if ( data.wordsInVariant.all.size() > 1 ) {
-                WordInVariant word = data.wordsInVariant.wordOf(this.currentPosition);
+            if ( data.wordsInInput.all.size() > 1 ) {
+                WordInInput word = data.wordsInInput.wordOf(this.currentPosition);
                 int intersections = word.intersections(this.positions, this.currentPosition);
                 if ( intersections > 0 ) {
                     this.clusteredIncrement();
@@ -741,7 +741,7 @@ class PositionsAnalyze {
             this.keyChars.add(this.currentPosition);
             this.weight.add(CLUSTER_BEFORE_SEPARATOR);
         } else {
-            WordInVariant word = this.data.wordsInVariant.wordOf(this.currentPosition);
+            WordInInput word = this.data.wordsInInput.wordOf(this.currentPosition);
             int intersections = word.intersections(this.positions, this.currentPosition);
             if ( intersections > 0 ) {
                 this.weight.add(PREVIOUS_CHAR_IS_SEPARATOR);
@@ -779,7 +779,7 @@ class PositionsAnalyze {
     }
 
     private void doWhenOnlyNextCharacterIsSeparator() {
-        if ( this.data.wordsInVariant.all.size() == 1 ) {
+        if ( this.data.wordsInInput.all.size() == 1 ) {
             int notFoundCharsCount = this.notFoundPatternCharsCount();
             if ( notFoundCharsCount == 0 ) {
                 this.weight.add(NEXT_CHAR_IS_SEPARATOR);
@@ -1045,9 +1045,9 @@ class PositionsAnalyze {
                 if ( findPositionsStep.isAfter(STEP_1) ) {
                     Step foundStep = positionFoundSteps.get(savedPosition);
                     if ( foundStep.isAfter(STEP_1) ) {
-                        WordInVariant savedPositionWord = data.wordsInVariant.wordOf(savedPosition);
-                        WordInVariant word;
-                        WordsInVariant.WordsInRange foundWords = data.wordsInVariant.wordsOfRange(filledPositions);
+                        WordInInput savedPositionWord = data.wordsInInput.wordOf(savedPosition);
+                        WordInInput word;
+                        WordsInInput.WordsInRange foundWords = data.wordsInInput.wordsOfRange(filledPositions);
                         int charInWordPosition;
                         for ( int i = 0 ; i < foundWords.all().size(); i++ ) {
                             word = foundWords.all().get(i);
@@ -1349,7 +1349,7 @@ class PositionsAnalyze {
                                 }
                             }
 
-                            WordInVariant wordOfCurrentChar = this.data.wordsInVariant.wordOf(currentPatternCharPositionInVariant);
+                            WordInInput wordOfCurrentChar = this.data.wordsInInput.wordOf(currentPatternCharPositionInVariant);
 
                             boolean canDoLoopSearch = wordOfCurrentChar.startIndex == currentPatternCharPositionInVariant ||
                                     currStepTwoCluster.containsOnlyInClustered(wordOfCurrentChar.startIndex) ||
@@ -1357,7 +1357,7 @@ class PositionsAnalyze {
 
                             if ( wordOfCurrentChar.placing.is(DEPENDENT) ) {
                                 if ( canDoLoopSearch ) {
-                                    WordInVariant firstIndependentWordBefore = this.data.wordsInVariant.firstIndependentBefore(wordOfCurrentChar);
+                                    WordInInput firstIndependentWordBefore = this.data.wordsInInput.firstIndependentBefore(wordOfCurrentChar);
                                     canDoLoopSearch =
                                             firstIndependentWordBefore.intersections(this.filledPositions) > 0;
                                 }
@@ -1377,7 +1377,7 @@ class PositionsAnalyze {
                                 int iVariant = currentPatternCharPositionInVariant + 1;
                                 int limitPattern = data.pattern.length() -1 -iPattern > 4 ? iPattern + 3 : data.pattern.length()-1;
 
-                                WordInVariant currentWord = this.data.wordsInVariant.wordOf(currStepTwoCluster.assessedCharVariantPosition());
+                                WordInInput currentWord = this.data.wordsInInput.wordOf(currStepTwoCluster.assessedCharVariantPosition());
                                 int limitVariant = currentWord.endIndex;
                                 int endOfAssessedWord = currentWord.endIndex;
                                 if ( limitVariant > endOfAssessedWord ) {
@@ -1425,7 +1425,7 @@ class PositionsAnalyze {
                                         lastInPattern = step2LoopCandidatePositionsInLoopSorting.get(0);
 
                                         if ( lastInPattern.is(lastInVariant) ) {
-                                            WordInVariant conflictWord = wordOrNullOfPossibleWeakConflict(currentWord, currStepTwoCluster, lastInVariant);
+                                            WordInInput conflictWord = wordOrNullOfPossibleWeakConflict(currentWord, currStepTwoCluster, lastInVariant);
                                             if ( nonNull(conflictWord) ) {
                                                 step2LoopCandidatePositionsInLoop.remove(lastInPattern);
                                                 data.log.add(POSITIONS_SEARCH, "          [info] positions-in-cluster '%s' pattern:%s, variant:%s, included(variant:%s pattern:%s), %s, candidate:true",
@@ -1477,7 +1477,7 @@ class PositionsAnalyze {
                                 if ( currentCharIsVariantWordEnd ) {
                                     data.log.add(POSITIONS_SEARCH, "          [info] '%s' is word end (variant:%s pattern:%s)",
                                             currentChar, currentPatternCharPositionInVariant, currentPatternCharIndex);
-                                    WordInVariant word = data.wordsInVariant.wordOf(currentPatternCharPositionInVariant);
+                                    WordInInput word = data.wordsInInput.wordOf(currentPatternCharPositionInVariant);
                                     if ( word.hasStartIn(filledPositions) ) {
                                         boolean allowed = this.isAllowedAsWordEnd(word, currentPatternCharIndex);
                                         if ( allowed ) {
@@ -1499,7 +1499,7 @@ class PositionsAnalyze {
                         if ( currentCharIsVariantWordEnd ) {
                             data.log.add(POSITIONS_SEARCH, "          [info] '%s' is word end (variant:%s pattern:%s)",
                                     currentChar, currentPatternCharPositionInVariant, currentPatternCharIndex);
-                            WordInVariant word = data.wordsInVariant.wordOf(currentPatternCharPositionInVariant);
+                            WordInInput word = data.wordsInInput.wordOf(currentPatternCharPositionInVariant);
                             if ( word.hasStartIn(filledPositions) ) {
                                 boolean allowed = this.isAllowedAsWordEnd(word, currentPatternCharIndex);
                                 if ( allowed ) {
@@ -1620,10 +1620,10 @@ class PositionsAnalyze {
                                 lastAddedChar = data.pattern.charAt(lastAddedCharPatternPosition);
                             }
 
-                            WordInVariant word;
+                            WordInInput word;
                             char wordFirstChar;
-                            wordsConflictsLoop: for ( int iWord = 0; iWord < data.wordsInVariant.all.size(); iWord++ ) {
-                                word = data.wordsInVariant.all.get(iWord);
+                            wordsConflictsLoop: for (int iWord = 0; iWord < data.wordsInInput.all.size(); iWord++ ) {
+                                word = data.wordsInInput.all.get(iWord);
                                 if ( word.length > 2 ) {
                                     wordFirstChar = data.variant.charAt(word.startIndex);
                                     if ( wordFirstChar == lastAddedChar ) {
@@ -1719,17 +1719,17 @@ class PositionsAnalyze {
                 if ( currStepOneCluster.isSet() ) {
 
                     boolean ignoreStepOneCluster = false;
-                    WordInVariant word;
-                    WordInVariant clusterWord = data.wordsInVariant.wordOf(currentPatternCharPositionInVariant);
+                    WordInInput word;
+                    WordInInput clusterWord = data.wordsInInput.wordOf(currentPatternCharPositionInVariant);
                     if ( clusterWord.startIndex == currStepOneCluster.firstOfVariant() ) {
 
                     }
                     else {
-                        conflictSearch : for ( int i = 0; i < data.wordsInVariant.all.size(); i++ ) {
+                        conflictSearch : for (int i = 0; i < data.wordsInInput.all.size(); i++ ) {
                             if ( i == clusterWord.index ) {
                                 continue conflictSearch;
                             }
-                            word = data.wordsInVariant.all.get(i);
+                            word = data.wordsInInput.all.get(i);
                             if ( word.length > 1 && hasPossibleConflict(word, currStepOneCluster) ) {
                                 ignoreStepOneCluster = true;
                                 data.log.add(POSITIONS_SEARCH, "          [info] reject cluster - conflicts with word %s", word.charsString());
@@ -1744,10 +1744,10 @@ class PositionsAnalyze {
                     else {
                         currStepOneCluster.finish(data.variant, data.pattern);
                         if ( prevStepOneCluster.isSet() ) {
-                            if ( currStepOneCluster.isBetterThan(prevStepOneCluster, data.wordsInVariant) ) {
+                            if ( currStepOneCluster.isBetterThan(prevStepOneCluster, data.wordsInInput) ) {
                                 acceptCurrentCluster();
                             }
-                            else if ( prevStepOneCluster.isBetterThan(currStepOneCluster, data.wordsInVariant) ) {
+                            else if ( prevStepOneCluster.isBetterThan(currStepOneCluster, data.wordsInInput) ) {
                                 acceptPreviousCluster();
                             }
                             else {
@@ -1783,7 +1783,7 @@ class PositionsAnalyze {
                                 if ( currentCharInVariantQty > 1 ) {
                                     int firstPatternPosition = currStepTwoCluster.firstClusteredPatternPostion();
                                     if ( this.currentCharIsPresentInPatternBefore(currentPatternCharIndex, firstPatternPosition) ) {
-                                        WordInVariant word = data.wordsInVariant.wordOf(currStepTwoCluster.assessedCharVariantPosition());
+                                        WordInInput word = data.wordsInInput.wordOf(currStepTwoCluster.assessedCharVariantPosition());
                                         if ( word.length > 1 ) { // exclude single-char-words
                                             data.log.add(POSITIONS_SEARCH, "          [info] '%s' has closer position to new cluster, ignore new cluster", currentChar);
                                             compareClusters = false;
@@ -1896,20 +1896,20 @@ class PositionsAnalyze {
         else if ( positionCandidate.isPresent() ) {
             int position = positionCandidate.position();
 
-            WordInVariant word = this.data.wordsInVariant.wordOf(position);
+            WordInInput word = this.data.wordsInInput.wordOf(position);
 
             boolean skip = false;
             if ( word.length > 2 ) {
                 int intersections = word.intersections(this.filledPositions);
                 if ( intersections == 0 ) {
                     int otherIntersections = 0;
-                    WordsInVariant.WordsInRange otherWords;
+                    WordsInInput.WordsInRange otherWords;
 
                     if ( word.placing.is(INDEPENDENT) ) {
-                        otherWords = this.data.wordsInVariant.allDependentAfterOrNull(word);
+                        otherWords = this.data.wordsInInput.allDependentAfterOrNull(word);
                     }
                     else {
-                        otherWords = this.data.wordsInVariant.independentAndDependentWordsBefore(word);
+                        otherWords = this.data.wordsInInput.independentAndDependentWordsBefore(word);
                     }
 
                     if ( nonNull(otherWords) ) {
@@ -1981,7 +1981,7 @@ class PositionsAnalyze {
         swapStepTwoCluster.clear();
     }
 
-    private boolean hasPossibleConflict(WordInVariant word, ClusterStepOne cluster) {
+    private boolean hasPossibleConflict(WordInInput word, ClusterStepOne cluster) {
         int clusterPosition1 = cluster.mainOfVariant();
         int clusterPosition2 = cluster.nextOfVariant();
 
@@ -2001,16 +2001,16 @@ class PositionsAnalyze {
         return ( wordChar0 == clusterChar1 && wordChar1 == clusterChar2 );
     }
 
-    private WordInVariant wordOrNullOfPossibleWeakConflict(
-            WordInVariant currentWord,
+    private WordInInput wordOrNullOfPossibleWeakConflict(
+            WordInInput currentWord,
             ClusterStepTwo cluster,
             Step2LoopCandidatePosition lastInWord) {
-        var foundWords = this.data.wordsInVariant.wordsOfRange(this.filledPositions);
+        var foundWords = this.data.wordsInInput.wordsOfRange(this.filledPositions);
 
         char lastInWordChar = Character.toLowerCase(lastInWord.c);
         char firstInFoundWordChar;
 
-        for ( WordInVariant foundWord : foundWords.all() ) {
+        for ( WordInInput foundWord : foundWords.all() ) {
             if ( currentWord.index == foundWord.index ) {
                 continue;
             }
@@ -2029,14 +2029,14 @@ class PositionsAnalyze {
         return null;
     }
 
-    private boolean isAllowedAsWordEnd(WordInVariant word, int currentPatternCharIndex) {
+    private boolean isAllowedAsWordEnd(WordInInput word, int currentPatternCharIndex) {
         int wordStartVariantPosition = word.startIndex;
         int wordStartPatternPosition = this.patternIndexesByVariantPosition.get(wordStartVariantPosition);
 
         int otherWordsBetweenCount = 0;
 
         int position;
-        WordInVariant positionWord;
+        WordInInput positionWord;
         for ( int iPattern = wordStartPatternPosition + 1; iPattern < currentPatternCharIndex; iPattern++ ) {
             position = this.positions.i(iPattern);
 
@@ -2044,7 +2044,7 @@ class PositionsAnalyze {
                 continue;
             }
 
-            positionWord = this.data.wordsInVariant.wordOf(position);
+            positionWord = this.data.wordsInInput.wordOf(position);
 
             if ( positionWord.index == word.index ) {
                 continue;
@@ -2105,19 +2105,19 @@ class PositionsAnalyze {
         if ( prevStepTwoCluster.hasBackwardTypos() ) {
             int currentAssessedCharPosition = prevStepTwoCluster.assessedCharVariantPosition();
 
-            WordInVariant wordOfCurrentAssessedChar = data.wordsInVariant.wordOf(currentAssessedCharPosition);
+            WordInInput wordOfCurrentAssessedChar = data.wordsInInput.wordOf(currentAssessedCharPosition);
             int foundInWord = wordOfCurrentAssessedChar.intersections(positions);
             if ( foundInWord > 0 ) {
                 return false;
             }
 
-            WordsInVariant.WordsInRange matchingWordsAfterCurrentAssessedChar = data.wordsInVariant.wordsOfRange(currentAssessedCharPosition, this.positions);
+            WordsInInput.WordsInRange matchingWordsAfterCurrentAssessedChar = data.wordsInInput.wordsOfRange(currentAssessedCharPosition, this.positions);
 
             if ( matchingWordsAfterCurrentAssessedChar.areEmpty() ) {
                 return false;
             }
 
-            WordInVariant word;
+            WordInInput word;
             for ( int i = 0; i < matchingWordsAfterCurrentAssessedChar.count(); i++ ) {
                 word = matchingWordsAfterCurrentAssessedChar.get(i);
                 assessPositionsIn(word);
@@ -2140,7 +2140,7 @@ class PositionsAnalyze {
         }
     }
 
-    private void assessPositionsIn(WordInVariant word) {
+    private void assessPositionsIn(WordInInput word) {
         char variantCh;
         char patternCh;
 
@@ -2277,9 +2277,9 @@ class PositionsAnalyze {
     
     private void fillPositionsFrom(ClusterStepOne subcluster) {
         PositionIterableView position = subcluster.positionIterableView();
-        WordsInVariant.WordsInRange words = subcluster.findWords(this.data);
+        WordsInInput.WordsInRange words = subcluster.findWords(this.data);
         if ( words.count() == 1 ) {
-            WordInVariant word = words.get(0);
+            WordInInput word = words.get(0);
 
             if ( subcluster.isPositionsAtStartOf(word) ) {
 
@@ -2476,7 +2476,7 @@ class PositionsAnalyze {
         this.processClusterPositionOrderStats();
 
         if ( ! this.data.variantContainsPattern ) {
-            WordsInVariant.WordsInRange wordsOfCluster = this.data.wordsInVariant.wordsOfRange(this.currentClusterFirstPosition, this.currentClusterLength);
+            WordsInInput.WordsInRange wordsOfCluster = this.data.wordsInInput.wordsOfRange(this.currentClusterFirstPosition, this.currentClusterLength);
 
             if ( wordsOfCluster.areEmpty() ) {
                 this.currentClusterIsRejected = true;
@@ -2488,8 +2488,8 @@ class PositionsAnalyze {
                 }
                 else {
                     if ( wordsOfCluster.count() == 1 ) {
-                        WordInVariant word = wordsOfCluster.first();
-                        WordInVariant prevWord = this.data.wordsInVariant.wordBeforeOrNull(word);
+                        WordInInput word = wordsOfCluster.first();
+                        WordInInput prevWord = this.data.wordsInInput.wordBeforeOrNull(word);
                         if ( nonNull(prevWord) ) {
                             char lastCharOfPrevWord = this.data.variant.charAt(prevWord.endIndex);
                             char firstCharOfClusterWord = this.data.variant.charAt(word.startIndex);
@@ -2506,7 +2506,7 @@ class PositionsAnalyze {
                         int ignoreMissedWordStartConditions = 0;
 
                         if ( wordsOfCluster.count() == 1 ) {
-                            WordInVariant word = wordsOfCluster.get(0);
+                            WordInInput word = wordsOfCluster.get(0);
                             if ( word.length > 3 ) {
                                 boolean considerOtherMatchings = false;
                                 int intersections = word.intersections(this.filledPositions);
@@ -2563,7 +2563,7 @@ class PositionsAnalyze {
                 if ( this.currentClusterWordStartFound ) {
                     ignoreClusterPenalty = true;
                     // partially compensate clustering importance
-                    if ( data.wordsInVariant.all.size() > 2 && this.filledPositions.size() > 7 ) {
+                    if ( data.wordsInInput.all.size() > 2 && this.filledPositions.size() > 7 ) {
                         this.clusteredIncrement();
                     }
                 }
@@ -2690,8 +2690,8 @@ class PositionsAnalyze {
 
                 }
                 else {
-                    WordInVariant word0 = data.wordsInVariant.wordOf(this.alonePositionAfterPreviousSeparator);
-                    WordInVariant word1 = data.wordsInVariant.wordOf(this.currentClusterFirstPosition);
+                    WordInInput word0 = data.wordsInInput.wordOf(this.alonePositionAfterPreviousSeparator);
+                    WordInInput word1 = data.wordsInInput.wordOf(this.currentClusterFirstPosition);
 
                     if ( word0.index == word1.index ) {
                         int word0intersection = word0.intersectsWithRange(this.currentClusterFirstPosition, this.currentClusterLength);
@@ -2778,7 +2778,7 @@ class PositionsAnalyze {
             return;
         }
 
-        WordsInVariant.WordsInRange wordsInRange = data.wordsInVariant
+        WordsInInput.WordsInRange wordsInRange = data.wordsInInput
                 .wordsOfRange(this.currentClusterFirstPosition, this.currentClusterLength);
 
         if (wordsInRange.areEmpty()) {
@@ -2803,11 +2803,11 @@ class PositionsAnalyze {
     }
 
     private void checkWordsInRangeOfFoundPositions() {
-        if ( this.data.wordsInVariant.all.size() > 1 ) {
+        if ( this.data.wordsInInput.all.size() > 1 ) {
             if ( ! this.data.variantContainsPattern ) {
                 int firstFoundPosition = this.findFirstPosition();
                 if ( firstFoundPosition > -1 ) {
-                    WordInVariant word = this.data.wordsInVariant.wordOf(firstFoundPosition);
+                    WordInInput word = this.data.wordsInInput.wordOf(firstFoundPosition);
 
                     if ( ! this.filledPositions.contains(word.startIndex) ) {
                         this.weight.add(FIRST_CLUSTER_HAS_MISSED_WORD_START);
@@ -2824,15 +2824,15 @@ class PositionsAnalyze {
     private void checkWordsCoverageByAllClusters() {
         data.log.add(POSITIONS_CLUSTERS, "    [Words]");
 
-        WordsInVariant.WordsInRange foundWords = this.data.wordsInVariant.wordsOfRange(this.positions);
+        WordsInInput.WordsInRange foundWords = this.data.wordsInInput.wordsOfRange(this.positions);
 
-        if ( foundWords.count() == data.wordsInVariant.all.size() ) {
+        if ( foundWords.count() == data.wordsInInput.all.size() ) {
             float wordBonus = -13.37f;
             this.weight.add(wordBonus, FOUND_POSITIONS_DENOTES_ALL_WORDS);
         }
 
         if ( foundWords.count() == 1 ) {
-            WordInVariant word = foundWords.get(0);
+            WordInInput word = foundWords.get(0);
 
             if ( this.notFoundPatternCharsCount() == 0 ) {
                 float bonus;
@@ -2850,8 +2850,8 @@ class PositionsAnalyze {
         boolean isSpecialCase;
         int wordQuality;
 
-        WordInVariant word;
-        List<WordInVariant> all = foundWords.all();
+        WordInInput word;
+        List<WordInInput> all = foundWords.all();
         int singleCharsWordsCount = 0;
         for ( int iWord = 0; iWord < all.size(); iWord++ ) {
             word = all.get(iWord);
@@ -2978,7 +2978,7 @@ class PositionsAnalyze {
                                 boolean misspelling = this.checkOnSinglePositionMisspelling(word, all);
 
                                 if ( misspelling ) {
-                                    if ( this.data.wordsInVariant.all.size() > 3 ) {
+                                    if ( this.data.wordsInInput.all.size() > 3 ) {
                                         wordQuality = wordQuality - 2;
                                         data.log.add(POSITIONS_CLUSTERS, "          -2 no cluster, word start not in single positions, words qty > 3");
                                     }
@@ -2990,13 +2990,13 @@ class PositionsAnalyze {
                             }
 
                             if ( wordQuality > 0 ) {
-                                if ( foundWords.count() == this.data.wordsInVariant.all.size() ) {
+                                if ( foundWords.count() == this.data.wordsInInput.all.size() ) {
                                     if ( word.length < 6 ) {
                                         wordQuality = wordQuality + 1;
                                         data.log.add(POSITIONS_CLUSTERS, "          +1 all words are found");
                                     }
                                 }
-                                else if ( foundWords.count() > this.data.wordsInVariant.all.size() / 2 ) {
+                                else if ( foundWords.count() > this.data.wordsInInput.all.size() / 2 ) {
 
                                 }
                                 else {
@@ -3515,10 +3515,10 @@ class PositionsAnalyze {
 
             if ( wordQuality > 0 ) {
                 if ( word.placing.is(DEPENDENT) ) {
-                    WordInVariant firstIndependentWord = this.data.wordsInVariant.firstIndependentBefore(word);
+                    WordInInput firstIndependentWord = this.data.wordsInInput.firstIndependentBefore(word);
                     int i = all.indexOf(firstIndependentWord);
                     if ( i > -1 ) {
-                        int quality = this.data.wordsInVariant.qualities.qualityOf(word);
+                        int quality = this.data.wordsInInput.qualities.qualityOf(word);
                         if ( quality > 2 ) {
                             wordQuality = wordQuality + 1;
                             data.log.add(POSITIONS_CLUSTERS, "          +1 first independent word is found and has quality > 2");
@@ -3548,7 +3548,7 @@ class PositionsAnalyze {
                 weightValue = 0;
             }
 
-            this.data.wordsInVariant.qualities.add(word, wordQuality);
+            this.data.wordsInInput.qualities.add(word, wordQuality);
             if ( weightValue != 0 ) {
                 if ( weightValue == 24 ) {
                     this.weight.add(weightValue, WORD_QUALITY);
@@ -3758,7 +3758,7 @@ class PositionsAnalyze {
         return false;
     }
 
-    private boolean checkOnSinglePositionMisspelling(WordInVariant word, List<WordInVariant> allFoundWords) {
+    private boolean checkOnSinglePositionMisspelling(WordInInput word, List<WordInInput> allFoundWords) {
         final boolean APPLY_MISSPELLING_PENALTY = true;
         final boolean IGNORE_MISSPELLING = false;
 
@@ -3782,7 +3782,7 @@ class PositionsAnalyze {
                 return APPLY_MISSPELLING_PENALTY;
             }
 
-            WordInVariant word1 = data.wordsInVariant.wordOf(iVariantPrev);
+            WordInInput word1 = data.wordsInInput.wordOf(iVariantPrev);
 
             if ( word1.index < word.index ) {
                 return IGNORE_MISSPELLING;
@@ -3802,8 +3802,8 @@ class PositionsAnalyze {
                 return APPLY_MISSPELLING_PENALTY;
             }
 
-            WordInVariant wordPrev = data.wordsInVariant.wordOf(iVariantPrev);
-            WordInVariant wordNext = data.wordsInVariant.wordOf(iVariantNext);
+            WordInInput wordPrev = data.wordsInInput.wordOf(iVariantPrev);
+            WordInInput wordNext = data.wordsInInput.wordOf(iVariantNext);
 
             if ( wordPrev.hasSameWord(wordNext) ) {
                 return IGNORE_MISSPELLING;
@@ -3814,7 +3814,7 @@ class PositionsAnalyze {
         }
     }
 
-    private boolean checkOnMisplacing(WordInVariant word, Cluster cluster, ListInt singlePositionsInWord) {
+    private boolean checkOnMisplacing(WordInInput word, Cluster cluster, ListInt singlePositionsInWord) {
         data.log.add(POSITIONS_CLUSTERS, "          [clusters misplacing check] [single cluster and single positions]");
 
         try {
@@ -3887,7 +3887,7 @@ class PositionsAnalyze {
         }
     }
 
-    private boolean checkOnMisplacing(WordInVariant word, List<Cluster> clustersInWord) {
+    private boolean checkOnMisplacing(WordInInput word, List<Cluster> clustersInWord) {
         data.log.add(POSITIONS_CLUSTERS, "          [clusters misplacing check] [many clusters]");
 
         Cluster clusterPrev = clustersInWord.get(0);
@@ -4053,7 +4053,7 @@ class PositionsAnalyze {
             this.previousClusterOrdersIsConsistent = ! cluster.hasOrdersDiff();
             this.currentClusterOrderDiffs.clear();
 
-            WordsInVariant.WordsInRange wordsOfCluster;
+            WordsInInput.WordsInRange wordsOfCluster;
             if ( cluster.isJoinedClusters() ) {
                 Cluster joinedCluster;
                 for ( int i = 0; i < this.accidentalJoinedClusters.size(); i++ ) {
@@ -4061,13 +4061,13 @@ class PositionsAnalyze {
                     int consistencyReward = this.consistencyRewardDependingOn(joinedCluster.length());
                     data.log.add(POSITIONS_CLUSTERS, "            [cluster stats] joined cluster is consistent");
                     this.weight.add(-consistencyReward, CLUSTER_IS_CONSISTENT);
-                    wordsOfCluster = this.data.wordsInVariant.wordsOfOrNull(joinedCluster);
+                    wordsOfCluster = this.data.wordsInInput.wordsOfOrNull(joinedCluster);
                     if ( isNull(wordsOfCluster) ) {
                         throw new IllegalStateException("Cluster doesn't belong to any words!");
                     }
                     else {
                         if ( wordsOfCluster.count() == 1 ) {
-                            WordInVariant word = wordsOfCluster.get(0);
+                            WordInInput word = wordsOfCluster.get(0);
                             if ( word.isEqualTo(joinedCluster) ) {
                                 float bonus = 3.25f;
 //                                if ( word.length > 2 ) {
@@ -4192,16 +4192,16 @@ class PositionsAnalyze {
         return nonNull(matchType) && matchType.equals("UNIQUE");
     }
 
-    private boolean nextDependentWordsHasFoundPositions(WordInVariant word) {
-        WordsInVariant.WordsInRange dependentWords = this.data.wordsInVariant.allDependentAfterOrNull(word);
+    private boolean nextDependentWordsHasFoundPositions(WordInInput word) {
+        WordsInInput.WordsInRange dependentWords = this.data.wordsInInput.allDependentAfterOrNull(word);
         if ( nonNull(dependentWords) ) {
-            WordInVariant nextWord = dependentWords.get(0);
+            WordInInput nextWord = dependentWords.get(0);
             if ( nextWord.intersections(this.filledPositions) > 2 ) {
                 return true;
             }
             else if ( nextWord.length < 5 ) {
                 if ( dependentWords.count() > 1 ) {
-                    WordInVariant nextNextWord = dependentWords.get(1);
+                    WordInInput nextNextWord = dependentWords.get(1);
                     if ( nextNextWord.intersections(this.filledPositions) > 2 ) {
                         return true;
                     }
@@ -4212,9 +4212,9 @@ class PositionsAnalyze {
         return false;
     }
 
-    private boolean previousIndependentWordHasQuality(WordInVariant word) {
-        WordInVariant independentBefore = this.data.wordsInVariant.firstIndependentBefore(word);
-        int qualityOfIndependentWord = this.data.wordsInVariant.qualities.qualityOf(independentBefore);
+    private boolean previousIndependentWordHasQuality(WordInInput word) {
+        WordInInput independentBefore = this.data.wordsInInput.firstIndependentBefore(word);
+        int qualityOfIndependentWord = this.data.wordsInInput.qualities.qualityOf(independentBefore);
 
         return qualityOfIndependentWord > 0;
     }
@@ -4476,7 +4476,7 @@ class PositionsAnalyze {
                         if ( clusterLength == 2 || clusterLength == 3 ) {
                             shifts = 2;
                             if ( clusterLength > 2 && firstOrder != diffMean ) {
-                                WordsInVariant.WordsInRange wordsInRange = this.data.wordsInVariant.wordsOfRange(this.currentClusterFirstPosition, this.currentClusterLength);
+                                WordsInInput.WordsInRange wordsInRange = this.data.wordsInInput.wordsOfRange(this.currentClusterFirstPosition, this.currentClusterLength);
 
                                 if ( wordsInRange.areEmpty() ) {
                                     haveCompensation = false;
@@ -4487,7 +4487,7 @@ class PositionsAnalyze {
                                 else {
                                     int intersections = wordsInRange.intersections(this.positions, this.currentClusterFirstPosition, this.currentClusterLength);
                                     if ( wordsInRange.hasStartIn(this.filledPositions) ) {
-                                        if ( this.data.wordsInVariant.all.size() == 1 ) {
+                                        if ( this.data.wordsInInput.all.size() == 1 ) {
                                             if ( intersections < this.currentClusterLength ) {
                                                 haveCompensation = false;
                                                 haveCompensationInCurrentStep = false;
@@ -4605,7 +4605,7 @@ class PositionsAnalyze {
                     if ( ! ignoreFirstOrderAndMeanDiff ) {
                         if ( firstOrder != diffMean ) {
                             if ( repeatQty == clusterLength-1 ) {
-                                WordInVariant word = data.wordsInVariant.wordOf(clusterFirstPosition);
+                                WordInInput word = data.wordsInInput.wordOf(clusterFirstPosition);
                                 if ( word.startIndex == clusterFirstPosition ) {
                                     if ( abs(firstOrder - diffMean ) == 1 ) {
                                         ignoreFirstOrderAndMeanDiff = true;
@@ -4731,7 +4731,7 @@ class PositionsAnalyze {
             }
 
             if ( ! ignore ) {
-                WordsInVariant.WordsInRange words = this.data.wordsInVariant.wordsOfRange(clusterFirstPosition, clusterLength);
+                WordsInInput.WordsInRange words = this.data.wordsInInput.wordsOfRange(clusterFirstPosition, clusterLength);
                 if ( words.first().startIndex == clusterFirstPosition ) {
                     isBad = true;
                 }
@@ -4793,7 +4793,7 @@ class PositionsAnalyze {
     private void log(ClusterStepTwo cluster, String header) {
         if ( data.log.isEnabled(POSITIONS_SEARCH) ) {
             data.log.add(POSITIONS_SEARCH, "          [%s]", header);
-            WordInVariant word = cluster.word();
+            WordInInput word = cluster.word();
             data.log.add(POSITIONS_SEARCH, "             [main] '%s' variant:%s, pattern:%s, included:%s", cluster.assessedChar(), cluster.assessedCharVariantPosition(), cluster.assessedCharPatternPosition(), cluster.isAssessedCharFilledInVariant());
             var view = cluster.positionView();
             while ( view.hasNext() ) {

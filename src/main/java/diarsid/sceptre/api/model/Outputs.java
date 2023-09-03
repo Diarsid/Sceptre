@@ -3,43 +3,57 @@ package diarsid.sceptre.api.model;
 import java.io.Serializable;
 import java.util.List;
 
+import diarsid.sceptre.impl.OutputsImpl;
+
 public interface Outputs extends Serializable {
 
-    void resetTraversing();
+    public interface Iteration {
 
-    void setTraversingToPositionBefore(int variantIndex);
+        boolean next();
 
-    int currentTraverseIndex();
+        Output current();
+
+        int currentIndex();
+
+        boolean isCurrentMuchBetterThanNext();
+
+        void toPositionBefore(int outputIndex);
+
+        List<Output> nextSimilarSublist();
+
+        void reset();
+
+    }
+
+    public static Outputs of(List<Output> outputs) {
+        return new OutputsImpl(outputs);
+    }
 
     boolean isEmpty();
 
     boolean isNotEmpty();
 
-    Output best();
-
-    Outputs removeHavingStart(String start);
-
-    Outputs removeWorseThan(String variant);
-
-    Output get(int i);
-
-    int size();
-
-    boolean isChoiceInSimilarVariantsNaturalRange(int number);
-
     boolean hasOne();
 
     boolean hasMany();
 
-    boolean next();
-
-    boolean isCurrentMuchBetterThanNext();
-
-    Output current();
-
-    List<Output> nextSimilarSublist();
+    int size();
 
     int indexOf(String string);
 
     int indexOf(Output output);
+
+    Output best();
+
+    Output get(int i);
+
+    Outputs removeHavingStart(String start);
+
+    Outputs removeWorseThan(String input);
+
+    boolean isChoiceInSimilarVariantsNaturalRange(int number);
+
+    Outputs.Iteration iteration();
+
+    List<Output> all();
 }

@@ -48,8 +48,8 @@ import static diarsid.sceptre.impl.MatchType.MATCH_DIRECTLY;
 import static diarsid.sceptre.impl.MatchType.MATCH_TYPO_LOOP;
 import static diarsid.sceptre.impl.MatchType.MATCH_TYPO_NEXT_IN_PATTERN_PREVIOUS_IN_VARIANT;
 import static diarsid.sceptre.impl.MatchType.MATCH_TYPO_PREVIOUS_IN_PATTERN_PREVIOUSx2_IN_VARIANT;
-import static diarsid.sceptre.impl.WordInVariant.Placing.DEPENDENT;
-import static diarsid.sceptre.impl.WordInVariant.Placing.INDEPENDENT;
+import static diarsid.sceptre.impl.WordInInput.Placing.DEPENDENT;
+import static diarsid.sceptre.impl.WordInInput.Placing.INDEPENDENT;
 import static diarsid.support.misc.MathFunctions.absDiff;
 
 class ClusterStepTwo {
@@ -326,7 +326,7 @@ class ClusterStepTwo {
     private int filledInVariantQty;
     private int matchStrength;
     private int mergedDuplicates;
-    private final Possible<WordInVariant> word;
+    private final Possible<WordInInput> word;
     private final Possible<PositionsInWordType> positionsInWordType;
     private int directMatchesCount;
 
@@ -355,7 +355,7 @@ class ClusterStepTwo {
     }
     
     void setAssessed(char c, int patternPosition, int variantPosition) {
-        this.word.resetTo(this.analyze.data.wordsInVariant.wordOf(variantPosition));
+        this.word.resetTo(this.analyze.data.wordsInInput.wordOf(variantPosition));
         this.assessedChar = c;
         this.assessedCharFilledInVariant = this.analyze.filledPositions.contains(variantPosition);
         this.assessedCharPatternPosition = patternPosition;
@@ -366,7 +366,7 @@ class ClusterStepTwo {
                 c, patternPosition, variantPosition);
     }
 
-    void setAssessed(WordInVariant word, char c, int patternPosition, int variantPosition) {
+    void setAssessed(WordInInput word, char c, int patternPosition, int variantPosition) {
         this.word.resetTo(word);
         this.assessedChar = c;
         this.assessedCharFilledInVariant = this.analyze.filledPositions.contains(variantPosition);
@@ -382,7 +382,7 @@ class ClusterStepTwo {
         return this.assessedChar;
     }
 
-    WordInVariant word() {
+    WordInInput word() {
         return this.word.orThrow();
     }
 
@@ -554,8 +554,8 @@ class ClusterStepTwo {
         }
     }
 
-    int rejectCandidatesBelongingByPatternToOtherWords(WordInVariant word) {
-        WordInVariant wordOfCandidate;
+    int rejectCandidatesBelongingByPatternToOtherWords(WordInInput word) {
+        WordInInput wordOfCandidate;
         int patternPosition;
         int variantPosition;
         int rejectedCount = 0;
@@ -563,7 +563,7 @@ class ClusterStepTwo {
             if ( this.fillingsInPattern.get(i) ) {
                 patternPosition = this.patternPositions.get(i);
                 variantPosition = this.analyze.positions.i(patternPosition);
-                wordOfCandidate = this.analyze.data.wordsInVariant.wordOf(variantPosition);
+                wordOfCandidate = this.analyze.data.wordsInInput.wordOf(variantPosition);
                 if ( wordOfCandidate.index != word.index ) {
                     rejectedCount++;
                     this.remove(i);
@@ -625,8 +625,8 @@ class ClusterStepTwo {
         if ( isFilledInPattern ) {
             int cPositionInVariant = this.analyze.positions.i(patternPosition);
             if ( cPositionInVariant != variantPosition ) {
-                WordInVariant wordOfFilledChar = this.analyze.data.wordsInVariant.wordOf(cPositionInVariant);
-                WordInVariant wordAnother = this.analyze.data.wordsInVariant.wordOf(variantPosition);
+                WordInInput wordOfFilledChar = this.analyze.data.wordsInInput.wordOf(cPositionInVariant);
+                WordInInput wordAnother = this.analyze.data.wordsInInput.wordOf(variantPosition);
 
                 if ( ! wordOfFilledChar.equals(wordAnother) ) {
                     int distance = abs(wordOfFilledChar.index - wordAnother.index);
@@ -879,7 +879,7 @@ class ClusterStepTwo {
     }
 
     private PositionsInWordType definePositionsInWordType() {
-        WordInVariant word = this.word.orThrow();
+        WordInInput word = this.word.orThrow();
 
         boolean chosen = word.hasIntersections(this.analyze.filledPositions);
 
@@ -1041,7 +1041,7 @@ class ClusterStepTwo {
         }
     }
 
-    private boolean allNoLoopMatchesBelongTo(WordInVariant word) {
+    private boolean allNoLoopMatchesBelongTo(WordInInput word) {
         for ( int i = 0; i < this.matches.size(); i++ ) {
             if ( this.matches.get(i).isNot(MATCH_TYPO_LOOP) ) {
                 if ( ! word.hasIndex(this.variantPositions.get(i)) ) {
@@ -1057,7 +1057,7 @@ class ClusterStepTwo {
     }
 
     private boolean searchForStartOfNewWord() {
-        WordInVariant word = this.word.orThrow();
+        WordInInput word = this.word.orThrow();
 
         int fromVariantIncl = word.startIndex;
         int toVariantExcl = this.findFirstVariantPositionIn(word);
@@ -1100,7 +1100,7 @@ class ClusterStepTwo {
         return found;
     }
 
-    private int findFirstVariantPositionIn(WordInVariant word) {
+    private int findFirstVariantPositionIn(WordInInput word) {
         int firstVariantPosition = this.assessedCharVariantPosition;
 
         if ( word.startIndex == firstVariantPosition ) {
@@ -1122,8 +1122,8 @@ class ClusterStepTwo {
     }
     
     boolean isBetterThan(ClusterStepTwo other) {
-        WordInVariant thisWord = this.word.orThrow();
-        WordInVariant otherWord = other.word.orThrow();
+        WordInInput thisWord = this.word.orThrow();
+        WordInInput otherWord = other.word.orThrow();
 
         if ( this.filledInVariantQty == 0 && other.filledInVariantQty == 0 ) {
             /* comparison of found subclusters, both are new */
@@ -1163,11 +1163,11 @@ class ClusterStepTwo {
                             }
                         }
 
-                        WordInVariant prevWordOfThis = this.analyze.data.wordsInVariant.wordBeforeOrNull(thisWord);
-                        WordInVariant nextWordOfThis = this.analyze.data.wordsInVariant.wordAfterOrNull(thisWord);
+                        WordInInput prevWordOfThis = this.analyze.data.wordsInInput.wordBeforeOrNull(thisWord);
+                        WordInInput nextWordOfThis = this.analyze.data.wordsInInput.wordAfterOrNull(thisWord);
 
-                        WordInVariant prevWordOfOther = this.analyze.data.wordsInVariant.wordBeforeOrNull(otherWord);
-                        WordInVariant nextWordOfOther = this.analyze.data.wordsInVariant.wordAfterOrNull(otherWord);
+                        WordInInput prevWordOfOther = this.analyze.data.wordsInInput.wordBeforeOrNull(otherWord);
+                        WordInInput nextWordOfOther = this.analyze.data.wordsInInput.wordAfterOrNull(otherWord);
 
                         int thisIntersections =
                                 (isNull(prevWordOfThis) ? 0 : prevWordOfThis.intersections(this.analyze.filledPositions)) +
@@ -1388,8 +1388,8 @@ class ClusterStepTwo {
             } else if ( this.matched() < other.matched() ) {
                 return false;
             } else {
-                WordInVariant thisAssessedCharWord = this.analyze.data.wordsInVariant.wordOf(this.assessedCharVariantPosition);
-                WordInVariant otherAssessedCharWord = other.analyze.data.wordsInVariant.wordOf(other.assessedCharVariantPosition);
+                WordInInput thisAssessedCharWord = this.analyze.data.wordsInInput.wordOf(this.assessedCharVariantPosition);
+                WordInInput otherAssessedCharWord = other.analyze.data.wordsInInput.wordOf(other.assessedCharVariantPosition);
 
                 int thisAssessedCharWordIntersections = thisAssessedCharWord.intersections(this.analyze.filledPositions);
                 int otherAssessedCharWordIntersections = otherAssessedCharWord.intersections(other.analyze.filledPositions);
@@ -1427,8 +1427,8 @@ class ClusterStepTwo {
                         }
                     }
 
-                    WordsInVariant.WordsInRange thisPositionsWords = this.analyze.data.wordsInVariant.wordsOfRange(this.variantPositions);
-                    WordsInVariant.WordsInRange otherPositionsWords = other.analyze.data.wordsInVariant.wordsOfRange(other.variantPositions);
+                    WordsInInput.WordsInRange thisPositionsWords = this.analyze.data.wordsInInput.wordsOfRange(this.variantPositions);
+                    WordsInInput.WordsInRange otherPositionsWords = other.analyze.data.wordsInInput.wordsOfRange(other.variantPositions);
 
                     if ( thisPositionsWords.areNotEmpty() && otherPositionsWords.areEmpty() ) {
                         return true;
@@ -1449,16 +1449,16 @@ class ClusterStepTwo {
                     else {
                         if ( thisType.foundType.is(otherType.foundType) ) {
                             if ( thisWord.index != otherWord.index ) {
-                                WordsInVariant.WordsInRange wordsBefore;
+                                WordsInInput.WordsInRange wordsBefore;
                                 if ( thisWord.placing.is(INDEPENDENT) && otherWord.placing.is(DEPENDENT) ) {
-                                    wordsBefore = this.analyze.data.wordsInVariant.independentAndDependentWordsBefore(otherWord);
+                                    wordsBefore = this.analyze.data.wordsInInput.independentAndDependentWordsBefore(otherWord);
                                     int intersectionsBefore = wordsBefore.intersections(this.analyze.filledPositions);
                                     if ( intersectionsBefore > 1 ) {
                                         return false;
                                     }
                                 }
                                 else if ( thisWord.placing.is(DEPENDENT) && otherWord.placing.is(INDEPENDENT) ) {
-                                    wordsBefore = this.analyze.data.wordsInVariant.independentAndDependentWordsBefore(thisWord);
+                                    wordsBefore = this.analyze.data.wordsInInput.independentAndDependentWordsBefore(thisWord);
                                     int intersectionsBefore = wordsBefore.intersections(this.analyze.filledPositions);
                                     if ( intersectionsBefore > 1 ) {
                                         return true;
@@ -1484,10 +1484,10 @@ class ClusterStepTwo {
                                 int thisWordWeight = 0;
                                 int otherWordWeight = 0;
 
-                                int discriminator = this.analyze.data.wordsInVariant.all.size() / 5;
+                                int discriminator = this.analyze.data.wordsInInput.all.size() / 5;
 
                                 if ( discriminator > 0 ) {
-                                    WordsInVariant.WordsInRange foundWords = this.analyze.data.wordsInVariant.wordsOfRange(this.analyze.filledPositions);
+                                    WordsInInput.WordsInRange foundWords = this.analyze.data.wordsInInput.wordsOfRange(this.analyze.filledPositions);
 
                                     int thisWordIndexDiff = wordsIndexesDiff(foundWords, thisWord) / discriminator;
                                     int otherWordIndexDiff = wordsIndexesDiff(foundWords, otherWord) / discriminator;
@@ -1569,7 +1569,7 @@ class ClusterStepTwo {
     }
 
     private int countCharsAtStartWithoutSpaces() {
-        WordInVariant word = this.word.orThrow();
+        WordInInput word = this.word.orThrow();
         int count = 0;
         if ( word.startIndex == assessedCharVariantPosition ) {
             count++;
@@ -1587,8 +1587,8 @@ class ClusterStepTwo {
         return count;
     }
 
-    private int wordsIndexesDiff(WordsInVariant.WordsInRange foundWords, WordInVariant word) {
-        WordInVariant foundWord;
+    private int wordsIndexesDiff(WordsInInput.WordsInRange foundWords, WordInInput word) {
+        WordInInput foundWord;
         int diffSum = 0;
         for ( int i = 0; i < foundWords.all().size(); i++ ) {
             foundWord = foundWords.get(i);
@@ -1603,7 +1603,7 @@ class ClusterStepTwo {
     }
 
     private int countVariantPositionsWithoutSpaces() {
-        WordInVariant word = this.word.orThrow();
+        WordInInput word = this.word.orThrow();
         int count = 0;
 
         int iWordPrev = word.startIndex;
