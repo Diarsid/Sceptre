@@ -297,7 +297,7 @@ public class AnalyzeImpl implements Analyze {
 
             for ( int i = 0; i < weightedOutputs.size(); i++ ) {
                 output = weightedOutputs.get(i);
-                this.log.add(BASE, "    %.3f : %s", output.weight(), output.input());
+                this.log.add(BASE, "    %.3f : %s", output.weight(), output.input().string);
             }
         }
         finally {

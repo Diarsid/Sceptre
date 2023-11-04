@@ -310,6 +310,19 @@ public class WordInInput extends PooledReusable {
         return matches;
     }
 
+    public void collectIntersectionsToList(Ints indexes, ListInt collector) {
+        int matches = 0;
+        Ints.Elements elements = indexes.elements();
+        int index;
+        while ( elements.hasNext() ) {
+            elements.next();
+            index = elements.current();
+            if ( index >= startIndex && index <= endIndex ) {
+                collector.add(index);
+            }
+        }
+    }
+
     public int intersections(Ints indexes, int excludingPosition) {
         int matches = 0;
         Ints.Elements elements = indexes.elements();

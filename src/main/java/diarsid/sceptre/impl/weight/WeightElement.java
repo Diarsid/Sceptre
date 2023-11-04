@@ -80,6 +80,8 @@ public enum WeightElement implements CommonEnum<WeightElement> {
             "total clustered"),
     TOTAL_UNCLUSTERED_CHARS_IMPORTANCE(
             "total unclustered importance"),
+    TOTAL_UNCLUSTERED_IMPORTANCE_MORE_THAN_TWICE_HIGER(
+            "total unclustered importance more than twice higher"),
     CLUSTERS_ORDER_INCOSISTENT(
             "clusters order incosistency"),
     CLUSTER_CANDIDATES_SIMILARITY(

@@ -651,15 +651,19 @@ class ClusterStepTwo {
                     possiblePosition.character, possiblePosition.patternPosition, possiblePosition.variantPosition,
                     existingPosition.character, existingPosition.patternPosition, existingPosition.variantPosition);
 
-            if ( existingPosition.isSameCharAs(possiblePosition) ) {
+            boolean skip = existingPosition.isSameCharAs(possiblePosition);
 
-            }
-            else {
+            if ( ! skip ) {
                 if ( possiblePosition.isBetterThan(existingPosition) ) {
-                    possiblePosition.mergeInSubclusterInsteadOf(existingPosition);
-                    this.analyze.data.log.add(
-                            POSITIONS_SEARCH,
-                            "          [info] positions-in-cluster duplicate: new position accepted");
+                    if ( this.isPointingAtAlreadyAcceptedVariantPosition(existingPosition, possiblePosition) ) {
+
+                    }
+                    else {
+                        possiblePosition.mergeInSubclusterInsteadOf(existingPosition);
+                        this.analyze.data.log.add(
+                                POSITIONS_SEARCH,
+                                "          [info] positions-in-cluster duplicate: new position accepted");
+                    }
                 } else {
                     this.analyze.data.log.add(
                             POSITIONS_SEARCH,
@@ -762,6 +766,23 @@ class ClusterStepTwo {
                 this.candidatesOrderEstimator.add(patternPosition, variantPosition);
             }
         }        
+    }
+
+    private boolean isPointingAtAlreadyAcceptedVariantPosition(
+            StepTwoClusterPositionView existingPosition,
+            StepTwoClusterPositionView possiblePosition) {
+        int i = this.variantPositions.indexOf(possiblePosition.variantPosition);
+
+        if ( i < 0 ) {
+            return false;
+        }
+
+        if ( i != existingPosition.i ) {
+            return true;
+        }
+        else {
+            return false;
+        }
     }
 
     private int countDirectMatchesWith(

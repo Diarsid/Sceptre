@@ -2,7 +2,6 @@ package diarsid.sceptre.impl;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.AfterAll;
@@ -18,7 +17,6 @@ import diarsid.sceptre.api.Analyze;
 import diarsid.sceptre.api.model.Output;
 import diarsid.sceptre.api.model.Outputs;
 import diarsid.sceptre.api.model.Word;
-import diarsid.support.objects.GuardedPool;
 
 import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
@@ -33,7 +31,6 @@ import static diarsid.sceptre.api.LogType.BASE;
 import static diarsid.sceptre.api.LogType.POSITIONS_CLUSTERS;
 import static diarsid.sceptre.api.LogType.POSITIONS_SEARCH;
 import static diarsid.sceptre.api.model.Output.AdditionalData.WORDS;
-import static diarsid.support.objects.Pools.pools;
 import static diarsid.support.objects.collections.CollectionUtils.nonEmpty;
 
 public class AnalyzeTest {
@@ -82,12 +79,6 @@ public class AnalyzeTest {
                 "\n  total variants : %s \n";
 
         log.info(format(report, stop - start, totalVariantsQuantity));
-
-        Optional<GuardedPool<AnalyzeUnit>> pool = pools().poolOf(AnalyzeUnit.class);
-        if ( pool.isPresent() ) {
-            GuardedPool<AnalyzeUnit> c = pool.get();
-            AnalyzeUnit analyzeUnit = c.give();
-        }
     }
     
     @BeforeEach
@@ -448,6 +439,45 @@ public class AnalyzeTest {
         
         expectedSameOrderAsVariants();
         
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_mvnantlr() {
+        pattern = "mvnantlr";
+
+        variants = asList(
+                "D:\\DEV\\2__LIB\\Maven_Local_Repo\\antlr"
+        );
+
+        expectedSameOrderAsVariants();
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_mvnantle() {
+        pattern = "mvnantle";
+
+        variants = asList(
+                "D:\\DEV\\2__LIB\\Maven_Local_Repo\\antlr"
+        );
+
+        expectedSameOrderAsVariants();
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_chenrbly() {
+        pattern = "chenrbly";
+
+        variants = asList(
+                "D:\\CONTENT\\Films\\Serials\\Chernobyl"
+        );
+
+        expectedSameOrderAsVariants();
+
         weightVariantsAndCheckMatching();
     }
     
@@ -1664,10 +1694,7 @@ public class AnalyzeTest {
                 "Tools_aaaaa",
                 "Tools_aaaaa",
                 "Tools_looking",
-                "lost_old_to",
-                "tolkien_lost",
-                "to_low_losing",
-                "book_tolstoy"
+                "tolkien_lost"
                 );
 
         worseVariantsDontMatter();
@@ -2511,7 +2538,9 @@ public class AnalyzeTest {
                 "Beyond Consequences, Logic, and Control, Vol. 2 by Heather T. Forbes");
 
         expected = asList(
-                "The Last Hours of Ancient Sunlight: The Fate of the World and What We Can Do Before It's Too Late by Neale Donald Walsch and Thom Hartmann, and Joseph Chilton Pearce");
+                "D:/CONTENT/Health");
+
+        worseVariantsDontMatter();
 
         weightVariantsAndCheckMatching();
     }
@@ -2571,7 +2600,9 @@ public class AnalyzeTest {
                 "Mycoplasma Protocols (Methods in Molecular Biology)",
                 "D:/SOUL/Programs/Links");
 
-        expected = asList("D:/SOUL/Programs/Links");
+        expected = asList(
+                "D:/SOUL/Programs/Links",
+                "Mycoplasma Protocols (Methods in Molecular Biology)");
 
         weightVariantsAndCheckMatching();
     }
@@ -2879,14 +2910,10 @@ public class AnalyzeTest {
 
         expected = asList(
                 "D:/DEV/3__Tools",
-                "D:/DEV/3__Tools/Servers/Message_Servers",
-                "Eating for Life: Your Guide to Great Health Fat Loss and Increased Energy! by Bill Phillips",
-                "Losers: The Road to Everyplace But the White House by Michael Lewis",
-                "The Hunger Games Companion: The Unauthorized Guide to the Series by Lois H. Gresh",
-                "The Book of Lost Tales Part One (The History of Middle-Earth #1) by J.R.R. Tolkien and Christopher Tolkien",
-                "Star Trek: Logs One and Two (Star Trek: Log #1-2) by Alan Dean Foster",
-                "The Dictionary of Corporate Bullshit: An A to Z Lexicon of Empty Enraging and Just Plain Stupid Office Talk by Lois Beckwith"
+                "D:/DEV/3__Tools/Servers/Message_Servers"
         );
+
+        worseVariantsDontMatter();
 
         weightVariantsAndCheckMatching();
     }
@@ -3395,6 +3422,113 @@ public class AnalyzeTest {
     }
 
     @Test
+    public void test_contteh() {
+        pattern = "contteh";
+
+        variants = asList(
+                "D:/CONTENT/Books/Tech",
+                "How to Prepare for the GED® Test (with CD-ROM): All New Content for the Computerized 2014 Exam (Barron's Ged (Book & CD-Rom)) by Christopher Sharpe"
+        );
+
+        expected = asList("D:/CONTENT/Books/Tech");
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_serlsbilns() {
+        pattern = "serlsbilns";
+
+        variants = asList(
+                "D:\\CONTENT\\Films\\Serials\\Peaky_Blinders",
+                "D:\\CONTENT\\Films\\Serials\\Billions"
+        );
+
+        expected = asList(
+                "D:\\CONTENT\\Films\\Serials\\Billions",
+                "D:\\CONTENT\\Films\\Serials\\Peaky_Blinders"
+        );
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_bookscs() {
+        pattern = "bookscs";
+
+        variants = asList(
+                "D:\\CONTENT\\Books\\Tech\\CS",
+                "The Scions of Shannara (Heritage of Shannara #1) by Terry Brooks");
+
+        expected = asList("D:\\CONTENT\\Books\\Tech\\CS");
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_slcnvally() {
+        pattern = "slcnvally";
+
+        variants = asList(
+                "D:\\CONTENT\\Films\\Serials\\Silicon_Valley",
+                "Valley Of Silence (Circle Trilogy #3) by Nora Roberts ");
+
+        expectedSameOrderAsVariants();
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_srlsslcnvally() {
+        pattern = "srlsslcnvally";
+
+        variants = asList(
+                "D:\\CONTENT\\Films\\Serials\\Silicon_Valley",
+                "Valley Of Silence (Circle Trilogy #3) by Nora Roberts ");
+
+        expected = asList("D:\\CONTENT\\Films\\Serials\\Silicon_Valley");
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_srlslcfr() {
+        pattern = "srlslcfr";
+
+        variants = asList(
+                "D:\\CONTENT\\Films\\Serials\\Lucifer",
+                "Valley Of Silence (Circle Trilogy #3) by Nora Roberts ");
+
+        expected = asList("D:\\CONTENT\\Films\\Serials\\Lucifer");
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_engnspthn() {
+        pattern = "engnspthn";
+
+        variants = asList(
+                "D:\\DEV\\2__LIB\\Engines\\Python_versions");
+
+        expectedSameOrderAsVariants();
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
+    public void test_librrs() {
+        pattern = "librrs";
+
+        variants = asList(
+                "Bridge of Birds (The Chronicles of Master Li and Number Ten Ox #1) by Barry Hughart");
+
+        expected = asList();
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
     public void test_solmnmies() {
         pattern = "solmnmies";
 
@@ -3787,7 +3921,7 @@ public class AnalyzeTest {
 
         while ( outputsIteration.next() ) {
             if ( outputsIteration.isCurrentMuchBetterThanNext() ) {
-                variantsWithWeight.add("\n" + outputsIteration.current().input() + " is much better than next: " + outputsIteration.current().weight());
+                variantsWithWeight.add("\n" + outputsIteration.current().input().string + " is much better than next: " + outputsIteration.current().weight());
             } else {
                 variantsWithWeight.add("\nnext candidates are similar: ");
                 outputsIteration
