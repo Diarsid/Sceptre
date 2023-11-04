@@ -3529,6 +3529,18 @@ public class AnalyzeTest {
     }
 
     @Test
+    public void test_srwrsmove() {
+        pattern = "srwrsmove";
+
+        variants = asList(
+                "D:\\CONTENT\\Films\\Movies\\Star_Wars");
+
+        expected = asList("D:\\CONTENT\\Films\\Movies\\Star_Wars");
+
+        weightVariantsAndCheckMatching();
+    }
+
+    @Test
     public void test_solmnmies() {
         pattern = "solmnmies";
 

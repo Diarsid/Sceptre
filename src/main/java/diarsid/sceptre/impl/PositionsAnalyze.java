@@ -2051,6 +2051,10 @@ class PositionsAnalyze {
         int wordStartVariantPosition = word.startIndex;
         int wordStartPatternPosition = this.patternIndexesByVariantPosition.get(wordStartVariantPosition);
 
+        if ( currentPatternCharIndex < wordStartPatternPosition ) {
+            return false;
+        }
+
         int otherWordsBetweenCount = 0;
 
         int position;
